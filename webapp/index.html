@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- iOS Safari: fills the full screen, no bounce scrolling on body -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Safari: enables Add to Home Screen full-screen mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vacay" />
+    <!-- Theme color for browser chrome -->
+    <meta name="theme-color" content="#000000" />
+    <!-- SEO -->
+    <meta name="description" content="Plan your next adventure. View your travel itinerary and destinations on a map." />
+    <title>Vacay — Travel Planner</title>
+  </head>
+  <body>
+    <script>
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        var root = document.getElementById('root');
+        if (root) {
+          root.innerHTML = '<div style="background:#000;color:#fff;padding:20px;font-family:monospace;height:100vh;">' +
+            '<h1 style="color:#ff3b30;font-size:16px;">SYSTEM FATAL ERROR</h1>' +
+            '<p style="font-size:12px;margin-top:10px;">' + (error ? error.stack : msg) + '</p>' +
+            '<p style="font-size:10px;color:#888;margin-top:10px;">' + url + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
+            '<button onclick="window.location.reload()" style="margin-top:20px;padding:10px 20px;background:#fff;color:#000;border:none;border-radius:8px;">RELOAD</button>' +
+            '</div>';
+        }
+        return false;
+      };
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
