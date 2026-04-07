@@ -1,23 +1,23 @@
 import type { WeatherDay } from '../core/models';
 
+/**
+ * Fetches weather for a specific latitude and longitude over a date range.
+ * If you need data for just one day, set startDate and endDate to the same value.
+ */
 export async function fetchWeather(lat: number, lon: number, startDate: string, endDate: string): Promise<WeatherDay[]> {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
   const today = new Date();
   
-  // Open-Meteo Forecast provides up to 16 days. 
-  // If the trip is further than 14 days out, we might need the Historical API or just show averages.
-  // For simplicity, we'll try the Forecast API first.
-  
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${startDate.split('T')[0]}&end_date=${endDate.split('T')[0]}`;
+  // Use .split('T')[0] to ensure we only have the YYYY-MM-DD part for the API
+  const s = startDate.split('T')[0];
+  const e = endDate.split('T')[0];
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${s}&end_date=${e}`;
   
   try {
     const res = await fetch(url);
     const data = await res.json();
     
     if (!data.daily) {
-      // If daily is missing, maybe dates are too far out. 
-      // Fallback to a simpler "climate" fetch or just return empty for now.
       return [];
     }
     

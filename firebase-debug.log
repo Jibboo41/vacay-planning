@@ -1,0 +1,45 @@
+[debug] [2026-04-07T11:38:38.881Z] ----------------------------------------------------------------------
+[debug] [2026-04-07T11:38:38.888Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\rache\gemini\vacay-planning\node_modules\firebase-tools\lib\bin\firebase.js deploy
+[debug] [2026-04-07T11:38:38.888Z] CLI Version:   15.13.0
+[debug] [2026-04-07T11:38:38.889Z] Platform:      win32
+[debug] [2026-04-07T11:38:38.889Z] Node Version:  v25.7.0
+[debug] [2026-04-07T11:38:38.889Z] Time:          Tue Apr 07 2026 07:38:38 GMT-0400 (Eastern Daylight Time)
+[debug] [2026-04-07T11:38:38.889Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-04-07T11:38:38.895Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-04-07T11:38:45.537Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-07T11:38:45.538Z] > authorizing via signed-in user (oneilltm@gmail.com)
+[debug] [2026-04-07T11:38:45.538Z] [iam] checking project vacay-planning for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-04-07T11:38:45.540Z] Checked if tokens are valid: false, expires at: 1775527308205
+[debug] [2026-04-07T11:38:45.540Z] Checked if tokens are valid: false, expires at: 1775527308205
+[debug] [2026-04-07T11:38:45.540Z] > refreshing access token with scopes: []
+[debug] [2026-04-07T11:38:45.543Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-07T11:38:45.543Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-07T11:38:45.689Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-04-07T11:38:45.689Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-07T11:38:45.702Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/vacay-planning:testIamPermissions [none]
+[debug] [2026-04-07T11:38:45.702Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/vacay-planning:testIamPermissions  x-goog-user-project=vacay-planning
+[debug] [2026-04-07T11:38:45.702Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/vacay-planning:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-07T11:38:45.723Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-04-07T11:38:45.723Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-04-07T11:38:45.952Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/vacay-planning:testIamPermissions 200
+[debug] [2026-04-07T11:38:45.953Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/vacay-planning:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-07T11:38:45.953Z] Checked if tokens are valid: true, expires at: 1775565524689
+[debug] [2026-04-07T11:38:45.954Z] Checked if tokens are valid: true, expires at: 1775565524689
+[debug] [2026-04-07T11:38:45.954Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/vacay-planning/serviceAccounts/vacay-planning@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-04-07T11:38:45.954Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/vacay-planning/serviceAccounts/vacay-planning@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-04-07T11:38:46.206Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/vacay-planning/serviceAccounts/vacay-planning@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-04-07T11:38:46.206Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/vacay-planning/serviceAccounts/vacay-planning@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-04-07T11:38:46.208Z] Checked if tokens are valid: true, expires at: 1775565524689
+[debug] [2026-04-07T11:38:46.208Z] Checked if tokens are valid: true, expires at: 1775565524689
+[debug] [2026-04-07T11:38:46.208Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/vacay-planning [none]
+[debug] [2026-04-07T11:38:46.485Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/vacay-planning 200
+[debug] [2026-04-07T11:38:46.485Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/vacay-planning {"projectId":"vacay-planning","projectNumber":"1058974081190","displayName":"vacay-planning","name":"projects/vacay-planning","resources":{"hostingSite":"vacay-planning","realtimeDatabaseInstance":"vacay-planning-default-rtdb"},"state":"ACTIVE","etag":"1_04c4a8f2-1ecb-4544-9f1c-ff9be679c598"}
+[debug] [2026-04-07T11:38:46.488Z] Specified "public" directory "webapp/dist" does not exist; Deploy to Hosting site "vacay-planning" may fail or be empty.
+[info] 
+[info] === Deploying to 'vacay-planning'...
+[info] 
+[info] i  deploying functions, hosting 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build
+[info] +  functions: Finished running predeploy script. 
+[info] Running command: cd webapp && npm run build

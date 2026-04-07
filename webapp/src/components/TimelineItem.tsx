@@ -26,18 +26,27 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         icon: (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
              <BedDouble size={20} style={{ marginBottom: '0px' }} />
-             <span style={{ fontSize: '9px', fontWeight: 900, letterSpacing: '0.5px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
+             <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
           </div>
         ), 
         color: isCheckout ? '#FF3B30' : '#30D158', 
         bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(48, 209, 88, 0.1)' 
+      };
+      case 'rental-car': return { 
+        icon: (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+             <Car size={20} style={{ marginBottom: '0px' }} />
+             <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'RET' : 'PKUP'}</span>
+          </div>
+        ),
+        color: '#AF52DE', 
+        bg: 'rgba(175, 82, 222, 0.1)' 
       };
       case 'activity': return { icon: <Navigation size={24} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
       case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
       case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
       case 'food':     return { icon: <Utensils size={24} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
       case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
-      case 'rental-car': return { icon: <Car size={24} />, color: '#AF52DE', bg: 'rgba(175, 82, 222, 0.1)' };
       default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };
@@ -81,8 +90,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: theme.color, background: theme.bg, padding: '2px 8px', borderRadius: '6px' }}>
-            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') : item.type === 'flight' ? 'TAKEOFF' : 'START'}
+          <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 8px', borderRadius: '6px' }}>
+            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : 
+             item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
+             item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') : 
+             item.type === 'flight' ? 'TAKEOFF' : 'START'}
             {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
           </div>
           {!isCheckout && (
@@ -166,14 +178,14 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           {isCheckout ? (
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#30D158', background: 'rgba(48,209,88,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-                CHECK-IN {getTimeLabel(item.startDate)}
+                {item.type === 'hotel' ? 'CHECK-IN' : 'PICKUP'} {getTimeLabel(item.startDate)}
                 {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
               </div>
             </div>
           ) : item.endDate ? (
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#ff3b30', background: 'rgba(255,59,48,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-                {item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
+                {item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'flight' ? 'LANDING' : item.type === 'rental-car' ? 'RETURN' : 'END'} {getTimeLabel(item.endDate)}
                 {getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.endDate)})`}
               </div>
             </div>

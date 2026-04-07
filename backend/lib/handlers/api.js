@@ -12,13 +12,13 @@ const app = (0, express_1.default)();
 app.use((0, cors_1.default)({ origin: true }));
 app.use(express_1.default.json());
 app.post('/api/parse-email', async (req, res) => {
-    const { emailText } = req.body;
+    const { emailText, tripTitle } = req.body;
     if (!emailText) {
         return res.status(400).json({ error: 'emailText is required in the request body.' });
     }
     try {
         console.log("Parsing inbound email text...");
-        const itineraryItems = await (0, emailParser_1.parseEmailToItinerary)(emailText);
+        const itineraryItems = await (0, emailParser_1.parseEmailToItinerary)(emailText, tripTitle || '');
         console.log(`Successfully parsed ${itineraryItems.length} item(s)!`);
         res.json({ items: itineraryItems });
     }

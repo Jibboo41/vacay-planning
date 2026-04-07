@@ -142,9 +142,10 @@ export default function TimelineScreen() {
     // Add primary entry (Check-in / Start)
     addToDay(item.startDate, item);
 
-    // If it's a hotel with a different end date, add a checkout entry
-    if (item.type === 'hotel' && item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate)) {
-      addToDay(item.endDate, item, true);
+    // If it's a hotel or rental car with a different end date, add a checkout/return entry
+    const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
+    if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay) {
+      addToDay(item.endDate!, item, true);
     }
   }
 
