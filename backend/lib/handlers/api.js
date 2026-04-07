@@ -27,6 +27,22 @@ app.post('/api/parse-email', async (req, res) => {
         res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
     }
 });
+app.post('/api/summarize-trip', async (req, res) => {
+    const { items } = req.body;
+    if (!items || !Array.isArray(items)) {
+        return res.status(400).json({ error: 'Valid items array is required in the request body.' });
+    }
+    try {
+        console.log("Generating AI summary for trip...");
+        const summary = await (0, emailParser_1.generateTripSummary)(items);
+        console.log("Successfully generated summary!");
+        res.json({ summary });
+    }
+    catch (error) {
+        console.error("Failed to summarize trip:", error);
+        res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
+    }
+});
 // Export the Express app as a Firebase Cloud Function
 exports.api = (0, https_1.onRequest)({ secrets: ["GEMINI_API_KEY"] }, app);
 // Start local server if NOT running in Firebase context

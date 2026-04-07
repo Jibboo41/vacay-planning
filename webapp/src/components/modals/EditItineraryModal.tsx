@@ -29,7 +29,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [address, setAddress]       = useState(item.location.address);
   const [lat, setLat]               = useState(item.location.latitude);
   const [lng, setLng]               = useState(item.location.longitude);
-  const [description, setDescription] = useState(item.description ?? '');
+  const [description, setDescription] = useState((item.description ?? '').replace(/<br\s*\/?>/gi, '\n'));
 
   // Hike specific
   const [hikeDiff, setHikeDiff] = useState<'Easy'|'Moderate'|'Hard'|'Expert'>(item.hikeDetails?.difficulty ?? 'Moderate');
@@ -37,6 +37,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [hikeDur, setHikeDur]   = useState(item.hikeDetails?.duration ?? '');
   const [hikeElev, setHikeElev] = useState(item.hikeDetails?.elevation ?? '');
   const [hikeLink, setHikeLink] = useState(item.hikeDetails?.allTrailsLink ?? '');
+
+  const [foodMeal, setFoodMeal] = useState<'Breakfast'|'Lunch'|'Dinner'|'Snack'|'Dessert'>(item.foodDetails?.mealType ?? 'Dinner');
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -60,8 +62,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   }, [address]);
 
   const handleSave = () => {
-    const startDateString = date ? (time ? `${date}T${time}:00` : date) : item.startDate;
-    const endDateString = endDate ? (endTime ? `${endDate}T${endTime}:00` : endDate) : undefined;
+    const startDateString = type === 'food' ? date : date ? (time ? `${date}T${time}:00` : date) : item.startDate;
+    const endDateString = type === 'food' ? undefined : endDate ? (endTime ? `${endDate}T${endTime}:00` : endDate) : undefined;
 
     onSave(item.id, {
       title,
@@ -83,6 +85,9 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         duration: hikeDur,
         elevation: hikeElev,
         allTrailsLink: hikeLink || undefined,
+      } : undefined,
+      foodDetails: type === 'food' ? {
+        mealType: foodMeal
       } : undefined,
     });
     onClose();
@@ -112,6 +117,11 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
+              onFocus={() => {
+                if (title === 'New Activity' || title === 'New Trip Stop') {
+                  setTitle('');
+                }
+              }}
               placeholder="Activity name"
             />
           </div>
@@ -137,7 +147,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
           {/* Start Date & Time */}
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <label className="edit-field-label">Start Date</label>
+              <label className="edit-field-label">{type === 'flight' ? 'Takeoff Date' : 'Date'}</label>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '150px' }}
@@ -147,22 +157,25 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               />
             </div>
 
-            <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <label className="edit-field-label">Time</label>
-              <input
-                className="edit-field-input"
-                style={{ width: 'auto', minWidth: '130px' }}
-                type="time"
-                value={time}
-                onChange={e => setTime(e.target.value)}
-              />
-            </div>
+            {type !== 'food' && (
+              <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
+                <label className="edit-field-label">{type === 'flight' ? 'Takeoff Time' : 'Time'}</label>
+                <input
+                  className="edit-field-input"
+                  style={{ width: 'auto', minWidth: '130px' }}
+                  type="time"
+                  value={time}
+                  onChange={e => setTime(e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
           {/* End Date & Time */}
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <label className="edit-field-label">End Date (optional)</label>
+          {type !== 'food' && (
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
+                <label className="edit-field-label">{type === 'flight' ? 'Landing Date (optional)' : 'End Date (optional)'}</label>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '150px' }}
@@ -173,7 +186,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
             </div>
 
             <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <label className="edit-field-label">End Time</label>
+              <label className="edit-field-label">{type === 'flight' ? 'Landing Time' : 'End Time'}</label>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '130px' }}
@@ -183,6 +196,21 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               />
             </div>
           </div>
+          )}
+
+          {/* Conditional Food Details */}
+          {type === 'food' && (
+            <div className="edit-field-group">
+              <label className="edit-field-label">Meal</label>
+              <select className="edit-field-input" value={foodMeal} onChange={e => setFoodMeal(e.target.value as any)}>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Snack">Snack</option>
+                <option value="Dessert">Dessert</option>
+              </select>
+            </div>
+          )}
 
           {/* Confirmation Number */}
           <div className="edit-field-group">

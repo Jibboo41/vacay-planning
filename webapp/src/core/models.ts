@@ -13,6 +13,10 @@ export interface HikeDetails {
   allTrailsLink?: string;
 }
 
+export interface FoodDetails {
+  mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
+}
+
 export interface ItineraryItem {
   id: string;
   type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'transit' | 'food' | 'note' | 'unknown';
@@ -23,6 +27,7 @@ export interface ItineraryItem {
   confirmationNumber?: string;
   location: Location;
   hikeDetails?: HikeDetails;
+  foodDetails?: FoodDetails;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
 }

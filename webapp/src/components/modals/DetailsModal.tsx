@@ -3,46 +3,9 @@ import type { ItineraryItem } from '../../core/models';
 import { MapPin, Edit2, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../../store/useTripStore';
+import Linkified from '../Linkified';
 
-// ── Linkify helper ────────────────────────────────────────────────────────────
-// Splits text on URLs and renders http/https links as tappable <a> elements.
-// Newlines are preserved as <br>.
-const URL_REGEX = /(https?:\/\/[^\s]+)/g;
 
-function Linkified({ text }: { text: string }) {
-  const parts = text.split(URL_REGEX);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (URL_REGEX.test(part)) {
-          return (
-            <a
-              key={i}
-              href={part}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              style={{
-                color: 'var(--sys-blue)',
-                textDecoration: 'underline',
-                wordBreak: 'break-all',
-              }}
-            >
-              {part}
-            </a>
-          );
-        }
-        // Preserve newlines as <br>
-        return part.split('\n').map((line, j, arr) => (
-          <span key={`${i}-${j}`}>
-            {line}
-            {j < arr.length - 1 && <br />}
-          </span>
-        ));
-      })}
-    </>
-  );
-}
 
 interface DetailsModalProps {
   item: ItineraryItem | null;
@@ -110,10 +73,19 @@ export default function DetailsModal({ item, onClose, onEdit, onDelete }: Detail
   if (!item) return null;
 
   const startDateObj = new Date(item.startDate);
-  const dateStr = startDateObj.toLocaleString([], { dateStyle: 'full', timeStyle: 'short' });
+  const hasTime = item.startDate.includes('T');
+  let dateStr = '';
+  
+  if (item.type === 'food') {
+    dateStr = `${(item.foodDetails?.mealType || 'Dining').toUpperCase()} • ${startDateObj.toLocaleDateString([], { dateStyle: 'full' })}`;
+  } else if (!hasTime) {
+    dateStr = startDateObj.toLocaleDateString([], { dateStyle: 'full' });
+  } else {
+    dateStr = startDateObj.toLocaleString([], { dateStyle: 'full', timeStyle: 'short' });
+  }
 
   let endDateStr = null;
-  if (item.endDate) {
+  if (item.endDate && item.type !== 'food') {
     const endDateObj = new Date(item.endDate);
     const isSameDay = startDateObj.toDateString() === endDateObj.toDateString();
     

@@ -226,10 +226,9 @@ export default function MapViewScreen() {
             key={`cross-${i}`}
             positions={line}
             pathOptions={{
-              color:     '#EBEBF5',
-              weight:    2.5,
-              opacity:   0.45,
-              dashArray: '6 8',
+              color:     'rgba(180, 180, 200, 0.6)',
+              weight:    3,
+              dashArray: '8, 8',
               lineCap:   'round',
             }}
           />
@@ -243,6 +242,9 @@ export default function MapViewScreen() {
           >
             <Popup className="custom-popup">
               <div style={{ minWidth: '190px', padding: '4px 2px' }}>
+                <p style={{ fontSize: '11px', color: '#0A84FF', fontWeight: 800, letterSpacing: '0.05em', marginBottom: '4px', textTransform: 'uppercase' }}>
+                  {new Date(item.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                </p>
                 <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#111' }}>
                   {item.title}
                 </p>

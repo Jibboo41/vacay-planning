@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TimelineScreen from './components/TimelineScreen';
+import SummaryScreen from './components/SummaryScreen';
 import MapViewScreen from './components/MapViewScreen';
 import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
-import TabBar from './components/TabBar';
+import GlobalControls from './components/GlobalControls';
 import Sidebar from './components/Sidebar';
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './core/firebase';
@@ -138,6 +139,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
           <Route path="/trips" element={<ProtectedRoute><TripSelector /></ProtectedRoute>} />
+          <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
           <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/trips" replace />} />
@@ -153,7 +155,7 @@ const NavWrapper = () => {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
   if (loading || !userId) return null;
-  return <TabBar />;
+  return <GlobalControls />;
 };
 
 export default App;

@@ -7,11 +7,13 @@ interface Trip {
   userId: string;
   items: ItineraryItem[];
   createdAt: number;
+  aiSummary?: string;
 }
 
 interface TripStore {
   trips: Trip[];
   currentTripId: string | null;
+  currentTripAiSummary: string | null;
   items: ItineraryItem[];
   userId: string | null;
   loading: boolean;
@@ -35,6 +37,7 @@ interface TripStore {
   deleteItem: (id: string) => void;
   addNote: (dayKey: string, title: string, content: string) => void;
   reorderItems: (activeId: string, overId: string | null, newDayKey: string) => void;
+  saveAiSummary: (summary: string) => Promise<void>;
 
   // Sync
   syncTrips: (trips: Trip[]) => void;
@@ -71,6 +74,7 @@ import {
 export const useTripStore = create<TripStore>((set, get) => ({
   trips: [],
   currentTripId: null,
+  currentTripAiSummary: null,
   items: [],
   userId: null,
   loading: true,
@@ -93,7 +97,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const currentTrip = sorted.find(t => t.id === currentTripId);
     set({ 
       trips: sorted,
-      items: currentTrip ? currentTrip.items : [] 
+      items: currentTrip ? currentTrip.items : [],
+      currentTripAiSummary: currentTrip?.aiSummary || null 
     });
   },
 
@@ -102,7 +107,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const trip = trips.find(t => t.id === tripId);
     set({ 
       currentTripId: tripId,
-      items: trip ? trip.items : []
+      items: trip ? trip.items : [],
+      currentTripAiSummary: trip?.aiSummary || null
     });
   },
 
@@ -201,10 +207,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!activeItem) return;
 
     const oldDayKey = getDayKey(activeItem.startDate);
-    const localTime = getLocalTimeStr(activeItem.startDate);
+    const hasTime = activeItem.startDate.includes('T');
+    const localTime = hasTime ? getLocalTimeStr(activeItem.startDate) : '';
     const movedItem: ItineraryItem =
       oldDayKey !== newDayKey
-        ? { ...activeItem, startDate: `${newDayKey}T${localTime}` }
+        ? { ...activeItem, startDate: hasTime ? `${newDayKey}T${localTime}` : newDayKey }
         : activeItem;
 
     const remaining = allItems.filter(i => i.id !== activeId);
@@ -231,6 +238,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
     set({ items: finalItems });
     await setDoc(doc(db, "trips", currentTripId), { items: finalItems }, { merge: true });
+  },
+
+  saveAiSummary: async (summary: string) => {
+    const { currentTripId } = get();
+    if (!currentTripId) return;
+    set({ currentTripAiSummary: summary });
+    await setDoc(doc(db, "trips", currentTripId), { aiSummary: summary }, { merge: true });
   },
 }));
 

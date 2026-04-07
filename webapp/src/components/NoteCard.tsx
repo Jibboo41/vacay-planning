@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StickyNote, GripVertical, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import type { ItineraryItem } from '../core/models';
+import Linkified from './Linkified';
 
 interface NoteCardProps {
   item: ItineraryItem;
@@ -75,12 +76,12 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
       {isExpanded && (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {item.description && (
-            <p style={{
+            <div style={{
               fontSize: '14px', color: 'var(--sys-label-secondary)',
               lineHeight: '1.5', margin: '0 0 20px 0'
             }}>
-              {item.description}
-            </p>
+              <Linkified text={item.description} />
+            </div>
           )}
 
           <button 

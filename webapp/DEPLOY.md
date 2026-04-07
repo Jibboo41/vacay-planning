@@ -27,12 +27,15 @@ From the **root** folder:
 firebase deploy
 ```
 
-### 2. Set Secrets (First Time Only)
-Since the backend uses Gemini AI, you must securely store your API key in Firebase:
+### 2. Set Secrets (First Time or Key Rotation)
+Since the backend uses Gemini AI, you must securely store your API key in Firebase so the Functions can access it:
 ```powershell
 firebase functions:secrets:set GEMINI_API_KEY
 ```
 *When prompted, paste your Gemini API key.*
+
+### 3. Verify Local Env
+Ensure your `webapp/.env` contains the correct `VITE_API_URL` pointing to your deployed Firebase Function (e.g. `https://us-central1-vacay-planning.cloudfunctions.net/api`).
 
 ---
 

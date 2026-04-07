@@ -258,7 +258,6 @@ input, textarea {
 .fab-group {
   position: fixed;
   bottom: calc(20px + env(safe-area-inset-bottom));
-  right: 24px; /* Positioned on the far right */
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
@@ -266,6 +265,8 @@ input, textarea {
   z-index: 2000;
   pointer-events: none;
 }
+.fab-group.right { right: 24px; }
+.fab-group.left { left: 24px; }
 
 .fab-main {
   width: 60px;
@@ -307,7 +308,6 @@ input, textarea {
 
 .fab-sub-label {
   position: absolute;
-  right: 60px;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   padding: 6px 12px;
@@ -316,7 +316,11 @@ input, textarea {
   font-weight: 600;
   opacity: 0;
   transition: opacity 0.2s ease;
+  white-space: nowrap;
 }
+.fab-group.right .fab-sub-label { right: 60px; }
+.fab-group.left .fab-sub-label { left: 60px; }
+
 .fab-sub:hover .fab-sub-label { opacity: 1; }
 
 /* ── Sidebar ── */

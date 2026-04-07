@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Menu, PenLine } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import DetailsModal from './modals/DetailsModal';
-import AddItineraryModal from './modals/AddItineraryModal';
-import AddNoteModal from './modals/AddNoteModal';
 import EditItineraryModal from './modals/EditItineraryModal';
 import type { ItineraryItem } from '../core/models';
 
@@ -92,15 +90,12 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, addItem, updateItem, deleteItem, addNote, reorderItems, setSidebarOpen } = useTripStore();
+  const { items, updateItem, deleteItem, reorderItems, setSidebarOpen } = useTripStore();
 
   const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
-  const [addVisible, setAddVisible] = useState(false);
-  const [addNoteVisible, setAddNoteVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [activeDayKey, setActiveDayKey] = useState<string>('');
-  const [isFabOpen, setIsFabOpen] = useState(false);
 
   // Shared drag state (used by both HTML5 and touch paths)
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -371,68 +366,7 @@ export default function TimelineScreen() {
         ))}
       </main>
 
-      {/* Collapsible FAB Group */}
-      <div className="fab-group">
-        <button 
-          className={`fab-main ${isFabOpen ? 'active' : ''}`} 
-          onClick={() => setIsFabOpen(!isFabOpen)}
-          aria-label="Add menu"
-        >
-          <Sparkles size={24} color="#fff" />
-        </button>
-
-        <div className={`fab-options ${isFabOpen ? 'open' : ''}`}>
-          <button 
-            className="fab-sub" 
-            onClick={() => { setAddNoteVisible(true); setIsFabOpen(false); }}
-            aria-label="Add note"
-          >
-            <span style={{ fontSize: '18px' }}>📝</span>
-            <span className="fab-sub-label">Note</span>
-          </button>
-
-          <button 
-            className="fab-sub" 
-            onClick={() => {
-              const id = `manual-${Date.now()}`;
-              const newItem: ItineraryItem = {
-                id,
-                type: 'activity',
-                title: 'New Trip Stop',
-                startDate: new Date().toISOString(),
-                location: { name: 'TBD', address: 'Location TBD', latitude: null, longitude: null }
-              };
-              addItem(newItem);
-              setSelectedItem(newItem);
-              setEditVisible(true);
-              setIsFabOpen(false);
-            }}
-            aria-label="Manual Entry"
-          >
-            <PenLine size={18} color="#fff" />
-            <span className="fab-sub-label">Manual</span>
-          </button>
-
-          <button 
-            className="fab-sub" 
-            onClick={() => { setAddVisible(true); setIsFabOpen(false); }}
-            aria-label="AI Parse"
-          >
-            <Sparkles size={20} color="#fff" />
-            <span className="fab-sub-label">Parse AI</span>
-          </button>
-        </div>
-      </div>
-
       {detailsVisible && <DetailsModal item={selectedItem} onClose={() => setDetailsVisible(false)} onEdit={() => { setEditVisible(true); setDetailsVisible(false); }} onDelete={handleDelete} />}
-      {addVisible && <AddItineraryModal onClose={() => setAddVisible(false)} onAdd={(item) => {
-        addItem(item);
-        if (item.id.startsWith('manual-')) {
-          setSelectedItem(item);
-          setEditVisible(true);
-        }
-      }} />}
-      {addNoteVisible && <AddNoteModal activeDayKey={activeDayKey} onClose={() => setAddNoteVisible(false)} onAdd={addNote} />}
       {editVisible && selectedItem && (
         <EditItineraryModal
           item={selectedItem}

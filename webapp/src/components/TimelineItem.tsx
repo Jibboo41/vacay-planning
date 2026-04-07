@@ -3,6 +3,7 @@ import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, Chev
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
+import Linkified from './Linkified';
 
 interface TimelineItemProps {
   item: ItineraryItem;
@@ -42,13 +43,21 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
   const theme = getTheme();
 
-  const getDayLabel = (dateString: string) =>
-    new Date(dateString)
+  const getDayLabel = (dateString: string) => {
+    // Force local interpretation by replacing dashes with slashes if no time present
+    const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
+    return new Date(clean)
       .toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
       .toUpperCase();
+  };
 
-  const getTimeLabel = (dateString: string) =>
-    new Date(dateString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const getTimeLabel = (dateString: string) => {
+    if (!dateString.includes('T')) return '';
+    const d = new Date(dateString);
+    // Hide noon for notes or if explicitly requested as "timeless" logic
+    if (item.type === 'note' && d.getHours() === 12 && d.getMinutes() === 0) return '';
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  };
 
 
   return (
@@ -70,7 +79,8 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ fontSize: '12px', fontWeight: 700, color: theme.color, background: theme.bg, padding: '2px 8px', borderRadius: '6px' }}>
-            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : 'START'} {getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
+            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') : item.type === 'flight' ? 'TAKEOFF' : 'START'}
+            {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
           </div>
           {!isCheckout && (
             <div
@@ -160,7 +170,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           ) : item.endDate ? (
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#ff3b30', background: 'rgba(255,59,48,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-                {item.type === 'hotel' ? 'CHECK-OUT' : 'END'} {getTimeLabel(item.endDate)}
+                {item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
                 {getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.endDate)})`}
               </div>
             </div>
@@ -201,9 +211,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           )}
 
           {item.description && (
-            <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', lineHeight: '1.5', margin: '0 0 20px 0' }}>
-              {item.description}
-            </p>
+            <div style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', lineHeight: '1.5', margin: '0 0 20px 0' }}>
+              <Linkified text={item.description} />
+            </div>
           )}
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -227,7 +237,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
-  const d = new Date(dateString);
+  // Force local interpretation for date-only strings to avoid UTC-midnight jumping to previous day
+  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
+  const d = new Date(clean);
   if (isNaN(d.getTime())) return dateString.split('T')[0];
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');

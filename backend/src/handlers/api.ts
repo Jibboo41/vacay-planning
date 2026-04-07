@@ -1,7 +1,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import express from 'express';
 import cors from 'cors';
-import { parseEmailToItinerary } from '../use-cases/emailParser';
+import { parseEmailToItinerary, generateTripSummary } from '../use-cases/emailParser';
 
 const app = express();
 
@@ -22,6 +22,23 @@ app.post('/api/parse-email', async (req: express.Request, res: express.Response)
     res.json({ items: itineraryItems });
   } catch (error: any) {
     console.error("Failed to parse email:", error);
+    res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
+  }
+});
+
+app.post('/api/summarize-trip', async (req: express.Request, res: express.Response) => {
+  const { items } = req.body;
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'Valid items array is required in the request body.' });
+  }
+
+  try {
+    console.log("Generating AI summary for trip...");
+    const summary = await generateTripSummary(items);
+    console.log("Successfully generated summary!");
+    res.json({ summary });
+  } catch (error: any) {
+    console.error("Failed to summarize trip:", error);
     res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
   }
 });
