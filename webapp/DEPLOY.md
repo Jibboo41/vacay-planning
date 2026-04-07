@@ -42,7 +42,10 @@ Ensure your `webapp/.env` contains the correct `VITE_API_URL` pointing to your d
 ## 📡 Deployment URLs
 - **Frontend**: [https://vacay-planning.web.app](https://vacay-planning.web.app)
 - **Backend (API)**: `https://us-central1-vacay-planning.cloudfunctions.net/api`
-  *(Note: After the first deploy, you'll see your exact function URL in the terminal. Copy that into your `webapp/.env.local` as `VITE_API_URL`.)*
+  *(Note: Ensure your `VITE_API_URL` in `.env` matches your deployed function URL.)*
+
+## 🌩 Weather API
+The Weather module uses the **Open-Meteo API**, which is free and requires no API key. However, for high-frequency use, ensure the backend respects rate limits (currently handled via frontend caching in `useTripStore`).
 
 ## ⚠️ Troubleshooting
 

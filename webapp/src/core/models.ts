@@ -19,7 +19,7 @@ export interface FoodDetails {
 
 export interface ItineraryItem {
   id: string;
-  type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'transit' | 'food' | 'note' | 'unknown';
+  type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'transit' | 'food' | 'note' | 'rental-car' | 'unknown';
   startDate: string;
   endDate?: string;
   title: string;
@@ -30,4 +30,38 @@ export interface ItineraryItem {
   foodDetails?: FoodDetails;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
+  /** Custom cost for this item (e.g. flight price, hotel total) */
+  cost?: number;
+  /** ID to group multiple flight legs or related items */
+  groupId?: string;
+}
+
+export interface TodoItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  createdAt: number;
+}
+
+export interface Expense {
+  id: string;
+  title: string;
+  amount: number;
+  category: 'itinerary' | 'manual' | 'food' | 'transport' | 'other';
+  date: string;
+  linkedItemId?: string; // Links to an ItineraryItem.id 
+}
+
+export interface WeatherDay {
+  date: string;
+  tempHigh: number;
+  tempLow: number;
+  condition: string;
+  icon: string;
+  isHistorical?: boolean;
+}
+
+export interface WeatherCache {
+  lastUpdated: number;
+  forecast: WeatherDay[];
 }

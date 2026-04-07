@@ -22,7 +22,13 @@
 
 ### 🔹 Leaflet Destination Mapping
 - **Interactive Map**: Visualize your stops on a reactive vector map.
-- **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order.
+- **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order. Fixed logic re-calculates paths instantly upon itinerary changes.
+
+### 🔹 Travel Power Modules (Phase 2)
+- **Todo System**: Specialized trip checklists with cloud sync, and completion tracking.
+- **Cost Tracker**: Intelligent expense dashboard that automatically aggregates costs from flights/hotels while allowing manual spending entries.
+- **Weather Suite**: Integrated daily forecasts via Open-Meteo API, providing smart destination-aware weather data for all trip dates.
+- **Enhanced Grouping**: Sophisticated UI for grouping multi-leg flights and automated rental car pickup/return cycle splitting.
 
 ---
 
@@ -100,8 +106,13 @@ stateDiagram-v2
   
   state ActiveTrip {
     direction LR
+  state ActiveTrip {
+    direction LR
     Timeline(Calendar) <--> Summary(Book)
     Timeline(Calendar) <--> Map(Compass)
+    Timeline(Calendar) <--> Todo(CheckSquare)
+    Timeline(Calendar) <--> Costs(Wallet)
+    Timeline(Calendar) <--> Weather(CloudSun)
     
     note right of Timeline(Calendar)
       Features Draggable DND, Local Timelines,
@@ -111,6 +122,10 @@ stateDiagram-v2
   
   ActiveTrip --> GlobalControls : App.tsx Overlay
   GlobalControls --> SparkleMenu : Hover Trigger
+  GlobalControls --> ViewSwitcher : Navigation Trigger
+  ViewSwitcher --> Todo
+  ViewSwitcher --> Costs
+  ViewSwitcher --> Weather
   SparkleMenu --> AddNoteModal
   SparkleMenu --> ParseAIModal
   SparkleMenu --> EditActivityModal

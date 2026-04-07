@@ -174,7 +174,7 @@ export default function MapViewScreen() {
       setDayRoutes(results);
       setRouteStatus('done');
     })();
-  }, []);
+  }, [items.length]);
 
   const crossDayLines: [number, number][][] = [];
   const byDay = groupByDay(mappable);

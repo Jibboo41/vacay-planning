@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Sparkles, Loader } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
 import { parseItinerary } from '../../data/api';
+import { useTripStore } from '../../store/useTripStore';
 
 interface AddItineraryModalProps {
   onClose: () => void;
@@ -13,12 +14,16 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const trips = useTripStore(s => s.trips);
+  const tripTitle = trips.find(t => t.id === currentTripId)?.title || '';
+
   const handleParse = async () => {
     if (!emailText.trim()) return;
     setIsLoading(true);
     setError(null);
     try {
-      const items = await parseItinerary(emailText);
+      const items = await parseItinerary(emailText, tripTitle);
       items.forEach(item => onAdd(item));
       onClose();
     } catch (err) {

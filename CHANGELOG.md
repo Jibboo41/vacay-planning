@@ -2,7 +2,25 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
-## [1.2.0] - 2026-04-07
+## [1.3.0] - 2026-04-07 (Phase 2: Power Modules)
+
+### 🚀 New Core Modules
+- **Todo System**: Full-featured interactive checklist with real-time Firestore sync.
+- **Cost Tracker**: Expense dashboard aggregating manual costs and itinerary-linked prices (Flight/Hotel).
+- **Weather Forecast**: Day-by-day forecast integration using Open-Meteo, with intelligent caching and historical data fallbacks.
+
+### 🛠 Visual & Functional Refinements
+- **Flight Grouping**: Visual containerization of multi-leg flight segments in the Timeline.
+- **Rental Car Type**: Dedicated "Rental Car" category with automated Pickup/Return event splitting and specialized purple iconography.
+- **Improved Geocoding**: Enhanced Nominatim accuracy by passing `tripTitle` context to the AI parsing engine.
+- **Map Paths**: Fixed OSRM road path calculation and added dependency tracking for instant map updates on data change.
+
+### 🩹 Critical Bug Fixes
+- **iOS Link Stability**: Fixed app resets when clicking external links (e.g. AllTrails) by persisting `currentTripId` in `localStorage`.
+- **Date Calibration**: Resolved off-by-one day errors by enforcing local timezone interpretation for all "timeless" date strings.
+- **Mobile Persistence**: User session and active trip now survive browser backgrounding and reloads.
+
+## [1.2.0] - 2026-04-07 (Phase 1.5: UI Overhaul)
 
 ### ✨ Modernized UI & UX
 - **Global Floating Controls**: Replaced the legacy bottom TabBar with a sophisticated, dual-FAB navigation system (Sparkle Menu & View Switcher).

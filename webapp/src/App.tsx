@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TimelineScreen from './components/TimelineScreen';
 import SummaryScreen from './components/SummaryScreen';
 import MapViewScreen from './components/MapViewScreen';
+import TodoScreen from './components/TodoScreen';
+import CostTrackerScreen from './components/CostTrackerScreen';
+import WeatherScreen from './components/WeatherScreen';
 import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
 import GlobalControls from './components/GlobalControls';
@@ -142,6 +145,9 @@ function App() {
           <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
           <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
           <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
+          <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
+          <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
+          <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/trips" replace />} />
         </Routes>
       </div>

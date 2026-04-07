@@ -29,6 +29,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [address, setAddress]       = useState(item.location.address);
   const [lat, setLat]               = useState(item.location.latitude);
   const [lng, setLng]               = useState(item.location.longitude);
+  const [cost, setCost]             = useState(item.cost?.toString() ?? '');
   const [description, setDescription] = useState((item.description ?? '').replace(/<br\s*\/?>/gi, '\n'));
 
   // Hike specific
@@ -89,6 +90,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       foodDetails: type === 'food' ? {
         mealType: foodMeal
       } : undefined,
+      cost: cost ? parseFloat(cost) : undefined
     });
     onClose();
   };
@@ -137,11 +139,24 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               <option value="activity">Activity</option>
               <option value="hiking">Hiking / Trail</option>
               <option value="hotel">Hotel / Lodging</option>
-              <option value="flight">Flight</option>
-              <option value="transit">Transit</option>
+              <option value="flight">Flight Segment</option>
+              <option value="rental-car">Rental Car</option>
+              <option value="transit">Transit / Training</option>
               <option value="food">Food & Dining</option>
               <option value="note">Note / Reminder</option>
             </select>
+          </div>
+
+          {/* Cost */}
+          <div className="edit-field-group">
+            <label className="edit-field-label">Estimated Cost ($)</label>
+            <input
+              className="edit-field-input"
+              type="number"
+              value={cost}
+              onChange={e => setCost(e.target.value)}
+              placeholder="0.00"
+            />
           </div>
 
           {/* Start Date & Time */}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, Info, MountainSnow, TrainFront, Utensils, StickyNote } from 'lucide-react';
+import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, Info, MountainSnow, TrainFront, Utensils, StickyNote, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -37,6 +37,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
       case 'food':     return { icon: <Utensils size={24} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
       case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+      case 'rental-car': return { icon: <Car size={24} />, color: '#AF52DE', bg: 'rgba(175, 82, 222, 0.1)' };
       default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };
@@ -68,9 +69,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       tabIndex={0}
       style={{
         borderLeft: `4px solid ${theme.color}`,
-        /* background and transition handled by .travel-card in index.css for better glassmorphism */
         overflow: 'hidden',
-        maxHeight: isExpanded ? '1000px' : '150px'
+        maxHeight: isExpanded ? '1000px' : '150px',
+        marginTop: item.groupId ? '-8px' : '0px',
+        borderTopLeftRadius: item.groupId ? '0' : '20px',
+        borderTopRightRadius: item.groupId ? '0' : '20px',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>

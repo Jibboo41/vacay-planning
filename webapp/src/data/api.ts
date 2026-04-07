@@ -7,14 +7,14 @@ const isProd = import.meta.env.PROD;
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (isProd ? '' : `http://${window.location.hostname}:3003`);
 
-export async function parseItinerary(emailText: string): Promise<ItineraryItem[]> {
+export async function parseItinerary(emailText: string, tripTitle: string = ''): Promise<ItineraryItem[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/parse-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ emailText }),
+      body: JSON.stringify({ emailText, tripTitle }),
     });
 
     if (!response.ok) {
