@@ -2,6 +2,18 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.6.0] - 2026-04-08 (Advanced Settlement & Integrated Editing)
+
+### 💳 Precision Expense Control
+- **Settlement Logic**: Transitioned from binary "Paid" status to granular `paidAmount` tracking, supporting partial payments and debt management.
+- **Over-Budget Detection**: Automated highlighting and system-wide alerts when actual payments exceed estimated costs.
+- **Improved Cost Tracker UI**: New settlement-focused list layout with "DUE" and "PAID" badges and clickable chevron navigation.
+
+### 🔗 Global Edit Orchestration
+- **Cross-Component Triggers**: Itinerary-linked expenses now directly trigger the detail editor for their parent activity, even from the financial screens.
+- **Specialized Manual Editor**: New dedicated modal for tuning manual trip costs with estimation vs. actual tracking.
+- **Unified State Management**: Centralized all modal lifecycle logic in the global store for extreme architectural reliability.
+
 ## [1.5.0] - 2026-04-08 (Financial Command & Multi-Year Weather)
 
 ### 💰 Financial Precision (Cost Tracker)

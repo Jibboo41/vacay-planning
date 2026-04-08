@@ -37,6 +37,8 @@ interface TripStore {
   initialized: boolean;
   saving: boolean;
   lastSaveError: string | null;
+  editingItem: ItineraryItem | null;
+  editingExpense: Expense | null;
   
   // Actions
   setUserId: (userId: string | null) => void;
@@ -45,6 +47,8 @@ interface TripStore {
   setFocusedLocation: (loc: { lat: number, lng: number } | null) => void;
   setTheme: (theme: string) => void;
   setCurrentTrip: (tripId: string | null) => void;
+  setEditingItem: (item: ItineraryItem | null) => void;
+  setEditingExpense: (exp: Expense | null) => void;
   addTrip: (title: string) => Promise<string>;
   deleteTrip: (tripId: string) => Promise<void>;
   
@@ -62,7 +66,7 @@ interface TripStore {
   deleteTodo: (id: string) => Promise<void>;
   
   // Expense Actions
-  addExpense: (expense: Omit<Expense, 'id' | 'paid'>) => Promise<void>;
+  addExpense: (expense: Omit<Expense, 'id' | 'paid' | 'paidAmount'>) => Promise<void>;
   updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   
@@ -125,6 +129,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
   initialized: false,
   saving: false,
   lastSaveError: null,
+  editingItem: null,
+  editingExpense: null,
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
@@ -193,6 +199,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (tripId) localStorage.setItem('vacay_current_trip_id', tripId);
     else localStorage.removeItem('vacay_current_trip_id');
   },
+
+  setEditingItem: (editingItem) => set({ editingItem }),
+  setEditingExpense: (editingExpense) => set({ editingExpense }),
 
   addTrip: async (title) => {
     const userId = get().userId || auth.currentUser?.uid;
@@ -357,7 +366,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
   addExpense: async (expenseData) => {
     const { currentTripId, expenses } = get();
     if (!currentTripId) return;
-    const newExpense: Expense = { ...expenseData, id: `exp-${Date.now()}`, paid: false };
+    const newExpense: Expense = { 
+      ...expenseData, 
+      id: `exp-${Date.now()}`, 
+      paid: false,
+      paidAmount: 0
+    };
     const newExpenses = [...expenses, newExpense];
     set({ expenses: newExpenses });
     await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });

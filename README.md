@@ -35,10 +35,10 @@
 - **Hardened Security**: Production-grade Firestore rules and explicit update operations for reliable, owner-restricted persistence.
 - **Persistence Visibility**: Real-time cloud sync status indicator keeps the user informed of data safety.
 
-### 🔹 Financial & Climate (Phase 1.5)
-- **Financial Dashboard**: "Paid vs. Remaining" budgeting module with settlement tracking.
-- **Climatic Averaging**: 5-year multi-year temperature averaging for superior long-term planning in Fahrenheit.
-- **Contextual Iconography**: Intelligent icon mapping between expenses and itinerary activities.
+### 🔹 Financial Command (Phase 1.6)
+- **Settlement Engine**: "Paid Amount" tracking with over-budget detection and settlement badges.
+- **Deep Linking**: Clickable expenses that trigger itinerary edits across the app.
+- **Global Orchestration**: Centralized modal management for a consistent, cross-screen editing experience.
 
 ---
 

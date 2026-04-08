@@ -9,6 +9,7 @@ import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
 import GlobalControls from './components/GlobalControls';
 import Sidebar from './components/Sidebar';
+import GlobalModals from './components/modals/GlobalModals';
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './core/firebase';
 import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
@@ -193,8 +194,9 @@ function App() {
           <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         )}
 
-        {/* Persistence Indicator */}
+        {/* Global Persistence & Modals */}
         <SyncStatus />
+        <GlobalModals />
 
         <Routes>
           <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />

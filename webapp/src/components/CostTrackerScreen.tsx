@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Plus, Trash2, PieChart, Wallet, CreditCard, ShoppingBag, Utensils, Plane, Car, Menu, Mountain, Bed, Activity, FileText, CheckCircle, Circle } from 'lucide-react';
+import { Plus, PieChart, Wallet, CreditCard, ShoppingBag, Utensils, Plane, Car, Menu, Mountain, Bed, Activity, FileText, AlertCircle, ChevronRight } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { Expense, ItineraryItem } from '../core/models';
 
 export default function CostTrackerScreen() {
-  const { expenses, items, addExpense, updateExpense, deleteExpense, setSidebarOpen } = useTripStore();
+  const { expenses, items, addExpense, setEditingItem, setEditingExpense, setSidebarOpen } = useTripStore();
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newAmount, setNewAmount] = useState('');
@@ -17,9 +17,10 @@ export default function CostTrackerScreen() {
       id: `itinerary-${i.id}`,
       title: i.title,
       amount: i.cost || 0,
+      paidAmount: 0, 
       category: 'itinerary' as const,
       date: i.startDate.split('T')[0],
-      paid: false, // Itinerary items don't have a separate paid flag yet, assuming unpaid or handled by manual
+      paid: false,
       linkedItemId: i.id
     }));
   }, [items]);
@@ -29,7 +30,7 @@ export default function CostTrackerScreen() {
   }, [expenses, itineraryExpenses]);
 
   const totalCost = allExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0);
-  const totalPaid = allExpenses.filter(e => e.paid).reduce((sum: number, e: Expense) => sum + e.amount, 0);
+  const totalPaid = allExpenses.reduce((sum: number, e: Expense) => sum + (e.paidAmount || 0), 0);
   const remainingCost = totalCost - totalPaid;
 
   const handleAdd = () => {
@@ -190,12 +191,21 @@ export default function CostTrackerScreen() {
           return (
             <div 
               key={exp.id}
+              onClick={() => {
+                if (exp.linkedItemId) {
+                  const item = items.find(i => i.id === exp.linkedItemId);
+                  if (item) setEditingItem(item);
+                } else {
+                  setEditingExpense(exp);
+                }
+              }}
               style={{ 
                 display: 'flex', alignItems: 'center', gap: '16px', 
                 background: 'var(--sys-bg-elevated-1)', padding: '16px', 
                 borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)',
                 opacity: exp.paid ? 0.6 : 1,
-                transition: 'opacity 0.2s ease'
+                transition: 'all 0.2s ease',
+                cursor: 'pointer'
               }}
             >
               <div style={{ 
@@ -214,29 +224,30 @@ export default function CostTrackerScreen() {
                 </p>
               </div>
 
-              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: exp.paid ? 'var(--sys-green)' : (exp.category === 'itinerary' ? 'var(--sys-blue)' : '#fff') }}>
+              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <p style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff' }}>
                     ${exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
-                    {exp.category !== 'itinerary' && (
-                      <button 
-                        onClick={() => updateExpense(exp.id, { paid: !exp.paid })}
-                        style={{ background: 'transparent', border: 'none', color: exp.paid ? 'var(--sys-green)' : 'var(--sys-label-tertiary)', padding: '4px' }}
-                      >
-                        {exp.paid ? <CheckCircle size={16} /> : <Circle size={16} />}
-                      </button>
-                    )}
-                    {exp.category !== 'itinerary' && (
-                      <button 
-                        onClick={() => deleteExpense(exp.id)}
-                        style={{ background: 'transparent', border: 'none', color: '#FF453A', padding: '4px' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
+                  
+                  {exp.paidAmount > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                       {exp.paidAmount > exp.amount && <AlertCircle size={10} color="#FF453A" />}
+                       <span style={{ fontSize: '11px', fontWeight: 700, color: exp.paidAmount > exp.amount ? '#FF453A' : 'var(--sys-green)' }}>
+                         PAID ${exp.paidAmount.toLocaleString()}
+                       </span>
+                    </div>
+                  )}
+
+                  {!exp.paid && exp.amount > exp.paidAmount && (
+                    <span style={{ fontSize: '10px', color: 'var(--sys-label-tertiary)', fontWeight: 600 }}>
+                      DUE ${ (exp.amount - exp.paidAmount).toLocaleString() }
+                    </span>
+                  )}
+                </div>
+                
+                <div style={{ color: 'var(--sys-label-quaternary)' }}>
+                  <ChevronRight size={18} />
                 </div>
               </div>
             </div>

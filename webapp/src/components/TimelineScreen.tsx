@@ -4,7 +4,6 @@ import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import DetailsModal from './modals/DetailsModal';
-import EditItineraryModal from './modals/EditItineraryModal';
 import type { ItineraryItem } from '../core/models';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -97,11 +96,10 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, updateItem, deleteItem, reorderItems, setSidebarOpen } = useTripStore();
+  const { items, deleteItem, reorderItems, setSidebarOpen, setEditingItem } = useTripStore();
 
-  const [selectedItem, setSelectedItem] = useState<ItineraryItem | null>(null);
+  const [selectedViewingItem, setSelectedViewingItem] = useState<ItineraryItem | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
-  const [editVisible, setEditVisible] = useState(false);
   const [activeDayKey, setActiveDayKey] = useState<string>('');
 
   // Shared drag state (used by both HTML5 and touch paths)
@@ -299,7 +297,7 @@ export default function TimelineScreen() {
   // ── Modals ─────────────────────────────────────────────────────────────────
   const handlePressItem = (item: ItineraryItem) => {
     if (draggingId) return;
-    setSelectedItem(item); setDetailsVisible(true);
+    setSelectedViewingItem(item); setDetailsVisible(true);
   };
   const handleDelete = (id: string) => { deleteItem(id); setDetailsVisible(false); };
 
@@ -389,14 +387,7 @@ export default function TimelineScreen() {
         ))}
       </main>
 
-      {detailsVisible && <DetailsModal item={selectedItem} onClose={() => setDetailsVisible(false)} onEdit={() => { setEditVisible(true); setDetailsVisible(false); }} onDelete={handleDelete} />}
-      {editVisible && selectedItem && (
-        <EditItineraryModal
-          item={selectedItem}
-          onClose={() => setEditVisible(false)}
-          onSave={(id, updates) => { updateItem(id, updates); setSelectedItem(prev => prev ? { ...prev, ...updates } : null); }}
-        />
-      )}
+      {detailsVisible && <DetailsModal item={selectedViewingItem} onClose={() => setDetailsVisible(false)} onEdit={() => { setEditingItem(selectedViewingItem); setDetailsVisible(false); }} onDelete={handleDelete} />}
     </>
   );
 }

@@ -46,10 +46,11 @@ export interface TodoItem {
 export interface Expense {
   id: string;
   title: string;
-  amount: number;
+  amount: number;       // Estimated cost
+  paidAmount: number;   // Actually paid
   category: 'itinerary' | 'manual' | 'food' | 'transport' | 'other';
   date?: string;
-  paid: boolean;
+  paid: boolean;        // Settlement status
   linkedItemId?: string; // Links to an ItineraryItem.id 
 }
 
