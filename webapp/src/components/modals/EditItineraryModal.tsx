@@ -30,6 +30,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [lat, setLat]               = useState(item.location.latitude);
   const [lng, setLng]               = useState(item.location.longitude);
   const [cost, setCost]             = useState(item.cost?.toString() ?? '');
+  const [paidAmount, setPaidAmount] = useState(item.paidAmount?.toString() ?? '');
   const [description, setDescription] = useState((item.description ?? '').replace(/<br\s*\/?>/gi, '\n'));
 
   // Hike specific
@@ -90,7 +91,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       foodDetails: type === 'food' ? {
         mealType: foodMeal
       } : undefined,
-      cost: cost ? parseFloat(cost) : undefined
+      cost: cost ? parseFloat(cost) : undefined,
+      paidAmount: paidAmount ? parseFloat(paidAmount) : undefined
     });
     onClose();
   };
@@ -100,10 +102,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       <div
         className="modal-sheet"
         onClick={e => e.stopPropagation()}
-        style={{ maxHeight: '92vh', paddingBottom: 0 }}
+        style={{ paddingBottom: 0 }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0, paddingTop: 'env(safe-area-inset-top)' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Edit Details</h2>
           <button onClick={onClose}><X size={22} color="var(--sys-label-secondary)" /></button>
         </div>
@@ -147,22 +149,38 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
             </select>
           </div>
 
-          {/* Cost */}
-          <div className="edit-field-group">
-            <label className="edit-field-label">Estimated Cost ($)</label>
-            <input
-              className="edit-field-input"
-              type="number"
-              value={cost}
-              onChange={e => setCost(e.target.value)}
-              placeholder="0.00"
-            />
+          {/* Financials */}
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <div className="edit-field-group" style={{ flex: 1, minWidth: '140px' }}>
+              <label className="edit-field-label">Estimated Cost ($)</label>
+              <input
+                className="edit-field-input"
+                type="number"
+                value={cost}
+                onChange={e => setCost(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="edit-field-group" style={{ flex: 1, minWidth: '140px' }}>
+              <label className="edit-field-label">Amount Paid ($)</label>
+              <input
+                className="edit-field-input"
+                type="number"
+                value={paidAmount}
+                onChange={e => setPaidAmount(e.target.value)}
+                placeholder="0.00"
+                style={{ color: cost && parseFloat(paidAmount) > parseFloat(cost) ? 'var(--sys-red)' : 'var(--sys-green)' }}
+              />
+            </div>
           </div>
 
           {/* Start Date & Time */}
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <label className="edit-field-label">{type === 'flight' ? 'Takeoff Date' : 'Date'}</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Takeoff Date' : 'Date'}</label>
+                {date && <button onClick={() => setDate('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+              </div>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '150px' }}
@@ -174,7 +192,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
 
             {type !== 'food' && (
               <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                <label className="edit-field-label">{type === 'flight' ? 'Takeoff Time' : 'Time'}</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Takeoff Time' : 'Time'}</label>
+                  {time && <button onClick={() => setTime('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+                </div>
                 <input
                   className="edit-field-input"
                   style={{ width: 'auto', minWidth: '130px' }}
@@ -190,23 +211,31 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
           {type !== 'food' && (
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                <label className="edit-field-label">{type === 'flight' ? 'Landing Date (optional)' : 'End Date (optional)'}</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Landing Date (opt)' : 'End Date (opt)'}</label>
+                  {endDate && <button onClick={() => setEndDate('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+                </div>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '150px' }}
                 type="date"
                 value={endDate}
+                onFocus={() => { if (!endDate && date) setEndDate(date); }}
                 onChange={e => setEndDate(e.target.value)}
               />
             </div>
 
             <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <label className="edit-field-label">{type === 'flight' ? 'Landing Time' : 'End Time'}</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Landing Time' : 'End Time'}</label>
+                  {endTime && <button onClick={() => setEndTime('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+                </div>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '130px' }}
                 type="time"
                 value={endTime}
+                onFocus={() => { if (!endTime && time) setEndTime(time); }}
                 onChange={e => setEndTime(e.target.value)}
               />
             </div>

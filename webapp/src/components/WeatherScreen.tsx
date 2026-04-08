@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin } from 'lucide-react';
+import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import { fetchWeather } from '../data/weatherApi';
 import type { WeatherDay } from '../core/models';
@@ -196,7 +196,7 @@ export default function WeatherScreen() {
           onClick={handleUpdate}
           disabled={loading}
         >
-          <RefreshCw size={20} className={loading ? 'spin' : ''} />
+          <RefreshCw size={20} className={loading ? 'spinning' : ''} />
         </button>
       </div>
 
@@ -246,8 +246,27 @@ export default function WeatherScreen() {
                   </div>
                   
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '32px' }}>{day.icon}</span>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 800, color: 'var(--sys-blue)', textTransform: 'uppercase' }}>{day.condition}</p>
+                    <span style={{ fontSize: '32px' }}>{day.isHistorical ? '📊' : day.icon}</span>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 800, color: day.isHistorical ? 'var(--sys-label-secondary)' : 'var(--sys-blue)', textTransform: 'uppercase' }}>
+                      {day.isHistorical ? 'Hist Avg' : day.condition}
+                    </p>
+                    {day.isHistorical && (
+                      <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                        {(day.rainfall || 0) > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-blue)', fontSize: '11px', fontWeight: 600 }}>
+                            <Droplets size={12} /> {day.rainfall?.toFixed(2)}"
+                          </div>
+                        )}
+                        {(day.snowfall || 0) > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8E8E93', fontSize: '11px', fontWeight: 600 }}>
+                            <Snowflake size={12} /> {day.snowfall?.toFixed(2)}"
+                          </div>
+                        )}
+                        {!(day.rainfall || 0) && !(day.snowfall || 0) && (
+                          <span style={{ fontSize: '10px', color: 'var(--sys-label-quaternary)' }}>No Precip</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               );

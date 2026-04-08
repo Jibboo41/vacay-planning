@@ -106,8 +106,8 @@ export default function GlobalControls() {
         </button>
 
         <div className={`fab-options ${isViewOpen ? 'open' : ''}`}>
-          <NavButton icon={<Compass size={18} />} label="Map" onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} isRightSide={true} />
           <NavButton icon={<Calendar size={18} />} label="Timeline" onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} isActive={location.pathname === '/timeline'} isRightSide={true} />
+          <NavButton icon={<Compass size={18} />} label="Map" onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} isRightSide={true} />
           <NavButton icon={<BookOpen size={18} />} label="Outline" onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} isRightSide={true} />
           <NavButton icon={<CheckSquare size={18} />} label="Todos" onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} isRightSide={true} />
           <NavButton icon={<Wallet size={18} />} label="Costs" onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} isRightSide={true} />

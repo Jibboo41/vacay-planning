@@ -214,7 +214,7 @@ export default function SummaryScreen() {
             </div>
 
             {dayGroups.map((group, groupIdx) => (
-              <div key={group.dateKey} style={{ background: 'var(--sys-bg-elevated-1)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <div key={group.dateKey} style={{ background: 'var(--sys-bg-elevated)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
                     {groupIdx + 1}

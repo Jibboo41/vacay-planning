@@ -61,7 +61,7 @@ interface TripStore {
   saveAiSummary: (summary: string) => Promise<void>;
 
   // Todo Actions
-  addTodo: (text: string) => Promise<void>;
+  addTodo: (text: string, dueDate?: string) => Promise<void>;
   toggleTodo: (id: string) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
   
@@ -338,10 +338,16 @@ export const useTripStore = create<TripStore>((set, get) => ({
     await updateDoc(doc(db, "trips", currentTripId), { aiSummary: summary });
   },
 
-  addTodo: async (text) => {
+  addTodo: async (text, dueDate) => {
     const { currentTripId, todos, initialized } = get();
     if (!currentTripId || !initialized) return;
-    const newTodo: TodoItem = { id: `todo-${Date.now()}`, text, completed: false, createdAt: Date.now() };
+    const newTodo: TodoItem = { 
+      id: `todo-${Date.now()}`, 
+      text, 
+      completed: false, 
+      createdAt: Date.now(),
+      dueDate: dueDate || undefined 
+    };
     const newTodos = [...todos, newTodo];
     set({ todos: newTodos });
     await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });

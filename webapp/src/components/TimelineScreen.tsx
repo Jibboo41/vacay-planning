@@ -3,7 +3,6 @@ import { Menu } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
-import DetailsModal from './modals/DetailsModal';
 import type { ItineraryItem } from '../core/models';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -96,10 +95,8 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, deleteItem, reorderItems, setSidebarOpen, setEditingItem } = useTripStore();
+  const { items, weather, reorderItems, setSidebarOpen, setEditingItem } = useTripStore();
 
-  const [selectedViewingItem, setSelectedViewingItem] = useState<ItineraryItem | null>(null);
-  const [detailsVisible, setDetailsVisible] = useState(false);
   const [activeDayKey, setActiveDayKey] = useState<string>('');
 
   // Shared drag state (used by both HTML5 and touch paths)
@@ -139,22 +136,17 @@ export default function TimelineScreen() {
       dayMap[key] = { dateKey: key, label: getDayLabel(dateStr), items: [] };
       dayGroups.push(dayMap[key]);
     }
-    // Use type assertion to allow virtual field or handle it cleanly
     dayMap[key].items.push(checkout ? ({ ...item, _isCheckout: true } as any) : item);
   };
 
   for (const item of sortedItems) {
-    // Add primary entry (Check-in / Start)
     addToDay(item.startDate, item);
-
-    // If it's a hotel or rental car with a different end date, add a checkout/return entry
     const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
     if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay) {
       addToDay(item.endDate!, item, true);
     }
   }
 
-  // Sort groups by dateKey
   dayGroups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 
   useEffect(() => {
@@ -204,16 +196,11 @@ export default function TimelineScreen() {
 
   const handleDrop = (overId: string) => {
     if (!draggingId) return;
-    
-    // Always strip -checkout from the dragging item to get its base ID
     const rawDraggingId = draggingId.replace('-checkout', '');
-
-    // Check if it's an "End of Day" drop zone
     if (overId.startsWith('end-of-')) {
       const targetDayKey = overId.replace('end-of-', '');
       reorderItems(rawDraggingId, null, targetDayKey);
     } else if (draggingId !== overId) {
-      // Normal between-items drop
       const rawOverId = overId.replace('-checkout', '');
       const overItem = items.find(i => i.id === rawOverId);
       if (overItem) reorderItems(rawDraggingId, rawOverId, getDayKey(overItem.startDate));
@@ -297,9 +284,8 @@ export default function TimelineScreen() {
   // ── Modals ─────────────────────────────────────────────────────────────────
   const handlePressItem = (item: ItineraryItem) => {
     if (draggingId) return;
-    setSelectedViewingItem(item); setDetailsVisible(true);
+    setEditingItem(item);
   };
-  const handleDelete = (id: string) => { deleteItem(id); setDetailsVisible(false); };
 
   return (
     <>
@@ -330,64 +316,76 @@ export default function TimelineScreen() {
       </div>
 
       <main className="timeline-main" style={{ paddingTop: '20px' }}>
-        {dayGroups.map((group) => (
-          <div key={group.dateKey}>
-            <div className="day-section-header" ref={el => { dayRefs.current[group.dateKey] = el; }}>
-              <span className="day-section-label">{group.label}</span>
+        {dayGroups.map((group) => {
+          const dayWeather = weather?.forecast.filter(f => f.date === group.dateKey);
+          let high: number | null = null;
+          let low: number | null = null;
+          
+          if (dayWeather && dayWeather.length > 0) {
+            high = Math.max(...dayWeather.map(w => w.tempHigh));
+            low = Math.min(...dayWeather.map(w => w.tempLow));
+          }
+
+          return (
+            <div key={group.dateKey}>
+              <div className="day-section-header" ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="day-section-label">{group.label}</span>
+                {high !== null && low !== null && (
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
+                    <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
+                  </span>
+                )}
+              </div>
+
+              {group.items.map((item, idx) => {
+                const dragId = item.id + ((item as any)._isCheckout ? '-checkout' : '');
+                const prev = group.items[idx - 1];
+                const next = group.items[idx + 1];
+                const hasGroup = !!item.groupId;
+                let groupPosition: 'start' | 'middle' | 'end' | 'single' = 'single';
+                if (hasGroup) {
+                  const samePrev = prev?.groupId === item.groupId;
+                  const sameNext = next?.groupId === item.groupId;
+                  if (samePrev && sameNext) groupPosition = 'middle';
+                  else if (samePrev) groupPosition = 'end';
+                  else if (sameNext) groupPosition = 'start';
+                }
+
+                return (
+                  <DraggableCard
+                    key={dragId}
+                    item={item}
+                    isDragging={draggingId === dragId}
+                    isDropTarget={dropTargetId === dragId}
+                    onPress={() => handlePressItem(item)}
+                    onDragStart={handleDragStart}
+                    onDragEnter={handleDragEnter}
+                    onDragEnd={handleDragEnd}
+                    onDrop={handleDrop}
+                    onGripTouchStart={startTouchDrag}
+                    isCheckout={(item as any)._isCheckout}
+                    groupPosition={groupPosition}
+                  />
+                );
+              })}
+
+              <div
+                className="end-day-drop-zone"
+                data-drag-id={`end-of-${group.dateKey}`}
+                onDragEnter={() => handleDragEnter(`end-of-${group.dateKey}`)}
+                onDragOver={e => e.preventDefault()}
+                onDrop={() => handleDrop(`end-of-${group.dateKey}`)}
+              >
+                {dropTargetId === `end-of-${group.dateKey}` && (
+                  <div className="drop-line-container">
+                    <div className="drop-line" style={{ top: '8px' }} />
+                  </div>
+                )}
+              </div>
             </div>
-
-            {group.items.map((item, idx) => {
-              const dragId = item.id + ((item as any)._isCheckout ? '-checkout' : '');
-              
-              // Grouping logic
-              const prev = group.items[idx - 1];
-              const next = group.items[idx + 1];
-              const hasGroup = !!item.groupId;
-              let groupPosition: 'start' | 'middle' | 'end' | 'single' = 'single';
-              if (hasGroup) {
-                const samePrev = prev?.groupId === item.groupId;
-                const sameNext = next?.groupId === item.groupId;
-                if (samePrev && sameNext) groupPosition = 'middle';
-                else if (samePrev) groupPosition = 'end';
-                else if (sameNext) groupPosition = 'start';
-              }
-
-              return (
-                <DraggableCard
-                  key={dragId}
-                  item={item}
-                  isDragging={draggingId === dragId}
-                  isDropTarget={dropTargetId === dragId}
-                  onPress={() => handlePressItem(item)}
-                  onDragStart={handleDragStart}
-                  onDragEnter={handleDragEnter}
-                  onDragEnd={handleDragEnd}
-                  onDrop={handleDrop}
-                  onGripTouchStart={startTouchDrag}
-                  isCheckout={(item as any)._isCheckout}
-                  groupPosition={groupPosition}
-                />
-              );
-            })}
-
-            <div
-              className="end-day-drop-zone"
-              data-drag-id={`end-of-${group.dateKey}`}
-              onDragEnter={() => handleDragEnter(`end-of-${group.dateKey}`)}
-              onDragOver={e => e.preventDefault()}
-              onDrop={() => handleDrop(`end-of-${group.dateKey}`)}
-            >
-              {dropTargetId === `end-of-${group.dateKey}` && (
-                <div className="drop-line-container">
-                  <div className="drop-line" style={{ top: '8px' }} />
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </main>
-
-      {detailsVisible && <DetailsModal item={selectedViewingItem} onClose={() => setDetailsVisible(false)} onEdit={() => { setEditingItem(selectedViewingItem); setDetailsVisible(false); }} onDelete={handleDelete} />}
     </>
   );
 }

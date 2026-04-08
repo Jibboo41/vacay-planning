@@ -65,7 +65,7 @@ async function fetchHistoricalAverages(lat: number, lon: number, startDate: stri
     const s = getLastYearStr(startDate, i);
     const e = getLastYearStr(endDate, i);
 
-    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${s}&end_date=${e}&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&temperature_unit=fahrenheit`;
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${s}&end_date=${e}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum&timezone=auto&temperature_unit=fahrenheit`;
 
     try {
       const res = await fetch(url);
@@ -82,8 +82,10 @@ async function fetchHistoricalAverages(lat: number, lon: number, startDate: stri
             date: dateStr,
             tempHigh: data.daily.temperature_2m_max[idx],
             tempLow: data.daily.temperature_2m_min[idx],
-            condition: getWeatherCondition(data.daily.weather_code[idx]),
-            icon: getWeatherIcon(data.daily.weather_code[idx]),
+            rainfall: data.daily.precipitation_sum[idx] * 0.0393701,
+            snowfall: data.daily.snowfall_sum[idx] * 0.393701,
+            condition: '',
+            icon: '',
             isHistorical: true
           };
         }));
@@ -102,12 +104,16 @@ async function fetchHistoricalAverages(lat: number, lon: number, startDate: stri
   for (let d = 0; d < numDays; d++) {
     let sumHigh = 0;
     let sumLow = 0;
+    let sumRain = 0;
+    let sumSnow = 0;
     let count = 0;
     
     yearlyData.forEach(year => {
       if (year[d]) {
         sumHigh += year[d].tempHigh;
         sumLow += year[d].tempLow;
+        sumRain += year[d].rainfall || 0;
+        sumSnow += year[d].snowfall || 0;
         count++;
       }
     });
@@ -117,8 +123,10 @@ async function fetchHistoricalAverages(lat: number, lon: number, startDate: stri
       date: mostRecentYear.date,
       tempHigh: Math.round(sumHigh / count),
       tempLow: Math.round(sumLow / count),
-      condition: `${mostRecentYear.condition} (5yr Avg)`,
-      icon: mostRecentYear.icon,
+      rainfall: sumRain / count,
+      snowfall: sumSnow / count,
+      condition: `Hist Avg`,
+      icon: '📊',
       isHistorical: true
     });
   }

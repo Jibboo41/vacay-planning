@@ -262,7 +262,7 @@ input, textarea {
   flex-direction: column-reverse;
   align-items: center;
   gap: 14px;
-  z-index: 2000;
+  z-index: 2500;
   pointer-events: none;
 }
 .fab-group.right { right: 24px; }
@@ -376,10 +376,11 @@ input, textarea {
   position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(6px); z-index: 8000; /* Bumped above FABs but below Sidebar */
   display: flex; justify-content: center; align-items: flex-end;
+  overscroll-behavior: contain;
 }
 
 .modal-sheet {
-  width: 100%; max-height: 92vh; 
+  width: 100%; max-height: 88vh; 
   background: rgba(36, 36, 38, 0.72); /* Glass modal sheet */
   backdrop-filter: blur(50px) saturate(1.6);
   -webkit-backdrop-filter: blur(50px) saturate(1.6);
@@ -452,6 +453,15 @@ input, textarea {
 @keyframes pulse-line {
   from { transform: scaleY(1); opacity: 0.8; }
   to   { transform: scaleY(1.3); opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
 }
 
 /* ── Global Custom Scrollbar ── */

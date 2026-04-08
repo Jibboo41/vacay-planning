@@ -32,6 +32,8 @@ export interface ItineraryItem {
   sortOrder?: number;
   /** Custom cost for this item (e.g. flight price, hotel total) */
   cost?: number;
+  /** Amount already paid specifically for this itinerary item */
+  paidAmount?: number;
   /** ID to group multiple flight legs or related items */
   groupId?: string;
 }
@@ -41,6 +43,7 @@ export interface TodoItem {
   text: string;
   completed: boolean;
   createdAt: number;
+  dueDate?: string;
 }
 
 export interface Expense {
@@ -61,6 +64,8 @@ export interface WeatherDay {
   condition: string;
   icon: string;
   isHistorical?: boolean;
+  rainfall?: number;  // Inches
+  snowfall?: number;  // Inches
 }
 
 export interface WeatherCache {

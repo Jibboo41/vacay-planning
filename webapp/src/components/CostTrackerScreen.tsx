@@ -17,10 +17,10 @@ export default function CostTrackerScreen() {
       id: `itinerary-${i.id}`,
       title: i.title,
       amount: i.cost || 0,
-      paidAmount: 0, 
+      paidAmount: i.paidAmount || 0, 
       category: 'itinerary' as const,
       date: i.startDate.split('T')[0],
-      paid: false,
+      paid: (i.paidAmount || 0) >= (i.cost || 0),
       linkedItemId: i.id
     }));
   }, [items]);
@@ -88,22 +88,31 @@ export default function CostTrackerScreen() {
         >
           <Menu size={24} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 800, letterSpacing: '-1px', color: '#FFF', margin: 0 }}>
-            Cost Tracker
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <h1 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            Trip Financials
           </h1>
-          <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+          
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <span style={{ fontSize: '42px', fontWeight: 900, letterSpacing: '-1.5px', color: '#FFF' }}>
+              ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </span>
+            <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sys-label-secondary)', marginBottom: '6px' }}>
+              total
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '24px', marginTop: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '10px', color: 'var(--sys-label-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Total Planned</span>
-              <span style={{ fontSize: '18px', fontWeight: 800, color: '#FFF' }}>
-                ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              <span style={{ fontSize: '10px', color: 'var(--sys-label-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Paid</span>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-green)' }}>
+                ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </span>
             </div>
-            <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', height: '24px', margin: 'auto 0' }} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 700, textTransform: 'uppercase' }}>Remaining</span>
               <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-blue)' }}>
-                ${remainingCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ${remainingCost.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </span>
             </div>
           </div>
@@ -113,14 +122,14 @@ export default function CostTrackerScreen() {
       <div style={{ padding: '24px', paddingBottom: '120px' }}>
         {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-        <div style={{ background: 'var(--sys-bg-elevated-1)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
           <div style={{ color: 'var(--sys-blue)', marginBottom: '12px' }}><PieChart size={24} /></div>
           <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Itinerary</p>
           <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
             ${itineraryExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0).toLocaleString()}
           </h3>
         </div>
-        <div style={{ background: 'var(--sys-bg-elevated-1)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+        <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
           <div style={{ color: 'var(--sys-green)', marginBottom: '12px' }}><CreditCard size={24} /></div>
           <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Manual/Extra</p>
           <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
@@ -201,7 +210,7 @@ export default function CostTrackerScreen() {
               }}
               style={{ 
                 display: 'flex', alignItems: 'center', gap: '16px', 
-                background: 'var(--sys-bg-elevated-1)', padding: '16px', 
+                background: 'var(--sys-bg-elevated)', padding: '16px', 
                 borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)',
                 opacity: exp.paid ? 0.6 : 1,
                 transition: 'all 0.2s ease',

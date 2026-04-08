@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, Info, MountainSnow, TrainFront, Utensils, StickyNote, Car } from 'lucide-react';
+import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -254,17 +254,46 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </div>
           )}
 
+          {item.confirmationNumber && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
+              <Hash size={14} />
+              <span style={{ fontWeight: 600 }}>Confirmation:</span>
+              <span style={{ color: '#fff', fontWeight: 700 }}>{item.confirmationNumber}</span>
+            </div>
+          )}
+
+          {(item.cost !== undefined || item.paidAmount !== undefined) && (
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+              {item.cost !== undefined && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
+                  <DollarSign size={14} />
+                  <span style={{ fontWeight: 600 }}>Cost:</span>
+                  <span style={{ color: '#fff', fontWeight: 700 }}>${item.cost.toLocaleString()}</span>
+                </div>
+              )}
+              {item.paidAmount !== undefined && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
+                  <CreditCard size={14} />
+                  <span style={{ fontWeight: 600 }}>Paid:</span>
+                  <span style={{ color: item.cost && item.paidAmount > item.cost ? '#FF453A' : 'var(--sys-green)', fontWeight: 700 }}>
+                    ${item.paidAmount.toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 
               onClick={(e) => { e.stopPropagation(); onPress(); }}
               className="details-btn"
               style={{
-                flex: 1, padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', color: '#fff',
-                border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                flex: 1, padding: '12px', borderRadius: '12px', background: 'var(--sys-blue)', color: '#fff',
+                border: 'none', fontSize: '14px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                boxShadow: '0 4px 12px rgba(10,132,255,0.3)'
               }}
             >
-              <Info size={16} />
-              Details & Edit
+              Edit
             </button>
           </div>
         </div>
