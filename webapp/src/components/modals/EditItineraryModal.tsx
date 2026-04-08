@@ -141,7 +141,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               <option value="hotel">Hotel / Lodging</option>
               <option value="flight">Flight Segment</option>
               <option value="rental-car">Rental Car</option>
-              <option value="transit">Transit / Training</option>
+              <option value="transit">Transit</option>
               <option value="food">Food & Dining</option>
               <option value="note">Note / Reminder</option>
             </select>

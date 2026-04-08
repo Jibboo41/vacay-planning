@@ -62,7 +62,8 @@ interface TripStore {
   deleteTodo: (id: string) => Promise<void>;
   
   // Expense Actions
-  addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
+  addExpense: (expense: Omit<Expense, 'id' | 'paid'>) => Promise<void>;
+  updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   
   // Weather
@@ -356,8 +357,16 @@ export const useTripStore = create<TripStore>((set, get) => ({
   addExpense: async (expenseData) => {
     const { currentTripId, expenses } = get();
     if (!currentTripId) return;
-    const newExpense: Expense = { ...expenseData, id: `exp-${Date.now()}` };
+    const newExpense: Expense = { ...expenseData, id: `exp-${Date.now()}`, paid: false };
     const newExpenses = [...expenses, newExpense];
+    set({ expenses: newExpenses });
+    await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
+  },
+
+  updateExpense: async (id, updates) => {
+    const { currentTripId, expenses } = get();
+    if (!currentTripId) return;
+    const newExpenses = expenses.map(e => e.id === id ? { ...e, ...updates } : e);
     set({ expenses: newExpenses });
     await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
   },

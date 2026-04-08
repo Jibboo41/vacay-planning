@@ -13,7 +13,7 @@ export async function fetchWeather(lat: number, lon: number, startDate: string, 
   const start = new Date(startDate.includes('T') ? startDate : startDate.replace(/-/g, '/'));
   
   // Decide whether to use Forecast API or Archive API
-  // If start date is > 16 days in the future, we must use Archive for "same date last year"
+  // If start date is > 16 days in the future, we must use Archive for multi-year averaging
   if (start > sixteenDaysFromNow) {
     return fetchHistoricalAverages(lat, lon, startDate, endDate);
   }
@@ -22,21 +22,20 @@ export async function fetchWeather(lat: number, lon: number, startDate: string, 
   const s = startDate.split('T')[0];
   const e = endDate.split('T')[0];
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${s}&end_date=${e}`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${s}&end_date=${e}&temperature_unit=fahrenheit`;
   
   try {
     const res = await fetch(url);
     const data = await res.json();
     
     if (!data.daily) {
-      // If forecast fails (e.g. range too wide), try historical anyway
       return fetchHistoricalAverages(lat, lon, startDate, endDate);
     }
     
     const days: WeatherDay[] = data.daily.time.map((date: string, i: number) => ({
       date,
-      tempHigh: data.daily.temperature_2m_max[i],
-      tempLow: data.daily.temperature_2m_min[i],
+      tempHigh: Math.round(data.daily.temperature_2m_max[i]),
+      tempLow: Math.round(data.daily.temperature_2m_min[i]),
       condition: getWeatherCondition(data.daily.weathercode[i]),
       icon: getWeatherIcon(data.daily.weathercode[i]),
       isHistorical: new Date(date.replace(/-/g, '/')) < today
@@ -50,46 +49,81 @@ export async function fetchWeather(lat: number, lon: number, startDate: string, 
 }
 
 /**
- * Fetches data from exactly one year ago for the same dates.
+ * Fetches data from the last 5 years for the same dates and averages them.
  */
 async function fetchHistoricalAverages(lat: number, lon: number, startDate: string, endDate: string): Promise<WeatherDay[]> {
-  // Map requested date to "Requested Date - 1 Year"
-  const getLastYearStr = (dStr: string) => {
-    const d = new Date(dStr.includes('T') ? dStr : dStr.replace(/-/g, '/'));
-    d.setFullYear(d.getFullYear() - 1);
-    return d.toISOString().split('T')[0];
-  };
+  const yearsToFetch = 5;
+  const yearlyData: WeatherDay[][] = [];
 
-  const s = getLastYearStr(startDate);
-  const e = getLastYearStr(endDate);
+  for (let i = 1; i <= yearsToFetch; i++) {
+    const getLastYearStr = (dStr: string, yearsBack: number) => {
+      const d = new Date(dStr.includes('T') ? dStr : dStr.replace(/-/g, '/'));
+      d.setFullYear(d.getFullYear() - yearsBack);
+      return d.toISOString().split('T')[0];
+    };
 
-  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${s}&end_date=${e}&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto`;
+    const s = getLastYearStr(startDate, i);
+    const e = getLastYearStr(endDate, i);
 
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${s}&end_date=${e}&daily=temperature_2m_max,temperature_2m_min,weather_code&timezone=auto&temperature_unit=fahrenheit`;
 
-    if (!data.daily) return [];
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
 
-    return data.daily.time.map((archiveDate: string, i: number) => {
-      // We return the ORIGINAL requested date, but data from last year
-      const requestedDate = new Date(archiveDate.replace(/-/g, '/'));
-      requestedDate.setFullYear(requestedDate.getFullYear() + 1);
-      const dateStr = requestedDate.toISOString().split('T')[0];
+      if (data.daily) {
+        yearlyData.push(data.daily.time.map((archiveDate: string, idx: number) => {
+          // We return the ORIGINAL requested date, but data from the past
+          const requestedDate = new Date(archiveDate.replace(/-/g, '/'));
+          requestedDate.setFullYear(requestedDate.getFullYear() + i);
+          const dateStr = requestedDate.toISOString().split('T')[0];
 
-      return {
-        date: dateStr,
-        tempHigh: data.daily.temperature_2m_max[i],
-        tempLow: data.daily.temperature_2m_min[i],
-        condition: `${getWeatherCondition(data.daily.weather_code[i])} (Avg)`,
-        icon: getWeatherIcon(data.daily.weather_code[i]),
-        isHistorical: true
-      };
-    });
-  } catch (err) {
-    console.error("Historical fetch failed:", err);
-    return [];
+          return {
+            date: dateStr,
+            tempHigh: data.daily.temperature_2m_max[idx],
+            tempLow: data.daily.temperature_2m_min[idx],
+            condition: getWeatherCondition(data.daily.weather_code[idx]),
+            icon: getWeatherIcon(data.daily.weather_code[idx]),
+            isHistorical: true
+          };
+        }));
+      }
+    } catch (err) {
+      console.error(`Historical fetch for year -${i} failed:`, err);
+    }
   }
+
+  if (yearlyData.length === 0) return [];
+
+  // Average the data across years
+  const numDays = yearlyData[0].length;
+  const averagedDays: WeatherDay[] = [];
+
+  for (let d = 0; d < numDays; d++) {
+    let sumHigh = 0;
+    let sumLow = 0;
+    let count = 0;
+    
+    yearlyData.forEach(year => {
+      if (year[d]) {
+        sumHigh += year[d].tempHigh;
+        sumLow += year[d].tempLow;
+        count++;
+      }
+    });
+
+    const mostRecentYear = yearlyData[0][d];
+    averagedDays.push({
+      date: mostRecentYear.date,
+      tempHigh: Math.round(sumHigh / count),
+      tempLow: Math.round(sumLow / count),
+      condition: `${mostRecentYear.condition} (5yr Avg)`,
+      icon: mostRecentYear.icon,
+      isHistorical: true
+    });
+  }
+
+  return averagedDays;
 }
 
 function getWeatherCondition(code: number): string {

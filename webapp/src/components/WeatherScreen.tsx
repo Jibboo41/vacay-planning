@@ -241,7 +241,7 @@ export default function WeatherScreen() {
                       </div>
                     )}
                     <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Thermometer size={14} /> {day.tempHigh}° / {day.tempLow}°
+                      <Thermometer size={14} /> {day.tempHigh}°F / {day.tempLow}°F
                     </p>
                   </div>
                   

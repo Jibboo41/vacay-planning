@@ -2,6 +2,23 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.5.0] - 2026-04-08 (Financial Command & Multi-Year Weather)
+
+### 💰 Financial Precision (Cost Tracker)
+- **Paid Status Management**: Implemented a "Paid" checkbox for manual expenses, allowing users to settled individual costs.
+- **Budgeting Logic**: Added "Total Planned" vs "Remaining to Pay" counters in the header to provide instant financial visibility.
+- **Dynamic Activity Icons**: Manual expenses linked to itinerary items now intelligently mirror that item's icon (e.g., Mountain for Hikes, Bed for Hotels).
+- **Flexible Entry**: Made dates optional for manual expenses, supporting "TBD" costs and generic trip savings.
+
+### 🌤️ Climatic Intelligence (Weather)
+- **5-Year Multi-Year Averaging**: For long-term planning (>16 days), the app now fetches and averages historical data from the last 5 years for superior climatic outlooks.
+- **Fahrenheit Transition**: Standardized all temperature data across Forecast and Historical modes to Fahrenheit (°F).
+- **Averaging UI**: Added "(5yr Avg)" labels to historical data and standardized temperature iconography.
+
+### 🧹 UI & Categorization Cleanup
+- **Transit Refinement**: Renamed "Transit / Training" category to "Transit" in all modals and tooltips.
+- **Improved Header Labels**: Polished cost and weather header stats for better readability.
+
 ## [1.4.0] - 2026-04-08 (Stability & Data Integrity)
 
 ### 🛡️ Persistence & Reliability

@@ -48,7 +48,8 @@ export interface Expense {
   title: string;
   amount: number;
   category: 'itinerary' | 'manual' | 'food' | 'transport' | 'other';
-  date: string;
+  date?: string;
+  paid: boolean;
   linkedItemId?: string; // Links to an ItineraryItem.id 
 }
 
