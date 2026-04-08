@@ -58,9 +58,9 @@ export default function CostTrackerScreen() {
   };
 
   return (
-    <div className="safe-area-inset" style={{ padding: '24px', paddingBottom: '120px', minHeight: '100vh' }}>
+    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <div className="screen-header glass-effect" style={{ marginBottom: '24px' }}>
+      <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
         <button 
           className="header-icon-btn"
           onClick={() => setSidebarOpen(true)}
@@ -77,7 +77,8 @@ export default function CostTrackerScreen() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+        {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
         <div style={{ background: 'var(--sys-bg-elevated-1)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
           <div style={{ color: 'var(--sys-blue)', marginBottom: '12px' }}><PieChart size={24} /></div>
@@ -186,6 +187,7 @@ export default function CostTrackerScreen() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

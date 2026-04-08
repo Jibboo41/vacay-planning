@@ -19,7 +19,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [initEndDate, initEndTime] = item.endDate ? splitDateTime(item.endDate) : ['', ''];
 
   const [title, setTitle]           = useState(item.title);
-  const [type, setType]             = useState(item.type);
+  const [type, setType]             = useState((item.type as string) === 'hike' ? 'hiking' : item.type);
   const [date, setDate]             = useState(initDate);
   const [time, setTime]             = useState(initTime);
   const [endDate, setEndDate]       = useState(initEndDate);
@@ -80,7 +80,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         latitude: lat,
         longitude: lng,
       },
-      hikeDetails: type === 'hiking' ? {
+      hikeDetails: (type === 'hiking' || type === 'hike') ? {
         difficulty: hikeDiff,
         distance: hikeDist,
         duration: hikeDur,
@@ -228,16 +228,18 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
           )}
 
           {/* Confirmation Number */}
-          <div className="edit-field-group">
-            <label className="edit-field-label">Confirmation Number</label>
-            <input
-              className="edit-field-input"
-              type="text"
-              value={confirmationNumber}
-              onChange={e => setConfirmationNumber(e.target.value)}
-              placeholder="e.g. AB12345 (Optional)"
-            />
-          </div>
+          {type !== 'hiking' && type !== 'hike' && (
+            <div className="edit-field-group">
+              <label className="edit-field-label">Confirmation Number</label>
+              <input
+                className="edit-field-input"
+                type="text"
+                value={confirmationNumber}
+                onChange={e => setConfirmationNumber(e.target.value)}
+                placeholder="e.g. AB12345 (Optional)"
+              />
+            </div>
+          )}
 
           {/* Location Search API + Address */}
           <div className="edit-field-group" style={{ position: 'relative' }}>
@@ -309,7 +311,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
 
 
           {/* Conditional Hike Details */}
-          {type === 'hiking' && (
+          {(type === 'hiking' || type === 'hike') && (
             <div style={{ background: 'rgba(52, 199, 89, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                 <span style={{ fontSize: '18px' }}>🥾</span>

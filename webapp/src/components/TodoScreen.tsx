@@ -15,9 +15,9 @@ export default function TodoScreen() {
   const completedCount = todos.filter(t => t.completed).length;
 
   return (
-    <div className="safe-area-inset" style={{ padding: '24px', paddingBottom: '120px', minHeight: '100vh' }}>
+    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <div className="screen-header glass-effect" style={{ marginBottom: '24px' }}>
+      <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
         <button 
           className="header-icon-btn"
           onClick={() => setSidebarOpen(true)}
@@ -34,7 +34,8 @@ export default function TodoScreen() {
         </div>
       </div>
 
-      {/* Input Area */}
+      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+        {/* Input Area */}
       <div style={{ 
         display: 'flex', gap: '12px', marginBottom: '32px', 
         background: 'rgba(255,255,255,0.05)', padding: '8px', 
@@ -120,6 +121,7 @@ export default function TodoScreen() {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );

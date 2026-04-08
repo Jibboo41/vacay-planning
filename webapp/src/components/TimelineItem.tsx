@@ -12,44 +12,51 @@ interface TimelineItemProps {
   isDragging?: boolean;
   onGripTouchStart?: (e: React.TouchEvent) => void;
   isCheckout?: boolean;
+  groupPosition?: 'start' | 'middle' | 'end' | 'single';
 }
 
-export default function TimelineItem({ item, onPress, onGripTouchStart, isCheckout }: TimelineItemProps) {
+export default function TimelineItem({ item, onPress, onGripTouchStart, isCheckout, groupPosition }: TimelineItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const setFocusedLocation = useTripStore(s => s.setFocusedLocation);
 
-  const getTheme = () => {
-    switch (item.type) {
-      case 'flight':   return { icon: <Plane size={24} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
-      case 'hotel':    return { 
-        icon: (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-             <BedDouble size={20} style={{ marginBottom: '0px' }} />
-             <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
-          </div>
-        ), 
-        color: isCheckout ? '#FF3B30' : '#30D158', 
-        bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(48, 209, 88, 0.1)' 
-      };
-      case 'rental-car': return { 
-        icon: (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-             <Car size={20} style={{ marginBottom: '0px' }} />
-             <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'RET' : 'PKUP'}</span>
-          </div>
-        ),
-        color: '#AF52DE', 
-        bg: 'rgba(175, 82, 222, 0.1)' 
-      };
-      case 'activity': return { icon: <Navigation size={24} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
-      case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
-      case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-      case 'food':     return { icon: <Utensils size={24} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
-      case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
-      default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
-    }
-  };
+    const getTheme = () => {
+      // Resilience: If hikeDetails exist, force it to be a hike theme regardless of type string
+      if (item.hikeDetails) {
+        return { icon: <MountainSnow size={24} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
+      }
+
+      switch (item.type) {
+        case 'flight':   return { icon: <Plane size={24} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
+        case 'hotel':    return { 
+          icon: (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+               <BedDouble size={20} style={{ marginBottom: '0px' }} />
+               <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
+            </div>
+          ), 
+          color: isCheckout ? '#FF3B30' : '#30D158', 
+          bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(48, 209, 88, 0.1)' 
+        };
+        case 'rental-car': return { 
+          icon: (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+               <Car size={20} style={{ marginBottom: '0px' }} />
+               <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'RET' : 'PKUP'}</span>
+            </div>
+          ),
+          color: '#AF52DE', 
+          bg: 'rgba(175, 82, 222, 0.1)' 
+        };
+        case 'activity': return { icon: <Navigation size={24} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
+        case 'hike':
+        case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
+        case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
+        case 'food':     return { icon: <Utensils size={24} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
+        case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+        default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
+      }
+    };
 
   const theme = getTheme();
 
@@ -80,11 +87,17 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         borderLeft: `4px solid ${theme.color}`,
         overflow: 'hidden',
         maxHeight: isExpanded ? '1000px' : '150px',
-        marginTop: item.groupId ? '-8px' : '0px',
-        borderTopLeftRadius: item.groupId ? '0' : '20px',
-        borderTopRightRadius: item.groupId ? '0' : '20px',
+        marginTop: (groupPosition === 'middle' || groupPosition === 'end') ? '-12px' : '0px',
+        borderTopLeftRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
+        borderTopRightRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
+        borderBottomLeftRadius: (groupPosition === 'middle' || groupPosition === 'start') ? '0' : '20px',
+        borderBottomRightRadius: (groupPosition === 'middle' || groupPosition === 'start') ? '0' : '20px',
+        zIndex: groupPosition === 'start' ? 2 : groupPosition === 'middle' ? 1 : 0,
       }}
     >
+      {(groupPosition === 'middle' || groupPosition === 'end') && (
+         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.05)', zIndex: 5 }} />
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em' }}>
           {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
@@ -191,7 +204,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </div>
           ) : null}
 
-          {item.type === 'hiking' && item.hikeDetails && (
+          {(item.type === 'hiking' || item.type === 'hike') && item.hikeDetails && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
               <div style={{ background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800 }}>
                 {item.hikeDetails.difficulty === 'Expert' ? '⬛ EXPERT' : item.hikeDetails.difficulty === 'Hard' ? '🟥 HARD' : item.hikeDetails.difficulty === 'Moderate' ? '🟦 MODERATE' : '🟩 EASY'}
@@ -212,15 +225,25 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 </div>
               )}
               {item.hikeDetails.allTrailsLink && (
-                <a 
-                  href={item.hikeDetails.allTrailsLink} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  style={{ background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                <div 
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // window.top.open is often more reliable for bypassing shell restrictions in PWAs
+                    const win = window.top || window;
+                    win.open(item.hikeDetails!.allTrailsLink, '_blank', 'noopener,noreferrer');
+                  }}
+                  style={{ 
+                    background: 'rgba(52, 199, 89, 0.25)', color: '#34C759', padding: '4px 12px', 
+                    borderRadius: '8px', fontSize: '12px', fontWeight: 900, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    border: '1px solid rgba(52, 199, 89, 0.3)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  }}
                 >
                   🔗 AllTrails
-                </a>
+                </div>
               )}
             </div>
           )}

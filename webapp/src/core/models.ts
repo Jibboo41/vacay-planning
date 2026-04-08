@@ -19,7 +19,7 @@ export interface FoodDetails {
 
 export interface ItineraryItem {
   id: string;
-  type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'transit' | 'food' | 'note' | 'rental-car' | 'unknown';
+  type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'hike' | 'transit' | 'food' | 'note' | 'rental-car' | 'unknown';
   startDate: string;
   endDate?: string;
   title: string;

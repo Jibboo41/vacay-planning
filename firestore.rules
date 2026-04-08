@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    /* 
+      Trips collection: 
+      Documents contain: userId, items, todos, expenses, aiSummary, weather, createdAt
+    */
+    match /trips/{tripId} {
+      // Allow read/update/delete if the existing document's userId matches the authenticated user
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow create if the new document's userId matches the authenticated user
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -43,28 +43,8 @@ export default function GlobalControls() {
 
   return (
     <>
-      {/* ── View Switcher FAB (Bottom Left) ── */}
+      {/* ── Sparkles Action FAB (Bottom Left) ── */}
       <div className="fab-group left">
-        <button 
-          className={`fab-main ${isViewOpen ? 'active' : ''}`}
-          onClick={() => { setIsViewOpen(!isViewOpen); setIsSparkleOpen(false); }}
-          aria-label="Switch Views"
-        >
-          {currentIcon}
-        </button>
-
-        <div className={`fab-options ${isViewOpen ? 'open' : ''}`}>
-          <NavButton icon={<Compass size={18} />} label="Map" onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} />
-          <NavButton icon={<Calendar size={18} />} label="Timeline" onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} isActive={location.pathname === '/timeline'} />
-          <NavButton icon={<BookOpen size={18} />} label="Outline" onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} />
-          <NavButton icon={<CheckSquare size={18} />} label="Todos" onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} />
-          <NavButton icon={<Wallet size={18} />} label="Costs" onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} />
-          <NavButton icon={<CloudSun size={18} />} label="Weather" onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} />
-        </div>
-      </div>
-
-      {/* ── Sparkles Action FAB (Bottom Right) ── */}
-      <div className="fab-group right">
         <button 
           className={`fab-main ${isSparkleOpen ? 'active' : ''}`} 
           onClick={() => { setIsSparkleOpen(!isSparkleOpen); setIsViewOpen(false); }}
@@ -80,7 +60,7 @@ export default function GlobalControls() {
             aria-label="Add note"
           >
             <span style={{ fontSize: '18px' }}>📝</span>
-            <span className="fab-sub-label">Note</span>
+            <span className="fab-sub-label" style={{ left: '60px', right: 'auto' }}>Note</span>
           </button>
 
           <button 
@@ -101,7 +81,7 @@ export default function GlobalControls() {
             aria-label="Manual Entry"
           >
             <PenLine size={18} color="#fff" />
-            <span className="fab-sub-label">Manual</span>
+            <span className="fab-sub-label" style={{ left: '60px', right: 'auto' }}>Manual</span>
           </button>
 
           <button 
@@ -110,8 +90,28 @@ export default function GlobalControls() {
             aria-label="AI Parse"
           >
             <Sparkles size={20} color="#fff" />
-            <span className="fab-sub-label">Parse AI</span>
+            <span className="fab-sub-label" style={{ left: '60px', right: 'auto' }}>Parse AI</span>
           </button>
+        </div>
+      </div>
+
+      {/* ── View Switcher FAB (Bottom Right) ── */}
+      <div className="fab-group right">
+        <button 
+          className={`fab-main ${isViewOpen ? 'active' : ''}`}
+          onClick={() => { setIsViewOpen(!isViewOpen); setIsSparkleOpen(false); }}
+          aria-label="Switch Views"
+        >
+          {currentIcon}
+        </button>
+
+        <div className={`fab-options ${isViewOpen ? 'open' : ''}`}>
+          <NavButton icon={<Compass size={18} />} label="Map" onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} isRightSide={true} />
+          <NavButton icon={<Calendar size={18} />} label="Timeline" onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} isActive={location.pathname === '/timeline'} isRightSide={true} />
+          <NavButton icon={<BookOpen size={18} />} label="Outline" onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} isRightSide={true} />
+          <NavButton icon={<CheckSquare size={18} />} label="Todos" onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} isRightSide={true} />
+          <NavButton icon={<Wallet size={18} />} label="Costs" onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} isRightSide={true} />
+          <NavButton icon={<CloudSun size={18} />} label="Weather" onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} isRightSide={true} />
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export default function GlobalControls() {
   );
 }
 
-function NavButton({ icon, label, onClick, isActive }: { icon: React.ReactNode, label: string, onClick: () => void, isActive: boolean }) {
+function NavButton({ icon, label, onClick, isActive, isRightSide }: { icon: React.ReactNode, label: string, onClick: () => void, isActive: boolean, isRightSide?: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -159,7 +159,14 @@ function NavButton({ icon, label, onClick, isActive }: { icon: React.ReactNode, 
       <div style={{ opacity: isActive ? 1 : 0.7 }}>
         {icon}
       </div>
-      <span className="fab-sub-label" style={{ opacity: isActive ? 1 : undefined }}>
+      <span 
+        className="fab-sub-label" 
+        style={{ 
+          opacity: isActive ? 1 : undefined,
+          right: isRightSide ? '60px' : 'auto',
+          left: isRightSide ? 'auto' : '60px'
+        }}
+      >
         {label}
       </span>
     </button>

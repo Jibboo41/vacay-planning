@@ -2,6 +2,19 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.4.0] - 2026-04-08 (Stability & Data Integrity)
+
+### 🛡️ Persistence & Reliability
+- **Absolute Sync Protection**: Implemented a synchronization barrier in `useTripStore` that prevents valid user data from being overwritten by empty server snapshots during network/auth transitions.
+- **Surgical Firestore Updates**: Migrated the entire persistence layer to explicit `updateDoc` operations, replacing the ambiguous `setDoc(merge)` method to ensure precise data writes.
+- **Universal Data Scrubbing**: Integrated a recursive `scrubData` utility that sanitizes all outgoing data by removing `undefined` values, resolving critical Firestore "Unsupported field" errors.
+- **Two-Way Category Normalization**: Standardized itinerary types (e.g. 'hike' -> 'hiking') across both load and save cycles to prevent category reversion "echoes".
+
+### 🔒 Navigation & Security
+- **Navigation Lockdown**: Eliminated all automatic code-level redirects. The app now uses an inline "No Trip Active" state rather than browser-level resets to maintain session stability.
+- **Live Sync Feedback**: Added a persistent status indicator in the app header providing real-time "SAVING TO CLOUD..." and error reporting.
+- **Production Security Rules**: Deployed hardened `firestore.rules` enforcing authenticated ownership checks (`userId == request.auth.uid`), moving out of "Test Mode".
+
 ## [1.3.0] - 2026-04-07 (Phase 2: Power Modules)
 
 ### 🚀 New Core Modules

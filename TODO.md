@@ -1,7 +1,10 @@
-# Post-MVP Backlog
+# Project Backlog & Future Road
 
-- [x] **UI/UX:** Migrate or abstract the React Native UI components to utilize pure, native iOS primitives (via SwiftUI integrations or native-bound libraries) for an authentic Apple ecosystem look and feel.
-- [ ] **Auth:** Implement User Authentication.
-- [ ] **Maps:** Configure Official Google Maps API keys (currently using default maps).
-- [x] **Itinerary Management:** Add the ability to dynamically edit existing itinerary items.
-- [x] **Map Integration:** Ensure itinerary item locations are automatically plotted on the main map.
+- [x] **UI/UX Architecture**: iOS-inspired glassmorphic design system with dual-FAB navigation.
+- [x] **User Authentication**: Secure Google Auth and session persistence.
+- [x] **Production Security**: Deployed owner-only Firestore security rules.
+- [x] **Data Integrity**: Implemented sync barriers, `updateDoc` migration, and `undefined` scrubbing.
+- [ ] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
+- [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
+- [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.
+- [ ] **Maps:** Configure Official Google Maps API keys (currently using Leaflet/OSM).

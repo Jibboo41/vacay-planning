@@ -44,12 +44,13 @@ interface DraggableCardProps {
   onDrop: (overId: string) => void;
   // iOS touch
   onGripTouchStart: (id: string) => void;
+  groupPosition?: 'start' | 'middle' | 'end' | 'single';
 }
 
 function DraggableCard({
   item, isDragging, isDropTarget, onPress,
   onDragStart, onDragEnter, onDragEnd, onDrop,
-  onGripTouchStart, isCheckout
+  onGripTouchStart, isCheckout, groupPosition
 }: DraggableCardProps & { isCheckout?: boolean }) {
   const dragId = item.id + (isCheckout ? '-checkout' : '');
   const gripHandler = (e: React.TouchEvent) => {
@@ -81,7 +82,13 @@ function DraggableCard({
       {item.type === 'note' ? (
         <NoteCard item={item} onPress={onPress} onGripTouchStart={gripHandler} />
       ) : (
-        <TimelineItem item={item} onPress={onPress} onGripTouchStart={gripHandler} isCheckout={isCheckout} />
+        <TimelineItem 
+          item={item} 
+          onPress={onPress} 
+          onGripTouchStart={gripHandler} 
+          isCheckout={isCheckout} 
+          groupPosition={groupPosition}
+        />
       )}
     </div>
   );
@@ -331,8 +338,22 @@ export default function TimelineScreen() {
               <span className="day-section-label">{group.label}</span>
             </div>
 
-            {group.items.map(item => {
+            {group.items.map((item, idx) => {
               const dragId = item.id + ((item as any)._isCheckout ? '-checkout' : '');
+              
+              // Grouping logic
+              const prev = group.items[idx - 1];
+              const next = group.items[idx + 1];
+              const hasGroup = !!item.groupId;
+              let groupPosition: 'start' | 'middle' | 'end' | 'single' = 'single';
+              if (hasGroup) {
+                const samePrev = prev?.groupId === item.groupId;
+                const sameNext = next?.groupId === item.groupId;
+                if (samePrev && sameNext) groupPosition = 'middle';
+                else if (samePrev) groupPosition = 'end';
+                else if (sameNext) groupPosition = 'start';
+              }
+
               return (
                 <DraggableCard
                   key={dragId}
@@ -346,6 +367,7 @@ export default function TimelineScreen() {
                   onDrop={handleDrop}
                   onGripTouchStart={startTouchDrag}
                   isCheckout={(item as any)._isCheckout}
+                  groupPosition={groupPosition}
                 />
               );
             })}

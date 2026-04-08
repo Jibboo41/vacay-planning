@@ -30,6 +30,11 @@
 - **Weather Suite**: Integrated daily forecasts via Open-Meteo API, providing smart destination-aware weather data for all trip dates.
 - **Enhanced Grouping**: Sophisticated UI for grouping multi-leg flights and automated rental car pickup/return cycle splitting.
 
+### 🔹 Stability & Security (Phase 1.4)
+- **Data Integrity Shield**: Recursive data scrubbing and synchronization barriers prevent state loss during platform transitions.
+- **Hardened Security**: Production-grade Firestore rules and explicit update operations for reliable, owner-restricted persistence.
+- **Persistence Visibility**: Real-time cloud sync status indicator keeps the user informed of data safety.
+
 ---
 
 ## 🏗️ Architecture Matrix

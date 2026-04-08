@@ -176,9 +176,9 @@ export default function WeatherScreen() {
     : 'Never';
 
   return (
-    <div className="safe-area-inset" style={{ padding: '24px', paddingBottom: '120px', minHeight: '100vh' }}>
+    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <div className="screen-header glass-effect" style={{ marginBottom: '24px' }}>
+      <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
         <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
@@ -200,67 +200,69 @@ export default function WeatherScreen() {
         </button>
       </div>
 
-      {dailyLocations.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <AlertCircle size={48} opacity={0.2} />
-          <p style={{ fontSize: '15px' }}>Add a location with coordinates to see the weather forecast.</p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
-          {error && (
-             <div style={{ padding: '16px', background: 'rgba(255, 69, 58, 0.1)', borderRadius: '16px', border: '1px solid rgba(255, 69, 58, 0.2)', display: 'flex', gap: '12px', alignItems: 'center', color: '#FF453A' }}>
-                <AlertCircle size={20} />
-                <span style={{ fontSize: '14px' }}>{error}</span>
-             </div>
-          )}
+      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+        {dailyLocations.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <AlertCircle size={48} opacity={0.2} />
+            <p style={{ fontSize: '15px' }}>Add a location with coordinates to see the weather forecast.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            {error && (
+               <div style={{ padding: '16px', background: 'rgba(255, 69, 58, 0.1)', borderRadius: '16px', border: '1px solid rgba(255, 69, 58, 0.2)', display: 'flex', gap: '12px', alignItems: 'center', color: '#FF453A' }}>
+                  <AlertCircle size={20} />
+                  <span style={{ fontSize: '14px' }}>{error}</span>
+               </div>
+            )}
 
-          {weather?.forecast.map(day => {
-            const loc = dailyLocations.find(dl => dl.date === day.date);
-            return (
-              <div 
-                key={day.date}
-                className="glass-effect"
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '16px', 
-                  padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#FFF' }}>
-                    {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                  </h4>
-                  {loc && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: 'var(--sys-label-secondary)' }}>
-                       <MapPin size={12} />
-                       <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                         {loc.name}
-                       </span>
-                    </div>
-                  )}
-                  <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Thermometer size={14} /> {day.tempHigh}° / {day.tempLow}°
-                  </p>
+            {weather?.forecast.map(day => {
+              const loc = dailyLocations.find(dl => dl.date === day.date);
+              return (
+                <div 
+                  key={day.date}
+                  className="glass-effect"
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '16px', 
+                    padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#FFF' }}>
+                      {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </h4>
+                    {loc && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: 'var(--sys-label-secondary)' }}>
+                         <MapPin size={12} />
+                         <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                           {loc.name}
+                         </span>
+                      </div>
+                    )}
+                    <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Thermometer size={14} /> {day.tempHigh}° / {day.tempLow}°
+                    </p>
+                  </div>
+                  
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '32px' }}>{day.icon}</span>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 800, color: 'var(--sys-blue)', textTransform: 'uppercase' }}>{day.condition}</p>
+                  </div>
                 </div>
-                
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '32px' }}>{day.icon}</span>
-                  <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 800, color: 'var(--sys-blue)', textTransform: 'uppercase' }}>{day.condition}</p>
-                </div>
+              );
+            })}
+
+            {(!weather || loading) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[1,2,3].map(i => (
+                  <div key={i} className="skeleton-line" style={{ height: '100px', borderRadius: '24px', opacity: 0.1 }} />
+                ))}
               </div>
-            );
-          })}
-
-          {(!weather || loading) && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {[1,2,3].map(i => (
-                <div key={i} className="skeleton-line" style={{ height: '100px', borderRadius: '24px', opacity: 0.1 }} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

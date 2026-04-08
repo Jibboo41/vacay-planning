@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import TimelineScreen from './components/TimelineScreen';
 import SummaryScreen from './components/SummaryScreen';
 import MapViewScreen from './components/MapViewScreen';
@@ -18,8 +18,10 @@ import { useTripStore } from './store/useTripStore';
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
+  const initialized = useTripStore(s => s.initialized);
   
-  if (loading) return null;
+  // Strict check: if loading or if we have a user but no data yet, stay on splash
+  if (loading || (userId && !initialized)) return null;
   if (!userId) return <Navigate to="/login" replace />;
 
   return <>{children}</>;
@@ -35,12 +37,53 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const NoTripState = () => (
+  <div style={{ padding: '80px 40px', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ fontSize: '3rem', marginBottom: '20px' }}>✈️</div>
+    <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '10px', color: '#fff' }}>No Trip Active</h2>
+    <p style={{ color: 'var(--sys-label-secondary)', marginBottom: '30px', maxWidth: '300px' }}>Select a trip from the sidebar or trip selector to view your itinerary.</p>
+    <Link to="/trips" style={{ display: 'inline-flex', padding: '12px 24px', borderRadius: '12px', background: 'var(--sys-blue)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>
+      Go to Trip Selector
+    </Link>
+  </div>
+);
+
+const SyncStatus = () => {
+  const saving = useTripStore(s => s.saving);
+  const error = useTripStore(s => s.lastSaveError);
+  
+  if (!saving && !error) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)',
+      zIndex: 11000, display: 'flex', alignItems: 'center', gap: '8px',
+      padding: '8px 16px', borderRadius: '100px',
+      background: error ? 'rgba(255, 59, 48, 0.95)' : 'rgba(0, 0, 0, 0.7)',
+      backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)',
+      color: '#fff', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.3)', pointerEvents: 'none',
+      transition: 'all 0.3s ease'
+    }}>
+      {error ? (
+        <><span>⚠️</span> <span>SYNC ERROR: {error}</span></>
+      ) : (
+        <>
+          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <span>SAVING TO CLOUD...</span>
+        </>
+      )}
+    </div>
+  );
+};
+
 function App() {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
   const currentTripId = useTripStore(s => s.currentTripId);
   const isSidebarOpen = useTripStore(s => s.isSidebarOpen);
   const theme = useTripStore(s => s.theme);
+  const initialized = useTripStore(s => s.initialized);
   const setUserId = useTripStore(s => s.setUserId);
   const setLoading = useTripStore(s => s.setLoading);
   const setSidebarOpen = useTripStore(s => s.setSidebarOpen);
@@ -87,9 +130,20 @@ function App() {
         ...doc.data()
       })) as any[];
       syncTrips(tripsData);
+      setError(null); // Clear errors if successful
     }, (err) => {
       console.error("Firestore Listen Error:", err);
-      setError(`Firestore Error: ${err.message}`);
+      // Give Auth a chance to stabilize (especially on iOS link return/background)
+      // Only show error if persistent after 2s or if not a permission error
+      if (err.code === 'permission-denied') {
+        setTimeout(() => {
+          if (!auth.currentUser) {
+            setError(`Firestore Error: ${err.message}. Please try logging in again.`);
+          }
+        }, 2000);
+      } else {
+        setError(`Firestore Error: ${err.message}`);
+      }
     });
 
     return unsubSnap;
@@ -128,10 +182,10 @@ function App() {
       </div>
 
       <div className="app-content-root">
-        {loading && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 5000, background: '#0f1014', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: '15px' }}>
+        {(loading || (userId && !initialized)) && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#0f1014', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: '15px' }}>
             <div style={{ fontSize: '2.5rem', animation: 'pulse 2s infinite' }}>✈️</div>
-            <div style={{ fontSize: '11px', letterSpacing: '0.2em' }}>INITIALIZING...</div>
+            <div style={{ fontSize: '11px', letterSpacing: '0.2em', opacity: 0.8 }}>RESTORING TRIP...</div>
           </div>
         )}
 
@@ -139,16 +193,19 @@ function App() {
           <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         )}
 
+        {/* Persistence Indicator */}
+        <SyncStatus />
+
         <Routes>
           <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
           <Route path="/trips" element={<ProtectedRoute><TripSelector /></ProtectedRoute>} />
-          <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
-          <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
-          <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
-          <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
-          <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
-          <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <Navigate to="/trips" replace />}</ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/trips" replace />} />
+          <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <NoTripState />}</ProtectedRoute>} />
+          <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <NoTripState />}</ProtectedRoute>} />
+          <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <NoTripState />}</ProtectedRoute>} />
+          <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <NoTripState />}</ProtectedRoute>} />
+          <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <NoTripState />}</ProtectedRoute>} />
+          <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/timeline" replace />} />
         </Routes>
       </div>
 

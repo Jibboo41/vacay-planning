@@ -6,7 +6,7 @@ import {
   addDoc, 
   deleteDoc, 
   doc, 
-  setDoc 
+  updateDoc 
 } from "firebase/firestore";
 
 interface Trip {
@@ -34,6 +34,9 @@ interface TripStore {
   isSidebarOpen: boolean;
   focusedLocation: { lat: number, lng: number } | null;
   theme: string;
+  initialized: boolean;
+  saving: boolean;
+  lastSaveError: string | null;
   
   // Actions
   setUserId: (userId: string | null) => void;
@@ -90,6 +93,21 @@ function getLocalTimeStr(dateStr: string) {
   return `${hours}:${minutes}:00`;
 }
 
+/** Recursively remove all "undefined" values from an object for Firestore compatibility */
+function scrubData(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(scrubData);
+  }
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, v]) => v !== undefined)
+        .map(([k, v]) => [k, scrubData(v)])
+    );
+  }
+  return obj;
+}
+
 export const useTripStore = create<TripStore>((set, get) => ({
   trips: [],
   currentTripId: localStorage.getItem('vacay_current_trip_id'),
@@ -103,6 +121,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
   isSidebarOpen: false,
   focusedLocation: null,
   theme: localStorage.getItem('vacay_theme') || 'default',
+  initialized: false,
+  saving: false,
+  lastSaveError: null,
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
@@ -114,16 +135,45 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   syncTrips: (trips) => {
+    const { initialized, currentTripId, items: currentItems } = get();
+    
+    if (trips.length === 0 && !initialized && currentTripId) {
+      return;
+    }
+
     const sorted = [...trips].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    const { currentTripId } = get();
     const currentTrip = sorted.find(t => t.id === currentTripId);
+
+    // CRITICAL: If we have a trip ID but the snapshot doesn't show it yet,
+    // DON'T set items to [] which would trigger a UI clear/redirect.
+    if (currentTripId && !currentTrip && initialized) {
+       console.warn("Sync: currentTripId exists but trip not in snapshot. Keeping current state.");
+       set({ trips: sorted });
+       return;
+    }
+
+    // Normalize item types (e.g. 'hike' -> 'hiking') to prevent UI reversion
+    const newItems = (currentTrip?.items || []).map(item => ({
+      ...item,
+      type: (item.type as string) === 'hike' ? 'hiking' : item.type
+    }));
+
+    // If we're already initialized and the data is magically empty, ignore it 
+    // unless the user intentionally deleted the trip (which we handle elsewhere).
+    if (initialized && newItems.length === 0 && currentItems.length > 0) {
+       console.warn("Sync: Snapshot returned empty items for active trip. Ignoring.");
+       set({ trips: sorted });
+       return;
+    }
+
     set({ 
       trips: sorted,
-      items: currentTrip?.items || [],
+      items: newItems,
       todos: currentTrip?.todos || [],
       expenses: currentTrip?.expenses || [],
       weather: currentTrip?.weather || null,
-      currentTripAiSummary: currentTrip?.aiSummary || null 
+      currentTripAiSummary: currentTrip?.aiSummary || null,
+      initialized: true
     });
     if (currentTripId) localStorage.setItem('vacay_current_trip_id', currentTripId);
   },
@@ -162,32 +212,61 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   addItem: async (item) => {
-    const { currentTripId, items } = get();
-    if (!currentTripId) return;
-    const newItems = [...items, item];
-    set({ items: newItems });
-    await setDoc(doc(db, "trips", currentTripId), { items: newItems }, { merge: true });
+    const { currentTripId, items, initialized } = get();
+    if (!currentTripId || !initialized) return;
+    
+    // Normalize before saving to server
+    const normalizedItem = {
+      ...item,
+      type: (item.type as string) === 'hike' ? 'hiking' : item.type
+    };
+    const newItems = [...items, normalizedItem];
+    
+    set({ items: newItems, saving: true, lastSaveError: null });
+    try {
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
+      set({ saving: false });
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      set({ saving: false, lastSaveError: err.message });
+    }
   },
 
   updateItem: async (id, updatedFields) => {
-    const { currentTripId, items } = get();
-    if (!currentTripId) return;
-    const newItems = items.map(item => item.id === id ? { ...item, ...updatedFields } : item);
-    set({ items: newItems });
-    await setDoc(doc(db, "trips", currentTripId), { items: newItems }, { merge: true });
+    const { currentTripId, items, initialized } = get();
+    if (!currentTripId || !initialized) return;
+
+    // Normalize category before saving
+    const finalUpdates = { ...updatedFields };
+    if (finalUpdates.type === 'hike') finalUpdates.type = 'hiking';
+
+    const newItems = items.map(item => item.id === id ? { ...item, ...finalUpdates } : item);
+    set({ items: newItems, saving: true, lastSaveError: null });
+    
+    try {
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
+      set({ saving: false });
+    } catch (err: any) {
+      console.error("Update failed:", err);
+      set({ saving: false, lastSaveError: err.message });
+    }
   },
 
   deleteItem: async (id) => {
-    const { currentTripId, items } = get();
-    if (!currentTripId) return;
+    const { currentTripId, items, initialized } = get();
+    if (!currentTripId || !initialized) return;
     const newItems = items.filter(item => item.id !== id);
     set({ items: newItems });
-    await setDoc(doc(db, "trips", currentTripId), { items: newItems }, { merge: true });
+    try {
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
   },
 
   addNote: async (dayKey, title, content) => {
-    const { currentTripId, items } = get();
-    if (!currentTripId) return;
+    const { currentTripId, items, initialized } = get();
+    if (!currentTripId || !initialized) return;
     const note: ItineraryItem = {
       id: `note-${Date.now()}`,
       type: 'note',
@@ -200,7 +279,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
     note.sortOrder = dayItems.length * 10;
     const newItems = [...items, note];
     set({ items: newItems });
-    await setDoc(doc(db, "trips", currentTripId), { items: newItems }, { merge: true });
+    try {
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
+    } catch (err) {
+      console.error("Add note failed:", err);
+    }
   },
 
   reorderItems: async (activeId, overId, newDayKey) => {
@@ -229,23 +312,29 @@ export const useTripStore = create<TripStore>((set, get) => ({
       finalItems = [...otherItems, ...reorderedTarget];
     }
     set({ items: finalItems });
-    await setDoc(doc(db, "trips", currentTripId), { items: finalItems }, { merge: true });
+    if (get().initialized) {
+      try {
+        await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(finalItems) });
+      } catch (err) {
+        console.error("Reorder failed:", err);
+      }
+    }
   },
 
   saveAiSummary: async (summary) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ currentTripAiSummary: summary });
-    await setDoc(doc(db, "trips", currentTripId), { aiSummary: summary }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { aiSummary: summary });
   },
 
   addTodo: async (text) => {
-    const { currentTripId, todos } = get();
-    if (!currentTripId) return;
+    const { currentTripId, todos, initialized } = get();
+    if (!currentTripId || !initialized) return;
     const newTodo: TodoItem = { id: `todo-${Date.now()}`, text, completed: false, createdAt: Date.now() };
     const newTodos = [...todos, newTodo];
     set({ todos: newTodos });
-    await setDoc(doc(db, "trips", currentTripId), { todos: newTodos }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   toggleTodo: async (id) => {
@@ -253,7 +342,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newTodos = todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
     set({ todos: newTodos });
-    await setDoc(doc(db, "trips", currentTripId), { todos: newTodos }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   deleteTodo: async (id) => {
@@ -261,7 +350,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newTodos = todos.filter(t => t.id !== id);
     set({ todos: newTodos });
-    await setDoc(doc(db, "trips", currentTripId), { todos: newTodos }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   addExpense: async (expenseData) => {
@@ -270,7 +359,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const newExpense: Expense = { ...expenseData, id: `exp-${Date.now()}` };
     const newExpenses = [...expenses, newExpense];
     set({ expenses: newExpenses });
-    await setDoc(doc(db, "trips", currentTripId), { expenses: newExpenses }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
   },
 
   deleteExpense: async (id) => {
@@ -278,13 +367,13 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newExpenses = expenses.filter(e => e.id !== id);
     set({ expenses: newExpenses });
-    await setDoc(doc(db, "trips", currentTripId), { expenses: newExpenses }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
   },
 
   updateWeather: async (weather) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ weather });
-    await setDoc(doc(db, "trips", currentTripId), { weather }, { merge: true });
+    await updateDoc(doc(db, "trips", currentTripId), { weather: scrubData(weather) });
   }
 }));
