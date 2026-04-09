@@ -21,16 +21,23 @@ npx firebase login
 
 To push your latest code changes (both Frontend and Backend) to the live website, follow these steps:
 
-### 1. Build and Deploy Everything
+### 1. Deploy Frontend Only (Hosting)
 From the **root** folder:
 ```powershell
-firebase deploy
+npx firebase deploy --only hosting
 ```
+> ℹ️ This builds the React app and uploads it. Use this for most UI changes.
 
-### 2. Set Secrets (First Time or Key Rotation)
+### 2. Deploy Everything (Hosting + Cloud Functions)
+```powershell
+npx firebase deploy
+```
+> ⚠️ Requires the backend to build successfully. Use when backend logic changes.
+
+### 3. Set Secrets (First Time or Key Rotation)
 Since the backend uses Gemini AI, you must securely store your API key in Firebase so the Functions can access it:
 ```powershell
-firebase functions:secrets:set GEMINI_API_KEY
+npx firebase functions:secrets:set GEMINI_API_KEY
 ```
 *When prompted, paste your Gemini API key.*
 

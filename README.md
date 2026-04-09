@@ -24,21 +24,27 @@
 - **Interactive Map**: Visualize your stops on a reactive vector map.
 - **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order. Fixed logic re-calculates paths instantly upon itinerary changes.
 
-### 🔹 Travel Power Modules (Phase 2)
-- **Todo System**: Specialized trip checklists with cloud sync, and completion tracking.
-- **Cost Tracker**: Intelligent expense dashboard that automatically aggregates costs from flights/hotels while allowing manual spending entries.
-- **Weather Suite**: Integrated daily forecasts via Open-Meteo API, providing smart destination-aware weather data for all trip dates.
-- **Enhanced Grouping**: Sophisticated UI for grouping multi-leg flights and automated rental car pickup/return cycle splitting.
+### 🔹 Travel Power Modules
+- **Todo System**: Trip checklists with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder via grip handle.
+- **Cost Tracker**: Comprehensive expense dashboard aggregating itinerary costs with paid/remaining split tracking and over-budget alerts.
+- **Weather Suite**: Integrated daily forecasts via Open-Meteo API with **5-year historical precipitation averages** (rainfall + snowfall in inches) and daily H/L aggregated across all stops.
+- **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
 
-### 🔹 Stability & Security (Phase 1.4)
-- **Data Integrity Shield**: Recursive data scrubbing and synchronization barriers prevent state loss during platform transitions.
-- **Hardened Security**: Production-grade Firestore rules and explicit update operations for reliable, owner-restricted persistence.
-- **Persistence Visibility**: Real-time cloud sync status indicator keeps the user informed of data safety.
+### 🔹 Financial Management
+- **Settlement Engine**: `paidAmount` field on itinerary items and manual expenses with over-budget detection (highlighted in red).
+- **Deep Linking**: Clickable expense rows trigger itinerary editing directly from the Costs screen.
+- **Prominent Summary**: Trip Financials header shows large total cost with Paid and Remaining breakdowns.
+- **Global Orchestration**: Centralized modal management for consistent, cross-screen editing.
 
-### 🔹 Financial Command (Phase 1.6)
-- **Settlement Engine**: "Paid Amount" tracking with over-budget detection and settlement badges.
-- **Deep Linking**: Clickable expenses that trigger itinerary edits across the app.
-- **Global Orchestration**: Centralized modal management for a consistent, cross-screen editing experience.
+### 🔹 Climatic Intelligence
+- **Historical Precipitation**: 5-year averaged rainfall and snowfall data (imperial units) replaces subjective condition labels.
+- **Daily H/L Aggregation**: Timeline day headers display the range of high/low temps across all stops for that day.
+- **Animated Refresh**: Spinning animation on the weather update button provides tactile feedback.
+
+### 🔹 Glass UI & Themes
+- **Glass Blue Buttons**: All primary actions use a frosted glass treatment instead of solid opaque blue.
+- **10 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk — each with gradient swatch previews in the sidebar.
+- **Ambient Background**: Three animated color blobs behind all content, colors driven by selected theme.
 
 ---
 

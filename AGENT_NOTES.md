@@ -1,5 +1,5 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-08 | Phase 9 Complete & Deployed
+> Last updated: 2026-04-09 | Phase 10 Complete & Deployed
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 
@@ -31,13 +31,14 @@ vacay-planning/
 │   │   │   ├── WeatherScreen.tsx   # Weather forecast (historical 5yr avg + live)
 │   │   │   ├── CostTrackerScreen.tsx # Financial overview & expense tracking
 │   │   │   ├── SummaryScreen.tsx   # AI-generated trip outline
-│   │   │   ├── TodoScreen.tsx      # Task list with due dates & overdue detection
+│   │   │   ├── TodoScreen.tsx      # Task list with due dates, inline edit, drag reorder
 │   │   │   ├── GlobalControls.tsx  # FAB menus (Sparkle=add, Right=nav)
-│   │   │   ├── Sidebar.tsx         # Trip switcher & theme selector
+│   │   │   ├── Sidebar.tsx         # Trip switcher & theme selector (gradient swatches)
 │   │   │   └── modals/
-│   │   │       ├── EditItineraryModal.tsx  # Edit any itinerary item
-│   │   │       ├── AddItineraryModal.tsx   # AI parse + add items
-│   │   │       └── AddNoteModal.tsx        # Quick note creator
+│   │   │       ├── EditItineraryModal.tsx   # Edit any itinerary item
+│   │   │       ├── EditManualExpenseModal.tsx # Edit manual expenses
+│   │   │       ├── AddItineraryModal.tsx    # AI parse + add items
+│   │   │       └── AddNoteModal.tsx         # Quick note creator
 │   │   ├── core/
 │   │   │   ├── models.ts           # TypeScript data models (see below)
 │   │   │   └── firebase.ts         # Firebase app init
@@ -50,6 +51,7 @@ vacay-planning/
 │   └── dist/                       # Built output (gitignored)
 ├── backend/                        # Firebase Cloud Functions (Node.js)
 │   └── src/index.ts                # Gemini AI endpoint
+├── AGENT_NOTES.md                  # This file
 ├── TODO.md                         # Feature backlog
 ├── CHANGELOG.md                    # Version history
 └── README.md                       # Project readme
@@ -64,9 +66,8 @@ Key fields: `id`, `type`, `title`, `startDate`, `endDate?`, `location`, `cost?`,
 
 **Types**: `flight | hotel | rental-car | activity | hiking | food | transit | note`
 
-> ⚠️ The type `'hike'` is normalized to `'hiking'` on save — this was a past bug fix. Never use `'hike'`.
-
-> ⚠️ `'Training'` is NOT a valid category — it was removed from transit. If you see it, it's a legacy item.
+> ⚠️ `'hike'` is normalized to `'hiking'` on save. Never use `'hike'`.
+> ⚠️ `'Training'` is NOT a valid category — removed from transit.
 
 ### `TodoItem`
 Fields: `id`, `text`, `completed`, `createdAt`, `dueDate?` (ISO date string `YYYY-MM-DD`)
@@ -74,31 +75,27 @@ Fields: `id`, `text`, `completed`, `createdAt`, `dueDate?` (ISO date string `YYY
 ### `Expense`
 Fields: `id`, `title`, `amount`, `paidAmount`, `paid`, `category`, `date?`, `linkedItemId?`
 
-**Expense categories**: `manual | food | transport | other | itinerary`
-
-> Itinerary-linked expenses are computed from `items` with a `.cost` field — they are NOT stored separately.
+**Categories**: `manual | food | transport | other | itinerary`
+> Itinerary-linked expenses are computed from `items` with `.cost` — NOT stored separately.
 
 ### `WeatherDay`
 Fields: `date`, `tempHigh`, `tempLow`, `condition?`, `icon?`, `rainfall?` (inches), `snowfall?` (inches), `isHistorical`
-
-### `WeatherCache`
-Fields: `tripId`, `lastFetched`, `forecast: WeatherDay[]`
 
 ---
 
 ## 🔄 State Management (`useTripStore.ts`)
 
-Uses **Zustand**. All data is synced to Firestore via `updateDoc`. Key actions:
+Uses **Zustand**. All data synced to Firestore via `updateDoc`. Key actions:
 
 - `addItem / updateItem / deleteItem / reorderItems`
-- `addTodo(text, dueDate?) / toggleTodo / deleteTodo`
+- `addTodo(text, dueDate?) / updateTodo(id, {text?, dueDate?}) / toggleTodo / deleteTodo / reorderTodos(newOrder[])`
 - `addExpense / updateExpense / deleteExpense`
 - `updateWeather(WeatherCache)`
-- `setEditingItem(item | null)` — triggers the global edit modal in `GlobalControls`
+- `setEditingItem(item | null)` — triggers global edit modal in `GlobalControls`
 - `setEditingExpense(exp | null)` — triggers expense editing
 - `syncTrips(trips)` — called by Firestore real-time listener
 
-**Global editing pattern**: Any screen can call `setEditingItem(item)` and `GlobalControls` will automatically show `EditItineraryModal`. This is the preferred pattern — don't create local edit modals.
+**Global editing pattern**: Any screen can call `setEditingItem(item)` and `GlobalControls` will automatically show `EditItineraryModal`. This is the preferred pattern.
 
 **localStorage keys**: `vacay_current_trip_id`, `vacay_theme`
 
@@ -114,128 +111,140 @@ Uses **Zustand**. All data is synced to Firestore via `updateDoc`. Key actions:
 --sys-orange: #FF9F0A
 --sys-purple: #BF5AF2
 --sys-bg-base: #000000
---sys-bg-elevated: #1C1C1E      /* Use this for card backgrounds */
---sys-bg-elevated-2: #2C2C2E   /* Use for inputs, secondary containers */
+--sys-bg-elevated: #1C1C1E      /* Card backgrounds */
+--sys-bg-elevated-2: #2C2C2E   /* Inputs, secondary containers */
 --sys-bg-elevated-3: #3A3A3C
 --sys-label-primary: #FFFFFF
 --sys-label-secondary: rgba(235,235,245,0.60)
 --sys-label-tertiary: rgba(235,235,245,0.30)
 ```
 
-> ⚠️ `--sys-bg-elevated-1` does NOT exist. Use `--sys-bg-elevated` instead.
+> ⚠️ `--sys-bg-elevated-1` does NOT exist. Use `--sys-bg-elevated`.
 
 ### Key CSS Classes
-- `.modal-backdrop` / `.modal-sheet` — modal system (max-height 88vh, overscroll contained)
+- `.btn-glass-blue` — frosted glass button (rgba blue bg, border, backdrop-filter). Use on ALL primary blue actions.
+- `.modal-backdrop` / `.modal-sheet` — modal system (88vh max-height, overscroll contained)
 - `.travel-card` — glassmorphic itinerary card
 - `.screen-header` — top header with safe-area padding
 - `.day-section-header` — date group header in timeline
-- `.fab-group.left` / `.fab-group.right` — floating action button groups (z-index 2500)
-- `.spinning` — CSS spin animation (use on refresh icons)
+- `.fab-group.left` / `.fab-group.right` — FABs (z-index 2500)
+- `.spinning` — CSS spin animation
 - `.edit-field-group` / `.edit-field-label` / `.edit-field-input` — form fields in modals
+
+---
+
+## 🌈 Theme System
+
+Themes are set via `useTripStore.setTheme(key)` and stored in `localStorage` as `vacay_theme`.
+
+`App.tsx` maps theme key → three blob colors in `getThemeBlobs()`. The blobs are `div.blob-1/2/3` in `.ambient-bg`.
+
+**Available themes** (10 total):
+| Key | Name | Blob colors |
+|-----|------|-------------|
+| `default` | Default | Blue, Purple |
+| `sunset` | Sunset | Red, Orange, Yellow |
+| `midnight` | Midnight | Indigo, Purple, Cyan |
+| `forest` | Forest | Green, Mint, Cyan |
+| `aurora` | Aurora | Mint, Violet, Cyan |
+| `desert` | Desert Rose | Terracotta, Rose, Gold |
+| `ocean` | Deep Ocean | Sky, Teal, Indigo |
+| `vulcan` | Vulcan | Lava, Amber, Pink-Red |
+| `sakura` | Sakura | Pink, Lavender, Blush |
+| `cyberpunk` | Cyberpunk | Magenta, Cyan, Yellow |
+
+The **Sidebar** theme picker renders these as gradient gradient-swatch tiles (emoji + name + active glow ring).
+Adding a new theme: add a case to `getThemeBlobs`, add a row to the Sidebar array.
 
 ---
 
 ## 🌦️ Weather System
 
 **API**: Open-Meteo (https://api.open-meteo.com)
-- **Live forecast**: `forecast` endpoint → 7-day, temperature in Fahrenheit
-- **Historical averages**: `archive` endpoint, queried for 5 past years on the same date range
+- **Live forecast**: 7-day, temperature in Fahrenheit
+- **Historical averages**: 5 past years, same date range → averaged per field
 
-**Averaging logic** (in `weatherApi.ts`):
-- Loops over 5 past years, fetches `temperature_2m_max`, `temperature_2m_min`, `precipitation_sum`, `snowfall_sum`
-- Averages each metric
-- Does NOT compute an averaged "condition" label — historical entries show rainfall/snowfall inches instead
-- `isHistorical: true` on averaged records
+**For historical records**: Shows `rainfall` + `snowfall` in inches instead of a condition label. `isHistorical: true`.
 
-**Units**: °F for temperature, inches for precipitation (mm converted via ÷ 25.4)
+**Units**: °F for temperature, inches for precipitation (mm ÷ 25.4).
 
 ---
 
 ## 💰 Financial System
 
-Two sources of expense data displayed in `CostTrackerScreen`:
-1. **Itinerary items** with a `.cost` field — computed on-the-fly, not stored in `expenses[]`
-2. **Manual expenses** stored in `expenses[]` in Firestore
+Two sources of expense data in `CostTrackerScreen`:
+1. **Itinerary items** with `.cost` — computed on-the-fly, NOT stored in `expenses[]`
+   - `paidAmount` comes from `item.paidAmount` (editable via `EditItineraryModal`)
+2. **Manual expenses** stored in `expenses[]`
+   - `paidAmount` editable via `EditManualExpenseModal`
 
-**Payment tracking**:
-- `paidAmount` on `ItineraryItem` — editable via `EditItineraryModal`
-- `paidAmount` on `Expense` — editable via expense editing flow
-- If `paidAmount > amount`, shown in red as over-budget
-- Cost tracker header shows: Total Planned | Paid | Remaining
+Cost tracker header shows: **Large total** | Paid (green) | Remaining (blue).
+If `paidAmount > amount` → shown in red as over-budget.
 
 ---
 
-## 📱 Known iOS Behaviors / Gotchas
+## ✅ Timeline Item — End Time Display Rules
 
-- **Safe area insets**: Use `env(safe-area-inset-top)` etc. Header already handles this.
-- **Modal height**: Set to `88vh` to leave room for iOS browser chrome. Header uses `paddingTop: 'env(safe-area-inset-top)'`
-- **Date strings**: Always parse with `replace(/-/g, '/')` before `new Date()` to avoid UTC-midnight timezone drift. The store's `getDayKey()` handles this.
-- **Touch drag**: Custom touch drag implemented in `TimelineScreen` — uses `touchmove` with `passive: false`. Don't rely on HTML5 drag API on iOS.
-- **Overscroll**: `.modal-backdrop` has `overscroll-behavior: contain` to prevent background scroll.
+- **Same-day end time**: shown **collapsed** (inline second badge, neutral gray, NO red)
+- **Cross-day end time**: shown only when **expanded**
+- **Checkout cards** (hotels spanning days): always show check-in reference in expanded view
+
+> ⚠️ End times should NEVER be red. Use `var(--sys-label-secondary)` or `rgba(255,255,255,0.06)` bg.
+
+---
+
+## 📝 Todo System Rules
+
+- **Adding**: Text + optional due date. Due date picker in the add form.
+- **Editing**: Pencil icon → inline edit (text + due date + Clear button). Confirm with ✓, cancel with ✕.
+- **Drag reorder**: GripVertical handle — supports both mouse drag (HTML5) and touch drag.
+- **Overdue**: If `dueDate` is past today and `!completed` → text shows `⚠` prefix, due date shown in `var(--sys-red)`.
+- **Store actions**: `addTodo`, `updateTodo`, `toggleTodo`, `deleteTodo`, `reorderTodos`
+
+---
+
+## 📱 iOS Behavior Gotchas
+
+- **Safe area**: Use `env(safe-area-inset-top)` etc. Header already handles this.
+- **Modal height**: `88vh` to leave room for iOS browser chrome.
+- **Date strings**: Always parse with `.replace(/-/g, '/')` before `new Date()` to avoid UTC midnight drift.
+- **Touch drag**: Custom touch drag in `TimelineScreen` and `TodoScreen` — uses `touchmove` with `passive: false`. Don't rely on HTML5 drag API on iOS.
+- **Overscroll**: `.modal-backdrop` has `overscroll-behavior: contain`.
 
 ---
 
 ## 🧭 Navigation
 
-**Route structure** (React Router):
-- `/timeline` — Itinerary timeline (default landing after login)
-- `/map` — Leaflet map
-- `/summary` — AI-generated outline
-- `/todo` — Task list
-- `/costs` — Cost tracker
-- `/weather` — Weather screen
+**Routes**: `/timeline` (default), `/map`, `/summary`, `/todo`, `/costs`, `/weather`
 
-**Navigation UI**: Right FAB (bottom right) opens view switcher. Order from bottom: Timeline → Map → Outline → Todos → Costs → Weather.
+**FAB order** (right, bottom-up): Timeline → Map → Outline → Todos → Costs → Weather
 
-**Add content**: Left FAB (bottom left, Sparkle icon) opens: AI Parse | Manual Entry | Note
+**Add content** (left FAB, Sparkle): AI Parse | Manual Entry | Note
+
+**Start date/time on itinerary items**: REQUIRED — do NOT add Clear buttons. Only end date/time is optional (has Clear).
 
 ---
 
 ## 🚀 Deployment
 
 ```powershell
-# From /webapp
-npm run build
-
-# From project root
+# From project root — builds webapp then deploys to Firebase Hosting
 npx firebase deploy --only hosting
+
+# Full deploy (hosting + cloud functions):
+npx firebase deploy
 ```
 
-Full deploy (including Cloud Functions): `npx firebase deploy`
-
 Firebase project ID: `vacay-planning`
-
----
-
-## ✅ Phase 9 — Completed (2026-04-08)
-
-- [x] Historical precipitation (rainfall/snowfall in inches) in weather averages
-- [x] Removed condition labels from historical weather data
-- [x] Weather refresh button spinning animation
-- [x] Daily H/L temperature in timeline day headers (aggregated across all stops)
-- [x] Retired `DetailsModal` — items expand inline in timeline
-- [x] Clicking timeline item → directly opens `EditItineraryModal`
-- [x] `paidAmount` field on `ItineraryItem` + editing in modal
-- [x] Clear buttons for all optional date/time fields in edit modal
-- [x] Smart end-date defaulting (mirrors start date on focus)
-- [x] iOS safe-area fix for edit modal header
-- [x] Cost tracker redesigned with prominent financial summary header
-- [x] Cost tracker reads `paidAmount` from itinerary items
-- [x] Todo due dates with calendar picker
-- [x] Overdue todos highlighted in red
-- [x] Swapped Timeline/Map nav button order
-- [x] FAB z-index bumped to 2500 (above map legend)
-- [x] Modal overscroll containment
-- [x] Modal height 88vh
-- [x] Standardized `--sys-bg-elevated` tokens (removed broken `elevated-1` refs)
+Live URL: https://vacay-planning.web.app
 
 ---
 
 ## 🗺️ Backlog (Future Work)
 
-- [ ] **AllTrails Scraper** — Parse hiking URLs to auto-fill trail stats (distance, elevation)
-- [ ] **Trip Sharing** — Invite collaborators to view/edit a shared trip
+- [ ] **AllTrails Scraper** — Parse hiking URLs to auto-fill trail stats
+- [ ] **Trip Sharing** — Invite collaborators to view/edit
 - [ ] **Offline Mode (PWA)** — Full offline read/write via Service Worker
-- [ ] **Google Maps API** — Replace Leaflet/OSM with official Google Maps (needs paid key)
-- [ ] **Edit due date on existing todos** — Currently can only set on creation; no edit UI
-- [ ] **Manual expense editing** — UI for editing paid amount on manual expenses exists via `setEditingExpense` but the editing modal/view needs verification
+- [ ] **Google Maps API** — Replace Leaflet/OSM with official Google Maps
+- [ ] **Edit due date on existing todos** ✅ Now implemented via inline edit
+- [ ] **CHANGELOG.md** — Keep a versioned changelog up to date
