@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake } from 'lucide-react';
+import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, BarChart3 } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import { fetchWeather } from '../data/weatherApi';
 import type { WeatherDay } from '../core/models';
@@ -246,7 +246,13 @@ export default function WeatherScreen() {
                   </div>
                   
                   <div style={{ textAlign: 'right' }}>
-                    <span style={{ fontSize: '32px' }}>{day.isHistorical ? '📊' : day.icon}</span>
+                    <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      {day.isHistorical ? (
+                        <BarChart3 size={32} style={{ color: 'rgba(255,255,255,0.7)', filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }} />
+                      ) : (
+                        <span style={{ fontSize: '32px' }}>{day.icon}</span>
+                      )}
+                    </div>
                     <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 800, color: day.isHistorical ? 'var(--sys-label-secondary)' : 'var(--sys-blue)', textTransform: 'uppercase' }}>
                       {day.isHistorical ? 'Hist Avg' : day.condition}
                     </p>

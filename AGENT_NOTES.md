@@ -185,9 +185,11 @@ If `paidAmount > amount` → shown in red as over-budget.
 
 ## ✅ Timeline Item — Layout & Badge Rules
 
-- **Header Row**: Minimalist design containing only the date label (e.g., TUE, JUL 28) and the drag-handle grip.
-- **Body Row**: Contains the icon, text column (Title + Location), time badges, and chevron.
-- **Time Badges**: Displayed as stacked badges to the right of the text content.
+- **Header Row**: Contains the date label (e.g., TUE, JUL 28), START/END time badges, and the drag-handle grip.
+- **Body Row**: Contains the icon, text column (Title + Location), and chevron.
+- **Vertical Efficiency**: Times in the header row free up horizontal space for long titles and locations.
+- **Cross-day Indicator**: If an activity ends on a subsequent day, the END badge displays a subtle blue `+N` indicator (e.g., `+1`).
+- **Time Badges**:
   - **Start Time**: Semantic color (theme.color) with background (`theme.bg`). Labels: TAKEOFF, CHECK-IN, PICKUP, START.
   - **End Time**: Neutral gray (`rgba(255,255,255,0.06)`). Labels: LANDING, END.
 - **Display Rules (Collapsed)**:

@@ -18,7 +18,7 @@
 ### 🔹 Dynamic Trip Outlining
 - **Trip Synopsis**: Generate a beautifully written AI summary of your entire journey's vibe and destination trajectory with one click.
 - **Compact Summary View**: A presentation-ready, high-density outline of your itinerary. No clutter—just destination names, chronological days, and calculated stay lengths.
-- **Compact Card Layout**: Itinerary cards use a high-density layout where date headers are slimmed down and time badges (START/END/TAKEOFF/etc) are moved into the body row beside the title and location for maximum vertical efficiency.
+- **Efficient Header Layout**: Itinerary cards feature a high-density header containing both the date and the START/END time badges, maximizing horizontal space for titles and locations. Cross-day indicator (`+1`) appears for multi-day activities.
 - **Responsive Chronology**: Shift your entire trip by dragging a single day. Timeless notes stay fixed, while mapped stops adopt the new timeline automatically.
 
 ### 🔹 Leaflet Destination Mapping

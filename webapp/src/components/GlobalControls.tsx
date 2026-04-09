@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, Wallet, CloudSun } from 'lucide-react';
+import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, DollarSign, CloudSun } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import AddItineraryModal from './modals/AddItineraryModal';
@@ -36,7 +36,7 @@ export default function GlobalControls() {
     if (location.pathname === '/timeline') return <Calendar size={24} color="#fff" />;
     if (location.pathname === '/summary') return <BookOpen size={24} color="#fff" />;
     if (location.pathname === '/todo') return <CheckSquare size={24} color="#fff" />;
-    if (location.pathname === '/costs') return <Wallet size={24} color="#fff" />;
+    if (location.pathname === '/costs') return <DollarSign size={24} color="#fff" />;
     if (location.pathname === '/weather') return <CloudSun size={24} color="#fff" />;
     return <Layers size={24} color="#fff" />;
   }, [location.pathname]);
@@ -110,7 +110,7 @@ export default function GlobalControls() {
           <NavButton icon={<Compass size={18} />} label="Map" onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} isRightSide={true} />
           <NavButton icon={<BookOpen size={18} />} label="Outline" onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} isRightSide={true} />
           <NavButton icon={<CheckSquare size={18} />} label="Todos" onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} isRightSide={true} />
-          <NavButton icon={<Wallet size={18} />} label="Costs" onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} isRightSide={true} />
+          <NavButton icon={<DollarSign size={18} />} label="Costs" onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} isRightSide={true} />
           <NavButton icon={<CloudSun size={18} />} label="Weather" onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} isRightSide={true} />
         </div>
       </div>

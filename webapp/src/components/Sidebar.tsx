@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Trash2, LogOut, X } from 'lucide-react';
+import { Plus, Trash2, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, Flower2, Waves, Flame, Flower, Zap } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,6 +21,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [newTripTitle, setNewTripTitle] = React.useState('');
   const [isAdding, setIsAdding] = React.useState(false);
   const navigate = useNavigate();
+
+  const glassIconStyle = {
+    color: 'rgba(255,255,255,0.9)',
+    filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.4))'
+  };
 
   const handleAddTrip = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,17 +96,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Appearance</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {([
-                { key: 'default',   label: 'Default',     icon: '🌌', grad: 'linear-gradient(135deg, #0A84FF 0%, #BF5AF2 100%)' },
-                { key: 'sunset',    label: 'Sunset',      icon: '🌅', grad: 'linear-gradient(135deg, #FF3B30 0%, #FF9F0A 50%, #FFD60A 100%)' },
-                { key: 'midnight',  label: 'Midnight',    icon: '🌙', grad: 'linear-gradient(135deg, #5E5CE6 0%, #BF5AF2 60%, #32ADE6 100%)' },
-                { key: 'forest',    label: 'Forest',      icon: '🌿', grad: 'linear-gradient(135deg, #30D158 0%, #34C759 50%, #32ADE6 100%)' },
-                { key: 'aurora',    label: 'Aurora',      icon: '✨', grad: 'linear-gradient(135deg, #00F5A0 0%, #8B5CF6 55%, #06B6D4 100%)' },
-                { key: 'desert',    label: 'Desert Rose', icon: '🌹', grad: 'linear-gradient(135deg, #E2A57E 0%, #C9415A 55%, #EDCA7F 100%)' },
-                { key: 'ocean',     label: 'Deep Ocean',  icon: '🌊', grad: 'linear-gradient(135deg, #0EA5E9 0%, #0D9488 50%, #6366F1 100%)' },
-                { key: 'vulcan',    label: 'Vulcan',      icon: '🌋', grad: 'linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FF2D55 100%)' },
-                { key: 'sakura',    label: 'Sakura',      icon: '🌸', grad: 'linear-gradient(135deg, #FF85A2 0%, #D891EF 55%, #FFB6CE 100%)' },
-                { key: 'cyberpunk', label: 'Cyberpunk',   icon: '⚡', grad: 'linear-gradient(135deg, #FF00AA 0%, #00FFEA 55%, #FFE600 100%)' },
-              ] as const).map(t => (
+                { key: 'default',   label: 'Default',     icon: <Layout size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #0A84FF 0%, #BF5AF2 100%)' },
+                { key: 'sunset',    label: 'Sunset',      icon: <Sunrise size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF3B30 0%, #FF9F0A 50%, #FFD60A 100%)' },
+                { key: 'midnight',  label: 'Midnight',    icon: <Moon size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #5E5CE6 0%, #BF5AF2 60%, #32ADE6 100%)' },
+                { key: 'forest',    label: 'Forest',      icon: <TreePine size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #30D158 0%, #34C759 50%, #32ADE6 100%)' },
+                { key: 'aurora',    label: 'Aurora',      icon: <Sparkles size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #00F5A0 0%, #8B5CF6 55%, #06B6D4 100%)' },
+                { key: 'desert',    label: 'Desert Rose', icon: <Flower2 size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #E2A57E 0%, #C9415A 55%, #EDCA7F 100%)' },
+                { key: 'ocean',     label: 'Deep Ocean',  icon: <Waves size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #0EA5E9 0%, #0D9488 50%, #6366F1 100%)' },
+                { key: 'vulcan',    label: 'Vulcan',      icon: <Flame size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FF2D55 100%)' },
+                { key: 'sakura',    label: 'Sakura',      icon: <Flower size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF85A2 0%, #D891EF 55%, #FFB6CE 100%)' },
+                { key: 'cyberpunk', label: 'Cyberpunk',   icon: <Zap size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF00AA 0%, #00FFEA 55%, #FFE600 100%)' },
+              ]).map(t => (
                 <button
                   key={t.key}
                   onClick={() => setTheme(t.key)}
@@ -123,9 +128,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     background: 'rgba(0,0,0,0.25)',
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center',
-                    gap: '2px'
+                    gap: '4px'
                   }}>
-                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.icon}</span>
+                    {t.icon}
                     <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', letterSpacing: '0.02em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{t.label}</span>
                   </div>
                   {theme === t.key && (

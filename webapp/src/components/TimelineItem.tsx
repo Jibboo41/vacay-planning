@@ -98,23 +98,50 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       {(groupPosition === 'middle' || groupPosition === 'end') && (
          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.05)', zIndex: 5 }} />
       )}
-      {/* Top row: date label + drag handle only (slim) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+      {/* Top row: date label | times | drag handle */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em' }}>
           {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
         </span>
-        {!isCheckout && (
-          <div
-            className="drag-handle"
-            onClick={e => e.stopPropagation()}
-            onTouchStart={onGripTouchStart}
-          >
-            <GripVertical size={16} />
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+              {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') :
+               item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
+               item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
+               item.type === 'flight' ? 'TAKEOFF' : 'START'}
+              {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+            </div>
+            {!isCheckout && item.endDate && item.endDate.includes('T') &&
+              item.type !== 'hotel' && item.type !== 'rental-car' && (
+              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+                {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
+                {(() => {
+                  const s = item.startDate.split('T')[0];
+                  const e = item.endDate.split('T')[0];
+                  if (s === e) return null;
+                  const d1 = new Date(s);
+                  const d2 = new Date(e);
+                  const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
+                  return diff > 0 ? <span style={{ color: '#0A84FF', marginLeft: '2px' }}>+{diff}</span> : null;
+                })()}
+              </div>
+            )}
           </div>
-        )}
+          {!isCheckout && (
+            <div
+              className="drag-handle"
+              onClick={e => e.stopPropagation()}
+              onTouchStart={onGripTouchStart}
+            >
+              <GripVertical size={16} />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Body row: icon | title+location | time badges | chevron */}
+      {/* Body row: icon | title+location | chevron */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
         <div style={{
           width: '44px', height: '44px', borderRadius: '12px',
@@ -127,7 +154,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           {theme.icon}
         </div>
 
-        {/* Title + location — flex:1, min-width:0 so it truncates */}
+        {/* Title + location — flex:1, full width */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.title}
@@ -166,23 +193,6 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               </span>
             </div>
           </div>
-        </div>
-
-        {/* Time badges — stacked, right-aligned, between text and chevron */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0, marginLeft: '8px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') :
-             item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
-             item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
-             item.type === 'flight' ? 'TAKEOFF' : 'START'}
-            {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
-          </div>
-          {!isCheckout && item.endDate && item.endDate.includes('T') &&
-            item.type !== 'hotel' && item.type !== 'rental-car' && (
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-              {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
-            </div>
-          )}
         </div>
 
         {/* Chevron */}
