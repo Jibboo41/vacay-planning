@@ -166,10 +166,17 @@ function App() {
 
   const getThemeBlobs = (t: string) => {
     switch (t) {
-      case 'sunset': return ['#FF3B30', '#FF9F0A', '#FFD60A'];
-      case 'midnight': return ['#5E5CE6', '#BF5AF2', '#32ADE6'];
-      case 'forest': return ['#30D158', '#34C759', '#32ADE6'];
-      default: return [undefined, undefined, undefined];
+      case 'sunset':     return ['#FF3B30', '#FF9F0A', '#FFD60A'];
+      case 'midnight':   return ['#5E5CE6', '#BF5AF2', '#32ADE6'];
+      case 'forest':     return ['#30D158', '#34C759', '#32ADE6'];
+      // New creative themes
+      case 'aurora':     return ['#00F5A0', '#8B5CF6', '#06B6D4'];
+      case 'desert':     return ['#E2A57E', '#C9415A', '#EDCA7F'];
+      case 'ocean':      return ['#0EA5E9', '#0D9488', '#6366F1'];
+      case 'vulcan':     return ['#FF4500', '#FF8C00', '#FF2D55'];
+      case 'sakura':     return ['#FF85A2', '#D891EF', '#FFB6CE'];
+      case 'cyberpunk':  return ['#FF00AA', '#00FFEA', '#FFE600'];
+      default:           return [undefined, undefined, undefined];
     }
   };
   const [b1, b2, b3] = getThemeBlobs(theme);

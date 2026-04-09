@@ -88,24 +88,51 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <span>New Trip</span>
           </button>
           <div style={{ padding: '24px 0 10px' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Appearance</h3>
+            <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Appearance</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <button 
-                onClick={() => setTheme('default')} 
-                style={{ background: theme === 'default' ? 'var(--sys-blue)' : 'rgba(255,255,255,0.06)', color: '#fff', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, transition: '0.2s', border: theme === 'default' ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent' }}
-              >Default</button>
-              <button 
-                onClick={() => setTheme('sunset')} 
-                style={{ background: theme === 'sunset' ? '#FF9F0A' : 'rgba(255,255,255,0.06)', color: '#fff', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, transition: '0.2s', border: theme === 'sunset' ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent' }}
-              >Sunset</button>
-              <button 
-                onClick={() => setTheme('midnight')} 
-                style={{ background: theme === 'midnight' ? '#5E5CE6' : 'rgba(255,255,255,0.06)', color: '#fff', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, transition: '0.2s', border: theme === 'midnight' ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent' }}
-              >Midnight</button>
-              <button 
-                onClick={() => setTheme('forest')} 
-                style={{ background: theme === 'forest' ? '#34C759' : 'rgba(255,255,255,0.06)', color: '#fff', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, transition: '0.2s', border: theme === 'forest' ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent' }}
-              >Forest</button>
+              {([
+                { key: 'default',   label: 'Default',     icon: '🌌', grad: 'linear-gradient(135deg, #0A84FF 0%, #BF5AF2 100%)' },
+                { key: 'sunset',    label: 'Sunset',      icon: '🌅', grad: 'linear-gradient(135deg, #FF3B30 0%, #FF9F0A 50%, #FFD60A 100%)' },
+                { key: 'midnight',  label: 'Midnight',    icon: '🌙', grad: 'linear-gradient(135deg, #5E5CE6 0%, #BF5AF2 60%, #32ADE6 100%)' },
+                { key: 'forest',    label: 'Forest',      icon: '🌿', grad: 'linear-gradient(135deg, #30D158 0%, #34C759 50%, #32ADE6 100%)' },
+                { key: 'aurora',    label: 'Aurora',      icon: '✨', grad: 'linear-gradient(135deg, #00F5A0 0%, #8B5CF6 55%, #06B6D4 100%)' },
+                { key: 'desert',    label: 'Desert Rose', icon: '🌹', grad: 'linear-gradient(135deg, #E2A57E 0%, #C9415A 55%, #EDCA7F 100%)' },
+                { key: 'ocean',     label: 'Deep Ocean',  icon: '🌊', grad: 'linear-gradient(135deg, #0EA5E9 0%, #0D9488 50%, #6366F1 100%)' },
+                { key: 'vulcan',    label: 'Vulcan',      icon: '🌋', grad: 'linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FF2D55 100%)' },
+                { key: 'sakura',    label: 'Sakura',      icon: '🌸', grad: 'linear-gradient(135deg, #FF85A2 0%, #D891EF 55%, #FFB6CE 100%)' },
+                { key: 'cyberpunk', label: 'Cyberpunk',   icon: '⚡', grad: 'linear-gradient(135deg, #FF00AA 0%, #00FFEA 55%, #FFE600 100%)' },
+              ] as const).map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setTheme(t.key)}
+                  style={{
+                    position: 'relative',
+                    borderRadius: '14px',
+                    overflow: 'hidden',
+                    border: theme === t.key ? '2px solid rgba(255,255,255,0.7)' : '2px solid transparent',
+                    boxShadow: theme === t.key ? '0 0 18px rgba(255,255,255,0.25)' : 'none',
+                    padding: 0,
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease',
+                    aspectRatio: '1.8',
+                  }}
+                >
+                  <div style={{ position: 'absolute', inset: 0, background: t.grad, opacity: 0.9 }} />
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(0,0,0,0.25)',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    gap: '2px'
+                  }}>
+                    <span style={{ fontSize: '20px', lineHeight: 1 }}>{t.icon}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', letterSpacing: '0.02em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{t.label}</span>
+                  </div>
+                  {theme === t.key && (
+                    <div style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,0.8)' }} />
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </div>
