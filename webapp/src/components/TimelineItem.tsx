@@ -86,7 +86,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       style={{
         borderLeft: `4px solid ${theme.color}`,
         overflow: 'hidden',
-        maxHeight: isExpanded ? '1000px' : '150px',
+        maxHeight: isExpanded ? '1000px' : '200px',
         marginTop: (groupPosition === 'middle' || groupPosition === 'end') ? '-12px' : '0px',
         borderTopLeftRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
         borderTopRightRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
@@ -111,11 +111,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                item.type === 'flight' ? 'TAKEOFF' : 'START'}
               {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
             </div>
-            {/* Same-day end time: show inline, neutral color */}
+            {/* End time badge: always show on collapsed card EXCEPT for hotel and rental-car */}
             {!isCheckout && item.endDate && item.endDate.includes('T') &&
-              getDayKey(item.startDate) === getDayKey(item.endDate) && (
+              item.type !== 'hotel' && item.type !== 'rental-car' && (
               <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px' }}>
-                {item.type === 'flight' ? 'LANDING' : item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'rental-car' ? 'RETURN' : 'END'} {getTimeLabel(item.endDate)}
+                {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
               </div>
             )}
           </div>
@@ -204,11 +204,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
               </div>
             </div>
-          ) : item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) ? (
-            // Cross-day end: only shown when expanded
+          ) : (item.type === 'hotel' || item.type === 'rental-car') && item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) ? (
+            // Hotel/rental checkout date: show in expanded view (not shown collapsed)
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px' }}>
-                {item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'flight' ? 'LANDING' : item.type === 'rental-car' ? 'RETURN' : 'END'} {getTimeLabel(item.endDate)}
+                {item.type === 'hotel' ? 'CHECK-OUT' : 'RETURN'} {getTimeLabel(item.endDate)}
                 {` (${getDayLabel(item.endDate)})`}
               </div>
             </div>
