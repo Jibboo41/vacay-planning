@@ -103,12 +103,21 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 8px', borderRadius: '6px' }}>
-            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : 
-             item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
-             item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') : 
-             item.type === 'flight' ? 'TAKEOFF' : 'START'}
-            {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 8px', borderRadius: '6px' }}>
+              {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : 
+               item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
+               item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') : 
+               item.type === 'flight' ? 'TAKEOFF' : 'START'}
+              {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+            </div>
+            {/* Same-day end time: show inline, neutral color */}
+            {!isCheckout && item.endDate && item.endDate.includes('T') &&
+              getDayKey(item.startDate) === getDayKey(item.endDate) && (
+              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px' }}>
+                {item.type === 'flight' ? 'LANDING' : item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'rental-car' ? 'RETURN' : 'END'} {getTimeLabel(item.endDate)}
+              </div>
+            )}
           </div>
           {!isCheckout && (
             <div
@@ -195,11 +204,12 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
               </div>
             </div>
-          ) : item.endDate ? (
+          ) : item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) ? (
+            // Cross-day end: only shown when expanded
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#ff3b30', background: 'rgba(255,59,48,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px' }}>
                 {item.type === 'hotel' ? 'CHECK-OUT' : item.type === 'flight' ? 'LANDING' : item.type === 'rental-car' ? 'RETURN' : 'END'} {getTimeLabel(item.endDate)}
-                {getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.endDate)})`}
+                {` (${getDayLabel(item.endDate)})`}
               </div>
             </div>
           ) : null}

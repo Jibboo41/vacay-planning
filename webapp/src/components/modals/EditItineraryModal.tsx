@@ -177,10 +177,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
           {/* Start Date & Time */}
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Takeoff Date' : 'Date'}</label>
-                {date && <button onClick={() => setDate('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
-              </div>
+              <label className="edit-field-label">{type === 'flight' ? 'Takeoff Date' : 'Date'}</label>
               <input
                 className="edit-field-input"
                 style={{ width: 'auto', minWidth: '150px' }}
@@ -192,10 +189,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
 
             {type !== 'food' && (
               <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Takeoff Time' : 'Time'}</label>
-                  {time && <button onClick={() => setTime('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
-                </div>
+                <label className="edit-field-label">{type === 'flight' ? 'Takeoff Time' : 'Time'}</label>
                 <input
                   className="edit-field-input"
                   style={{ width: 'auto', minWidth: '130px' }}

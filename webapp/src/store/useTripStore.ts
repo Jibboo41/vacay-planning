@@ -62,8 +62,10 @@ interface TripStore {
 
   // Todo Actions
   addTodo: (text: string, dueDate?: string) => Promise<void>;
+  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null }) => Promise<void>;
   toggleTodo: (id: string) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
+  reorderTodos: (newOrder: import('../core/models').TodoItem[]) => Promise<void>;
   
   // Expense Actions
   addExpense: (expense: Omit<Expense, 'id' | 'paid' | 'paidAmount'>) => Promise<void>;
@@ -359,6 +361,25 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const newTodos = todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
     set({ todos: newTodos });
     await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
+  },
+
+  updateTodo: async (id, updates) => {
+    const { currentTripId, todos } = get();
+    if (!currentTripId) return;
+    const newTodos = todos.map(t => t.id === id ? { 
+      ...t, 
+      ...updates,
+      dueDate: updates.dueDate === null ? undefined : (updates.dueDate ?? t.dueDate)
+    } : t);
+    set({ todos: newTodos });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
+  },
+
+  reorderTodos: async (newOrder) => {
+    const { currentTripId } = get();
+    if (!currentTripId) return;
+    set({ todos: newOrder });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newOrder) });
   },
 
   deleteTodo: async (id) => {
