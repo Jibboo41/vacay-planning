@@ -98,62 +98,46 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       {(groupPosition === 'middle' || groupPosition === 'end') && (
          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.05)', zIndex: 5 }} />
       )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+      {/* Top row: date label + drag handle only (slim) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em' }}>
           {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 8px', borderRadius: '6px' }}>
-              {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') : 
-               item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
-               item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') : 
-               item.type === 'flight' ? 'TAKEOFF' : 'START'}
-              {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
-            </div>
-            {/* End time badge: always show on collapsed card EXCEPT for hotel and rental-car */}
-            {!isCheckout && item.endDate && item.endDate.includes('T') &&
-              item.type !== 'hotel' && item.type !== 'rental-car' && (
-              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px' }}>
-                {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
-              </div>
-            )}
+        {!isCheckout && (
+          <div
+            className="drag-handle"
+            onClick={e => e.stopPropagation()}
+            onTouchStart={onGripTouchStart}
+          >
+            <GripVertical size={16} />
           </div>
-          {!isCheckout && (
-            <div
-              className="drag-handle"
-              onClick={e => e.stopPropagation()}
-              onTouchStart={onGripTouchStart}
-            >
-              <GripVertical size={16} />
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', marginTop: '4px' }}>
+      {/* Body row: icon | title+location | time badges | chevron */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
         <div style={{
           width: '44px', height: '44px', borderRadius: '12px',
           backgroundColor: theme.bg,
           color: theme.color,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginRight: '16px',
+          marginRight: '12px',
           flexShrink: 0
         }}>
           {theme.icon}
         </div>
 
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', marginBottom: '4px' }}>
+        {/* Title + location — flex:1, min-width:0 so it truncates */}
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+          <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {item.title}
           </h3>
-          <div 
-            style={{ 
-              display: 'inline-flex', alignItems: 'flex-start', 
+          <div
+            style={{
+              display: 'flex', alignItems: 'flex-start',
               cursor: (typeof item.location.latitude === 'number') ? 'pointer' : 'default',
-              padding: '2px 6px 2px 0', borderRadius: '4px',
+              padding: '1px 0',
               transition: 'background 0.2s',
-              maxWidth: '100%',
               overflow: 'hidden'
             }}
             onClick={(e) => {
@@ -170,22 +154,40 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                e.currentTarget.style.background = 'transparent';
             }}
           >
-            <MapPin size={12} color="var(--sys-label-tertiary)" style={{ marginRight: '6px', marginTop: '3px', flexShrink: 0 }} />
+            <MapPin size={12} color="var(--sys-label-tertiary)" style={{ marginRight: '5px', marginTop: '3px', flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {item.location.name && item.location.name !== item.location.address && (
-                <span style={{ fontSize: '14px', color: '#FFF', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ fontSize: '13px', color: '#FFF', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {item.location.name}
                 </span>
               )}
-              <span style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <span style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {item.location.address || item.location.name || 'No location'}
               </span>
             </div>
           </div>
         </div>
 
-        <div 
-          style={{ padding: '8px', opacity: 0.4, cursor: 'pointer', zIndex: 10 }}
+        {/* Time badges — stacked, right-aligned, between text and chevron */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0, marginLeft: '8px' }}>
+          <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') :
+             item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
+             item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
+             item.type === 'flight' ? 'TAKEOFF' : 'START'}
+            {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+          </div>
+          {!isCheckout && item.endDate && item.endDate.includes('T') &&
+            item.type !== 'hotel' && item.type !== 'rental-car' && (
+            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+              {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
+            </div>
+          )}
+        </div>
+
+        {/* Chevron */}
+        <div
+          style={{ padding: '8px', paddingLeft: '6px', opacity: 0.4, cursor: 'pointer', zIndex: 10, flexShrink: 0 }}
           onClick={(e) => {
             e.stopPropagation();
             setIsExpanded(!isExpanded);
