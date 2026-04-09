@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Trash2, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, Flower2, Waves, Flame, Flower, Zap } from 'lucide-react';
+import { Plus, Trash2, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, Flower2, Waves, Flame, Flower, Zap, Plane, BedDouble, Car, Navigation, MountainSnow, Utensils, StickyNote, TrainFront } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,6 +17,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const currentTripId = useTripStore(s => s.currentTripId);
   const theme = useTripStore(s => s.theme);
   const setTheme = useTripStore(s => s.setTheme);
+  const activeFilters = useTripStore(s => s.activeFilters);
+  const toggleFilter = useTripStore(s => s.toggleFilter);
   
   const [newTripTitle, setNewTripTitle] = React.useState('');
   const [isAdding, setIsAdding] = React.useState(false);
@@ -138,6 +140,41 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   )}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div style={{ padding: '24px 0 10px' }}>
+            <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filter Views</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+              {[
+                { type: 'flight', icon: <Plane size={18} /> },
+                { type: 'hotel', icon: <BedDouble size={18} /> },
+                { type: 'rental-car', icon: <Car size={18} /> },
+                { type: 'activity', icon: <Navigation size={18} /> },
+                { type: 'hiking', icon: <MountainSnow size={18} /> },
+                { type: 'food', icon: <Utensils size={18} /> },
+                { type: 'note', icon: <StickyNote size={18} /> },
+                { type: 'transit', icon: <TrainFront size={18} /> },
+              ].map(f => {
+                const isActive = activeFilters.includes(f.type);
+                return (
+                  <button
+                    key={f.type}
+                    onClick={() => toggleFilter(f.type)}
+                    style={{
+                      aspectRatio: '1', borderRadius: '12px',
+                      background: isActive ? 'var(--sys-blue)' : 'rgba(255,255,255,0.05)',
+                      border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'),
+                      color: isActive ? '#fff' : 'var(--sys-label-secondary)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.2s ease', cursor: 'pointer',
+                    }}
+                    title={f.type}
+                  >
+                    {f.icon}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -39,6 +39,7 @@ interface TripStore {
   lastSaveError: string | null;
   editingItem: ItineraryItem | null;
   editingExpense: Expense | null;
+  activeFilters: string[];
   
   // Actions
   setUserId: (userId: string | null) => void;
@@ -56,6 +57,7 @@ interface TripStore {
   addItem: (item: ItineraryItem) => Promise<void>;
   updateItem: (id: string, updatedFields: Partial<ItineraryItem>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
+  toggleFilter: (type: string) => void;
   addNote: (dayKey: string, title: string, content: string) => Promise<void>;
   reorderItems: (activeId: string, overId: string | null, newDayKey: string) => Promise<void>;
   saveAiSummary: (summary: string) => Promise<void>;
@@ -133,11 +135,17 @@ export const useTripStore = create<TripStore>((set, get) => ({
   lastSaveError: null,
   editingItem: null,
   editingExpense: null,
+  activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
   setSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
   setFocusedLocation: (focusedLocation) => set({ focusedLocation }),
+  toggleFilter: (type: string) => set((state) => ({
+    activeFilters: state.activeFilters.includes(type)
+      ? state.activeFilters.filter(t => t !== type)
+      : [...state.activeFilters, type]
+  })),
   setTheme: (theme) => {
     localStorage.setItem('vacay_theme', theme);
     set({ theme });

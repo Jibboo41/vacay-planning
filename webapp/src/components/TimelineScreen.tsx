@@ -95,7 +95,7 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, weather, reorderItems, setSidebarOpen, setEditingItem } = useTripStore();
+  const { items, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters } = useTripStore();
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
 
@@ -116,38 +116,38 @@ export default function TimelineScreen() {
     onEnd: (() => void) | null;
   }>({ draggingId: null, dropTargetId: null, ghost: null, onMove: null, onEnd: null });
 
-  // ── Group & sort items by day ──────────────────────────────────────────────
-  const sortedItems = [...items].sort((a, b) => {
-    const dayA = getDayKey(a.startDate), dayB = getDayKey(b.startDate);
+  // ── Flatten, filter & sort items ───────────────────────────────────────────
+  const filtered = items.filter(i => activeFilters.includes(i.type));
+
+  const flattened: (ItineraryItem & { _isCheckout?: boolean, _renderDate: string })[] = [];
+  filtered.forEach(item => {
+    flattened.push({ ...item, _renderDate: item.startDate });
+    const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
+    if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay) {
+      flattened.push({ ...item, _isCheckout: true, _renderDate: item.endDate! });
+    }
+  });
+
+  flattened.sort((a, b) => {
+    const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
     if (dayA !== dayB) return dayA.localeCompare(dayB);
     if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
     if (a.sortOrder !== undefined) return -1;
     if (b.sortOrder !== undefined) return 1;
-    return a.startDate.localeCompare(b.startDate);
+    return a._renderDate.localeCompare(b._renderDate);
   });
 
   const dayGroups: DayGroup[] = [];
   const dayMap: Record<string, DayGroup> = {};
 
-  // Helper to add item to dayMap
-  const addToDay = (dateStr: string, item: ItineraryItem, checkout = false) => {
-    const key = getDayKey(dateStr);
+  flattened.forEach(item => {
+    const key = getDayKey(item._renderDate);
     if (!dayMap[key]) {
-      dayMap[key] = { dateKey: key, label: getDayLabel(dateStr), items: [] };
+      dayMap[key] = { dateKey: key, label: getDayLabel(item._renderDate), items: [] };
       dayGroups.push(dayMap[key]);
     }
-    dayMap[key].items.push(checkout ? ({ ...item, _isCheckout: true } as any) : item);
-  };
-
-  for (const item of sortedItems) {
-    addToDay(item.startDate, item);
-    const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
-    if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay) {
-      addToDay(item.endDate!, item, true);
-    }
-  }
-
-  dayGroups.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+    dayMap[key].items.push(item);
+  });
 
   useEffect(() => {
     if (dayGroups.length > 0 && !activeDayKey) setActiveDayKey(dayGroups[0].dateKey);
@@ -201,9 +201,13 @@ export default function TimelineScreen() {
       const targetDayKey = overId.replace('end-of-', '');
       reorderItems(rawDraggingId, null, targetDayKey);
     } else if (draggingId !== overId) {
+      const isOverCheckout = overId.endsWith('-checkout');
       const rawOverId = overId.replace('-checkout', '');
       const overItem = items.find(i => i.id === rawOverId);
-      if (overItem) reorderItems(rawDraggingId, rawOverId, getDayKey(overItem.startDate));
+      if (overItem) {
+        const targetDayKey = (isOverCheckout && overItem.endDate) ? getDayKey(overItem.endDate) : getDayKey(overItem.startDate);
+        reorderItems(rawDraggingId, rawOverId, targetDayKey);
+      }
     }
     handleDragEnd();
   };
@@ -264,9 +268,13 @@ export default function TimelineScreen() {
         if (toId.startsWith('end-of-')) {
           reorderItems(rawFromId, null, toId.replace('end-of-', ''));
         } else {
+          const isOverCheckout = toId.endsWith('-checkout');
           const rawToId = toId.replace('-checkout', '');
           const overItem = items.find(i => i.id === rawToId);
-          if (overItem) reorderItems(rawFromId, rawToId, getDayKey(overItem.startDate));
+          if (overItem) {
+            const targetDayKey = (isOverCheckout && overItem.endDate) ? getDayKey(overItem.endDate) : getDayKey(overItem.startDate);
+            reorderItems(rawFromId, rawToId, targetDayKey);
+          }
         }
       }
     };

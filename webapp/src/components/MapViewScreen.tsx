@@ -128,10 +128,11 @@ function MapController() {
 }
 
 export default function MapViewScreen() {
-  const { items, setSidebarOpen } = useTripStore();
+  const { items, setSidebarOpen, activeFilters } = useTripStore();
 
   const mappable = items.filter(
-    i => typeof i.location.latitude === 'number' && typeof i.location.longitude === 'number'
+    i => (typeof i.location.latitude === 'number' && typeof i.location.longitude === 'number') &&
+         activeFilters.includes(i.type)
   );
 
   const allPositions: [number, number][] = mappable.map(

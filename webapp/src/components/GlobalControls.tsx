@@ -44,7 +44,8 @@ export default function GlobalControls() {
   return (
     <>
       {/* ── Sparkles Action FAB (Bottom Left) ── */}
-      <div className="fab-group left">
+      {location.pathname !== '/map' && (
+        <div className="fab-group left">
         <button 
           className={`fab-main ${isSparkleOpen ? 'active' : ''}`} 
           onClick={() => { setIsSparkleOpen(!isSparkleOpen); setIsViewOpen(false); }}
@@ -94,6 +95,7 @@ export default function GlobalControls() {
           </button>
         </div>
       </div>
+      )}
 
       {/* ── View Switcher FAB (Bottom Right) ── */}
       <div className="fab-group right">
