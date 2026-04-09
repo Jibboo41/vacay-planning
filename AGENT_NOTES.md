@@ -183,13 +183,20 @@ If `paidAmount > amount` → shown in red as over-budget.
 
 ---
 
-## ✅ Timeline Item — End Time Display Rules
+## ✅ Timeline Item — Layout & Badge Rules
 
-- **Same-day end time**: shown **collapsed** (inline second badge, neutral gray, NO red)
-- **Cross-day end time**: shown only when **expanded**
-- **Checkout cards** (hotels spanning days): always show check-in reference in expanded view
-
-> ⚠️ End times should NEVER be red. Use `var(--sys-label-secondary)` or `rgba(255,255,255,0.06)` bg.
+- **Header Row**: Minimalist design containing only the date label (e.g., TUE, JUL 28) and the drag-handle grip.
+- **Body Row**: Contains the icon, text column (Title + Location), time badges, and chevron.
+- **Time Badges**: Displayed as stacked badges to the right of the text content.
+  - **Start Time**: Semantic color (theme.color) with background (`theme.bg`). Labels: TAKEOFF, CHECK-IN, PICKUP, START.
+  - **End Time**: Neutral gray (`rgba(255,255,255,0.06)`). Labels: LANDING, END.
+- **Display Rules (Collapsed)**:
+  - **flight**: ✅ Always shows LANDING if `endDate` has a time.
+  - **activity / hiking / transit / food / note**: ✅ Always shows END time.
+  - **hotel / rental-car**: ❌ End time NOT shown collapsed (visible in expanded view only).
+- **Display Rules (Expanded)**:
+  - **hotel / rental-car**: ✅ Cross-day checkout/return date shown in expanded content as a badge.
+  - **Other types**: ❌ End time suppressed (already visible in collapsed state).
 
 ---
 
