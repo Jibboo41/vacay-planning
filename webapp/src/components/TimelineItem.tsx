@@ -286,11 +286,10 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 
               onClick={(e) => { e.stopPropagation(); onPress(); }}
-              className="details-btn"
+              className="details-btn btn-glass-blue"
               style={{
-                flex: 1, padding: '12px', borderRadius: '12px', background: 'var(--sys-blue)', color: '#fff',
-                border: 'none', fontSize: '14px', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                boxShadow: '0 4px 12px rgba(10,132,255,0.3)'
+                flex: 1, padding: '12px', borderRadius: '12px',
+                fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               }}
             >
               Edit

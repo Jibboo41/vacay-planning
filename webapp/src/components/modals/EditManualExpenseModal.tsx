@@ -115,7 +115,8 @@ export default function EditManualExpenseModal() {
           </button>
           <button 
             onClick={handleSave}
-            style={{ flex: 1, padding: '16px', borderRadius: '14px', background: 'var(--sys-blue)', border: 'none', color: '#FFF', fontWeight: 700, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+            className="btn-glass-blue"
+            style={{ flex: 1, padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
           >
             <Save size={18} />
             Save Changes

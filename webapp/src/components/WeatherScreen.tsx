@@ -191,8 +191,8 @@ export default function WeatherScreen() {
           </p>
         </div>
         <button 
-          className="header-icon-btn"
-          style={{ background: 'var(--sys-blue)', borderRadius: '14px', marginLeft: 'auto' }}
+          className="header-icon-btn btn-glass-blue"
+          style={{ borderRadius: '14px', marginLeft: 'auto' }}
           onClick={handleUpdate}
           disabled={loading}
         >

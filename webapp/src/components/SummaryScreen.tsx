@@ -198,14 +198,14 @@ export default function SummaryScreen() {
                   <div style={{ color: 'var(--sys-label-primary)', fontSize: '15px', lineHeight: '1.6' }}>
                     <Linkified text={currentTripAiSummary} />
                   </div>
-                  <button onClick={handleGenerateSummary} disabled={isGenerating} style={{ marginTop: '16px', background: 'transparent', border: '1px solid rgba(10, 132, 255, 0.3)', color: '#0A84FF', fontSize: '13px', fontWeight: 600, padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn-glass-blue" style={{ marginTop: '16px', fontSize: '13px', padding: '6px 14px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                     {isGenerating ? 'Regenerating...' : 'Regenerate'}
                   </button>
                 </>
               ) : (
                 <div style={{ textAlign: 'center', padding: '10px 0' }}>
                   <p style={{ color: 'var(--sys-label-secondary)', fontSize: '14px', marginBottom: '16px' }}>Generate a magical summary of this trip outline using AI.</p>
-                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} style={{ background: '#0A84FF', color: '#fff', fontSize: '14px', fontWeight: 600, padding: '10px 20px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', border: 'none', opacity: isGenerating || items.length === 0 ? 0.7 : 1 }}>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn-glass-blue" style={{ fontSize: '14px', padding: '10px 20px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                     {isGenerating ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={16} />}
                     {isGenerating ? 'Synthesizing...' : 'Generate Summary'}
                   </button>
@@ -214,7 +214,7 @@ export default function SummaryScreen() {
             </div>
 
             {dayGroups.map((group, groupIdx) => (
-              <div key={group.dateKey} style={{ background: 'var(--sys-bg-elevated)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+              <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
                     {groupIdx + 1}

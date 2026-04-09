@@ -396,12 +396,11 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         <div style={{ flexShrink: 0, paddingTop: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleSave}
+            className="btn-glass-blue"
             style={{
               width: '100%', padding: '16px', borderRadius: '14px',
-              background: 'var(--sys-blue)', color: '#FFF',
-              fontSize: '16px', fontWeight: 700,
+              fontSize: '16px',
               display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-              boxShadow: '0 4px 16px rgba(10,132,255,0.4)',
             }}
           >
             <Save size={18} />

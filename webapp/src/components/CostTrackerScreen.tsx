@@ -142,12 +142,11 @@ export default function CostTrackerScreen() {
       {!showAdd ? (
         <button 
           onClick={() => setShowAdd(true)}
+          className="btn-glass-blue"
           style={{ 
             width: '100%', padding: '16px', borderRadius: '16px', 
-            background: 'var(--sys-blue)', color: '#fff', border: 'none',
-            fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', 
+            fontSize: '16px', display: 'flex', alignItems: 'center', 
             justifyContent: 'center', gap: '8px', marginBottom: '32px',
-            boxShadow: '0 8px 24px rgba(10, 132, 255, 0.3)'
           }}
         >
           <Plus size={20} /> Add Expense
@@ -186,7 +185,7 @@ export default function CostTrackerScreen() {
           />
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}>Cancel</button>
-            <button onClick={handleAdd} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'var(--sys-blue)', border: 'none', color: '#fff', fontWeight: 700 }}>Save</button>
+            <button onClick={handleAdd} className="btn-glass-blue" style={{ flex: 1, padding: '12px', borderRadius: '12px' }}>Save</button>
           </div>
         </div>
       )}
