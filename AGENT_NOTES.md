@@ -1,5 +1,5 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-09 | Phase 10 Complete & Deployed
+> Last updated: 2026-04-09 | Phase 11 Complete & Deployed
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 
@@ -93,6 +93,7 @@ Uses **Zustand**. All data synced to Firestore via `updateDoc`. Key actions:
 - `updateWeather(WeatherCache)`
 - `setEditingItem(item | null)` — triggers global edit modal in `GlobalControls`
 - `setEditingExpense(exp | null)` — triggers expense editing
+- `toggleFilter(type)` — toggles visibility for specific event types (stored in `activeFilters[]`)
 - `syncTrips(trips)` — called by Firestore real-time listener
 
 **Global editing pattern**: Any screen can call `setEditingItem(item)` and `GlobalControls` will automatically show `EditItineraryModal`. This is the preferred pattern.
@@ -182,9 +183,15 @@ Cost tracker header shows: **Large total** | Paid (green) | Remaining (blue).
 If `paidAmount > amount` → shown in red as over-budget.
 
 ---
-
-## ✅ Timeline Item — Layout & Badge Rules
-
+ 
+ ## ✅ Timeline Item — Layout & Grouping Rules
+ 
+- **Grouping Logic (Flatten & Global Sort)**: 
+  - To handle multi-day hotel/rental car returns correctly, the timeline uses a "Flatten and Global Sort" strategy.
+  - All real items + virtual "checkout/return" items are flattened into a single array.
+  - Each item is assigned a `_renderDate` (either `startDate` or `endDate` for checkouts).
+  - The array is sorted globally by `_renderDate` and `sortOrder`.
+  - Finally, the sorted list is grouped into days. This ensures that a 10 AM return on Wednesday sorts correctly among other Wednesday items, even if the pickup was on Monday.
 - **Header Row**: Contains the date label (e.g., TUE, JUL 28), START/END time badges, and the drag-handle grip.
 - **Body Row**: Contains the icon, text column (Title + Location), and chevron.
 - **Vertical Efficiency**: Times in the header row free up horizontal space for long titles and locations.
@@ -229,6 +236,12 @@ If `paidAmount > amount` → shown in red as over-budget.
 **FAB order** (right, bottom-up): Timeline → Map → Outline → Todos → Costs → Weather
 
 **Add content** (left FAB, Sparkle): AI Parse | Manual Entry | Note
+- ⚠️ **Map View**: The Sparkle FAB is conditionally HIDDEN on the Map view to avoid legend overlap.
+
+**Global Filtering**: 
+- Accessible via the **Sidebar** -> "Filter Views".
+- Toggles visibility for: `flight`, `hotel`, `rental-car`, `activity`, `hiking`, `food`, `note`, `transit`.
+- Applied globally to both **Timeline** (pre-grouping) and **Map** (marker/route filtering).
 
 **Start date/time on itinerary items**: REQUIRED — do NOT add Clear buttons. Only end date/time is optional (has Clear).
 

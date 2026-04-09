@@ -19,14 +19,16 @@
 - **Trip Synopsis**: Generate a beautifully written AI summary of your entire journey's vibe and destination trajectory with one click.
 - **Compact Summary View**: A presentation-ready, high-density outline of your itinerary. No clutter—just destination names, chronological days, and calculated stay lengths.
 - **Efficient Header Layout**: Itinerary cards feature a high-density header containing both the date and the START/END time badges, maximizing horizontal space for titles and locations. Cross-day indicator (`+1`) appears for multi-day activities.
-- **Responsive Chronology**: Shift your entire trip by dragging a single day. Timeless notes stay fixed, while mapped stops adopt the new timeline automatically.
+- **Responsive Chronology**: Shift your entire trip by dragging a single day. Improved sorting logic ensures that multi-day rental car returns and hotel check-outs appear at their precise chronological time within the destination day, regardless of their original start date.
 
 ### 🔹 Leaflet Destination Mapping
 - **Interactive Map**: Visualize your stops on a reactive vector map.
+- **Dynamic Control**: The left-side Sparkle menu automatically hides in the map view to provide an unobstructed view of the map legend and navigation markers.
 - **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order. Fixed logic re-calculates paths instantly upon itinerary changes.
 
 ### 🔹 Travel Power Modules
 - **Todo System**: Trip checklists with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder via grip handle.
+- **Global Event Filtering**: Toggle visibility for specific categories (Flights, Hotels, Rentals, Activities, etc.) across both the Timeline and Map via the Sidebar to focus on specific trip segments.
 - **Cost Tracker**: Comprehensive expense dashboard aggregating itinerary costs with paid/remaining split tracking and over-budget alerts.
 - **Weather Suite**: Integrated daily forecasts via Open-Meteo API with **5-year historical precipitation averages** (rainfall + snowfall in inches) and daily H/L aggregated across all stops.
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
