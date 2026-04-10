@@ -108,6 +108,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 { key: 'vulcan',    label: 'Vulcan',      icon: <Flame size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FF2D55 100%)' },
                 { key: 'sakura',    label: 'Sakura',      icon: <Flower size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF85A2 0%, #D891EF 55%, #FFB6CE 100%)' },
                 { key: 'cyberpunk', label: 'Cyberpunk',   icon: <Zap size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF00AA 0%, #00FFEA 55%, #FFE600 100%)' },
+                { key: 'slate',     label: 'Slate',       icon: <Plus size={20} style={glassIconStyle} />, grad: '#708090' },
+                { key: 'black',     label: 'Black',       icon: <Moon size={20} style={glassIconStyle} />, grad: '#000000' },
               ]).map(t => (
                 <button
                   key={t.key}

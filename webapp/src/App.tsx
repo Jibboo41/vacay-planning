@@ -201,6 +201,8 @@ function App() {
       case 'vulcan':     return ['#FF4500', '#FF8C00', '#FF2D55'];
       case 'sakura':     return ['#FF85A2', '#D891EF', '#FFB6CE'];
       case 'cyberpunk':  return ['#FF00AA', '#00FFEA', '#FFE600'];
+      case 'slate':      return ['#708090', '#708090', '#708090'];
+      case 'black':      return ['#000000', '#000000', '#000000'];
       default:           return [undefined, undefined, undefined];
     }
   };

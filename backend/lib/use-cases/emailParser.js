@@ -24,7 +24,9 @@ Return ONLY a valid JSON array of ItineraryItem objects, following this schema:
       "longitude": "A roughly estimated floating point decimal measuring longitude"
     },
     "description": "Any remaining useful info like confirmation codes or rules. Use standard newlines (\\n) for line breaks to ensure paragraph formatting.",
-    "confirmationNumber": "string if available"
+    "confirmationNumber": "string if available",
+    "cost": "Total cost of this item as a number (omit currency symbols like $).",
+    "paidAmount": "Amount already paid for this item as a number (optional)."
   }
 ]
 Do not include markdown blocks like \`\`\`json, return pure JSON.

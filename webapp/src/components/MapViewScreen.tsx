@@ -171,6 +171,17 @@ export default function MapViewScreen() {
 
   const dayKeys = useMemo(() => [...byDayMap.keys()].sort(), [byDayMap]);
 
+  const allTripDayKeys = useMemo(() => {
+    const keys = new Set<string>();
+    items.forEach(item => {
+      keys.add(getDayKey(item.startDate));
+      if (item.endDate && (item.type === 'hotel' || item.type === 'rental-car')) {
+        keys.add(getDayKey(item.endDate));
+      }
+    });
+    return [...keys].sort();
+  }, [items]);
+
   useEffect(() => {
     if (mappable.length < 2) {
       setDayRoutes([]);
@@ -186,7 +197,9 @@ export default function MapViewScreen() {
       for (let i = 0; i < dayKeys.length; i++) {
         const key   = dayKeys[i];
         const stops = byDayMap.get(key)!;
-        const color = DAY_PALETTE[i % DAY_PALETTE.length];
+        // Color should be consistent with the total trip days sequence
+        const colorIdx = allTripDayKeys.indexOf(key);
+        const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
 
         if (stops.length < 2) {
           results.push({ dayKey: key, color, coords: straightLine(stops), distance: 0 });
@@ -204,7 +217,7 @@ export default function MapViewScreen() {
       setDayRoutes(results);
       setRouteStatus('done');
     })();
-  }, [dayKeys, byDayMap, mappable.length]);
+  }, [dayKeys, byDayMap, mappable.length, allTripDayKeys]);
 
   const crossDayLines: [number, number][][] = [];
   for (let i = 0; i < dayKeys.length - 1; i++) {
@@ -351,7 +364,7 @@ export default function MapViewScreen() {
         }}>
           <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em', marginBottom: '2px' }}>VISIBILITY BY DAY</div>
           
-          {dayKeys.map((key, i) => {
+          {allTripDayKeys.map((key, i) => {
             const isHidden = hiddenDayFilters.includes(key);
             const d = new Date(`${key}T12:00:00`);
             const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
