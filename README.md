@@ -184,12 +184,11 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 13: The Modernization Sprint (v1.7.0)
-- **Desktop Split-View**: Automatic dual-pane layout (Timeline + Map) on screens >= 1000px.
-- **Interactive Map Filtering**: Click a day in the legend to toggle its visibility on the map instantly.
-- **Chronological Integrity**: Every day in a trip range is now displayed in the Summary, including empty placeholders.
-- **Virtual Item Management**: Hotel checkouts and rental returns are now fully draggable and update their respective end-dates.
-- **iOS Zoom Prevention**: Globally enforced 16px font sizes on all inputs to stop intrusive browser auto-zooming.
-- **Duplicate Trip**: One-click "Copy" function in the Trip Selector to clone itineraries.
-- **Deletion Action**: Integrated Trash icons in the expanded itinerary view for manual maintenance.
-- **Cost Extraction**: AI Parser now identifies and populates 'Total Cost' and 'Paid Amount' from booking emails.
+## 📺 Phase 15: The System Refinement Sprint (v1.9.0)
+- **System Trace Logs**: Dedicated `/debug` screen for real-time monitoring of API interactions (Weather, Directions) and background sync events.
+- **Todo System Overhaul**: Replaced inline inputs with a dedicated "New Todo" button and structured form; hardened reordering logic for perfect cross-device touch support.
+- **Spatial Awareness**: Integrated weather forecasts (H/L temps and condition icons) into the daily itinerary headers on the Summary screen.
+- **Route Cache**: Optimized Map View performance with persistent caching of OSRM routing splines, making visibility toggles near-instant.
+- **Expanded Sidebar**: One-click Trip Duplication and navigation shortcuts integrated into the sidebar panel.
+- **Rental Parity**: Full metadata support (Booked via, Refundable) for rental car items to match hotel logic.
+- **AI Intelligence**: Enhanced Gemini parsing with automatic year sanitization based on existing itinerary context.
