@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Menu } from 'lucide-react';
-import type { ItineraryItem } from '../core/models';
 
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
@@ -65,17 +64,6 @@ function mapsUrl(lat: number, lng: number, name: string) {
 
 function getDayKey(dateStr: string) { return dateStr.split('T')[0]; }
 
-function groupByDay(items: ItineraryItem[]): Map<string, ItineraryItem[]> {
-  const map = new Map<string, ItineraryItem[]>();
-  const sorted = [...items].sort((a, b) => a.startDate.localeCompare(b.startDate));
-  for (const item of sorted) {
-    const key = getDayKey(item.startDate);
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(item);
-  }
-  return map;
-}
-
 interface DayRoute {
   dayKey: string;
   color: string;
@@ -83,14 +71,14 @@ interface DayRoute {
   distance: number; 
 }
 
-async function fetchOSRMRoute(stops: ItineraryItem[]): Promise<[number, number][]> {
+async function fetchOSRMRoute(stops: any[]): Promise<[number, number][]> {
   const waypoints = stops
     .map(s => `${s.location.longitude!},${s.location.latitude!}`)
     .join(';');
   const url =
     `https://router.project-osrm.org/route/v1/driving/${waypoints}` +
     `?overview=full&geometries=geojson&continue_straight=false`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const res = await fetch(url);
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes?.[0]) throw new Error('OSRM no route');
   return (data.routes[0].geometry.coordinates as [number, number][]).map(
@@ -98,7 +86,7 @@ async function fetchOSRMRoute(stops: ItineraryItem[]): Promise<[number, number][
   );
 }
 
-function straightLine(stops: ItineraryItem[]): [number, number][] {
+function straightLine(stops: any[]): [number, number][] {
   return stops.map(s => [s.location.latitude!, s.location.longitude!]);
 }
 
@@ -108,7 +96,7 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
     if (!positions.length) return;
     if (positions.length === 1) { map.setView(positions[0], 12); return; }
     map.fitBounds(L.latLngBounds(positions), { padding: [60, 60] });
-  }, []); 
+  }, [positions, map]); 
   return null;
 }
 
@@ -128,12 +116,39 @@ function MapController() {
 }
 
 export default function MapViewScreen() {
-  const { items, setSidebarOpen, activeFilters } = useTripStore();
+  const { items, setSidebarOpen, activeFilters, hiddenDayFilters, toggleDayFilter } = useTripStore();
 
-  const mappable = items.filter(
-    i => (typeof i.location.latitude === 'number' && typeof i.location.longitude === 'number') &&
-         activeFilters.includes(i.type)
-  );
+  const mappable = useMemo(() => {
+    const list: any[] = [];
+    items.forEach(item => {
+      const hasCoords = typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number';
+      if (!hasCoords) return;
+      if (!activeFilters.includes(item.type)) return;
+
+      const startKey = getDayKey(item.startDate);
+      if (!hiddenDayFilters.includes(startKey)) {
+        list.push({ ...item, _renderDate: item.startDate, _isBase: true });
+      }
+
+      if (item.endDate && (item.type === 'hotel' || item.type === 'rental-car')) {
+        const endKey = getDayKey(item.endDate);
+        // Include checkout/return even if it's the same day, so it appears in the sequence
+        if (!hiddenDayFilters.includes(endKey)) {
+          list.push({ ...item, _renderDate: item.endDate, _isCheckout: true });
+        }
+      }
+    });
+
+    // Ensure strictly chronological sorting before drawing lines
+    return list.sort((a, b) => {
+      if (a._renderDate !== b._renderDate) return a._renderDate.localeCompare(b._renderDate);
+      if (a.id === b.id) {
+         if (a._isCheckout) return 1;
+         if (b._isCheckout) return -1;
+      }
+      return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    });
+  }, [items, activeFilters, hiddenDayFilters]);
 
   const allPositions: [number, number][] = mappable.map(
     i => [i.location.latitude!, i.location.longitude!]
@@ -144,11 +159,25 @@ export default function MapViewScreen() {
   const [dayRoutes, setDayRoutes] = useState<DayRoute[]>([]);
   const [routeStatus, setRouteStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
 
-  useEffect(() => {
-    if (mappable.length < 2) return;
-    const byDay = groupByDay(mappable);
-    const dayKeys = [...byDay.keys()];
+  const byDayMap = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const item of mappable) {
+      const key = getDayKey(item._renderDate);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(item);
+    }
+    return map;
+  }, [mappable]);
 
+  const dayKeys = useMemo(() => [...byDayMap.keys()].sort(), [byDayMap]);
+
+  useEffect(() => {
+    if (mappable.length < 2) {
+      setDayRoutes([]);
+      setRouteStatus('done');
+      return;
+    }
+    
     setRouteStatus('loading');
 
     (async () => {
@@ -156,7 +185,7 @@ export default function MapViewScreen() {
 
       for (let i = 0; i < dayKeys.length; i++) {
         const key   = dayKeys[i];
-        const stops = byDay.get(key)!;
+        const stops = byDayMap.get(key)!;
         const color = DAY_PALETTE[i % DAY_PALETTE.length];
 
         if (stops.length < 2) {
@@ -175,22 +204,45 @@ export default function MapViewScreen() {
       setDayRoutes(results);
       setRouteStatus('done');
     })();
-  }, [items.length]);
+  }, [dayKeys, byDayMap, mappable.length]);
 
   const crossDayLines: [number, number][][] = [];
-  const byDay = groupByDay(mappable);
-  const dayKeys = [...byDay.keys()];
   for (let i = 0; i < dayKeys.length - 1; i++) {
-    const lastOfDay  = byDay.get(dayKeys[i])!.at(-1)!;
-    const firstOfNext = byDay.get(dayKeys[i + 1])!.at(0)!;
-    crossDayLines.push([
-      [lastOfDay.location.latitude!,  lastOfDay.location.longitude!],
-      [firstOfNext.location.latitude!, firstOfNext.location.longitude!],
-    ]);
+    const dayI = byDayMap.get(dayKeys[i]);
+    const dayNext = byDayMap.get(dayKeys[i + 1]);
+    if (dayI && dayNext) {
+      const lastOfDay = dayI.at(-1);
+      const firstOfNext = dayNext.at(0);
+      if (lastOfDay && firstOfNext) {
+        crossDayLines.push([
+          [lastOfDay.location.latitude!, lastOfDay.location.longitude!],
+          [firstOfNext.location.latitude!, firstOfNext.location.longitude!],
+        ]);
+      }
+    }
   }
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
+      <div className="map-header glass-effect screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000 }}>
+        <button 
+          className="header-icon-btn"
+          onClick={() => setSidebarOpen(true)}
+          style={{ marginRight: '4px' }}
+          aria-label="Open sidebar"
+        >
+          <Menu size={24} />
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
+            Destinations
+          </h1>
+          <p style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
+            {mappable.length} stop{mappable.length !== 1 ? 's' : ''} · {dayKeys.length} day{dayKeys.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+      </div>
+
       <MapContainer
         center={center}
         zoom={10}
@@ -213,8 +265,8 @@ export default function MapViewScreen() {
               positions={route.coords}
               pathOptions={{
                 color:   route.color,
-                weight:  5,
-                opacity: 0.85,
+                weight:  6,
+                opacity: 0.9,
                 lineCap: 'round',
                 lineJoin: 'round',
               }}
@@ -227,7 +279,7 @@ export default function MapViewScreen() {
             key={`cross-${i}`}
             positions={line}
             pathOptions={{
-              color:     'rgba(180, 180, 200, 0.6)',
+              color:     'rgba(180, 180, 200, 0.4)',
               weight:    3,
               dashArray: '8, 8',
               lineCap:   'round',
@@ -235,19 +287,20 @@ export default function MapViewScreen() {
           />
         ))}
 
-        {mappable.map(item => (
+        {mappable.map((item, idx) => (
           <Marker
-            key={item.id}
+            key={`${item.id}-${item._isCheckout ? 'out' : 'base'}-${idx}`}
             position={[item.location.latitude!, item.location.longitude!]}
             icon={makeMarkerIcon(item.type)}
           >
             <Popup className="custom-popup">
               <div style={{ minWidth: '190px', padding: '4px 2px' }}>
                 <p style={{ fontSize: '11px', color: '#0A84FF', fontWeight: 800, letterSpacing: '0.05em', marginBottom: '4px', textTransform: 'uppercase' }}>
-                  {new Date(item.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {new Date(item._renderDate.replace('T', ' ').replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {item._isCheckout ? ' • CHECK-OUT' : ''}
                 </p>
                 <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#111' }}>
-                  {item.title}
+                  {item.title} {item._isCheckout ? '(Checkout)' : ''}
                 </p>
                 {item.location.address && (
                   <p style={{ fontSize: '12px', color: '#555', marginBottom: '10px', lineHeight: 1.4 }}>
@@ -273,70 +326,50 @@ export default function MapViewScreen() {
         ))}
       </MapContainer>
 
-      {/* ─ Glass header ─ */}
-      <div className="map-header glass-effect screen-header">
-        <button 
-          className="header-icon-btn"
-          onClick={() => setSidebarOpen(true)}
-          style={{ marginRight: '4px' }}
-          aria-label="Open sidebar"
-        >
-          <Menu size={24} />
-        </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
-            Destinations
-          </h1>
-          <p style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {mappable.length} stop{mappable.length !== 1 ? 's' : ''} · {dayKeys.length} day{dayKeys.length !== 1 ? 's' : ''}
-          </p>
-        </div>
-      </div>
-
       {routeStatus === 'loading' && (
         <div style={{
           position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
           transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)',
-          color: '#fff', fontSize: '13px', fontWeight: 600,
-          padding: '8px 18px', borderRadius: '20px',
-          zIndex: 20, whiteSpace: 'nowrap',
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)',
+          color: '#fff', fontSize: '13px', fontWeight: 700,
+          padding: '10px 22px', borderRadius: '24px',
+          zIndex: 2000, whiteSpace: 'nowrap',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
         }}>
           🗺️ Calculating routes…
         </div>
       )}
 
-      {routeStatus === 'done' && dayRoutes.length > 0 && (
+      {routeStatus === 'done' && (
         <div style={{
-          position: 'absolute',
-          bottom: 'calc(24px + env(safe-area-inset-bottom))',
-          left: '16px',
-          background: 'rgba(0,0,0,0.65)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          borderRadius: '14px',
-          padding: '10px 14px',
-          zIndex: 1000,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
+          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          left: '16px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)', borderRadius: '18px',
+          padding: '12px 14px', zIndex: 1000, display: 'flex', flexDirection: 'column',
+          gap: '8px', border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)', maxHeight: '40vh', overflowY: 'auto'
         }}>
-          {dayRoutes.map(route => {
-            const d = new Date(`${route.dayKey}T12:00:00`);
+          <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em', marginBottom: '2px' }}>VISIBILITY BY DAY</div>
+          
+          {dayKeys.map((key, i) => {
+            const isHidden = hiddenDayFilters.includes(key);
+            const d = new Date(`${key}T12:00:00`);
             const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             return (
-              <div key={route.dayKey} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{ width: '24px', height: '4px', borderRadius: '2px', background: route.color, flexShrink: 0 }} />
+              <div 
+                key={key} 
+                onClick={() => toggleDayFilter(key)}
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: '10px', 
+                  cursor: 'pointer', opacity: isHidden ? 0.35 : 1,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{ width: '28px', height: '6px', borderRadius: '3px', background: DAY_PALETTE[i % DAY_PALETTE.length], flexShrink: 0 }} />
                 <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600 }}>{label}</span>
               </div>
             );
           })}
-          {crossDayLines.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '24px', height: '2px', background: 'rgba(235,245,245,0.45)', borderRadius: '1px', flexShrink: 0, borderTop: '2px dashed rgba(235,245,245,0.45)' }} />
-              <span style={{ color: 'rgba(235,235,245,0.6)', fontSize: '11px' }}>between days</span>
-            </div>
-          )}
         </div>
       )}
     </div>

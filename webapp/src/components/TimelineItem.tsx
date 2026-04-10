@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard } from 'lucide-react';
+import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -316,6 +316,32 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             >
               Edit
             </button>
+          </div>
+          {/* Delete Action (Bottom Right) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+            {!isCheckout && (
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   if (window.confirm(`Delete "${item.title}"?`)) {
+                     useTripStore.getState().deleteItem(item.id);
+                   }
+                 }}
+                 style={{ 
+                   display: 'flex', alignItems: 'center', gap: '8px',
+                   padding: '10px 18px', borderRadius: '12px',
+                   color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
+                   fontSize: '14px', fontWeight: 700,
+                   transition: 'all 0.2s ease',
+                   border: '1px solid rgba(255, 69, 58, 0.2)'
+                 }}
+                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
+                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
+               >
+                 <Trash2 size={16} color="var(--sys-red)" />
+                 Delete Item
+               </button>
+            )}
           </div>
         </div>
       )}

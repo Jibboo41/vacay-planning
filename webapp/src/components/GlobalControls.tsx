@@ -61,7 +61,7 @@ export default function GlobalControls() {
             aria-label="Add note"
           >
             <span style={{ fontSize: '18px' }}>📝</span>
-            <span className="fab-sub-label" style={{ left: '60px', right: 'auto' }}>Note</span>
+            <span className="fab-sub-label" style={{ left: '60px', right: 'auto', opacity: 1 }}>Note</span>
           </button>
 
           <button 
@@ -82,7 +82,7 @@ export default function GlobalControls() {
             aria-label="Manual Entry"
           >
             <PenLine size={18} color="#fff" />
-            <span className="fab-sub-label" style={{ left: '60px', right: 'auto' }}>Manual</span>
+            <span className="fab-sub-label" style={{ left: '60px', right: 'auto', opacity: 1 }}>Manual</span>
           </button>
 
           <button 
@@ -91,7 +91,7 @@ export default function GlobalControls() {
             aria-label="AI Parse"
           >
             <Sparkles size={20} color="#fff" />
-            <span className="fab-sub-label" style={{ left: '60px', right: 'auto' }}>Parse AI</span>
+            <span className="fab-sub-label" style={{ left: '60px', right: 'auto', opacity: 1 }}>Parse AI</span>
           </button>
         </div>
       </div>

@@ -56,7 +56,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
           style={{
             width: '100%', flex: 1, padding: '16px', borderRadius: '12px',
             background: 'var(--sys-bg-elevated-2)', border: '1px solid var(--sys-separator)',
-            color: '#FFF', fontSize: '15px', resize: 'none', lineHeight: '1.5',
+            color: '#FFF', fontSize: '16px', resize: 'none', lineHeight: '1.5',
             minHeight: '180px', marginBottom: '16px',
           }}
         />

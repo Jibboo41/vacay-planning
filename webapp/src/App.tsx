@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import TimelineScreen from './components/TimelineScreen';
 import SummaryScreen from './components/SummaryScreen';
 import MapViewScreen from './components/MapViewScreen';
@@ -21,7 +21,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const loading = useTripStore(s => s.loading);
   const initialized = useTripStore(s => s.initialized);
   
-  // Strict check: if loading or if we have a user but no data yet, stay on splash
   if (loading || (userId && !initialized)) return null;
   if (!userId) return <Navigate to="/login" replace />;
 
@@ -78,6 +77,35 @@ const SyncStatus = () => {
   );
 };
 
+function MainLayout({ children }: { children: React.ReactNode }) {
+  const { currentTripId } = useTripStore();
+  const location = useLocation();
+  const [isWide, setIsWide] = useState(window.innerWidth >= 1000);
+
+  useEffect(() => {
+    const handleResize = () => setIsWide(window.innerWidth >= 1000);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/trips';
+
+  if (!isAuthPage && isWide && currentTripId) {
+    return (
+      <div className="split-layout">
+        <div className="split-left">
+          <TimelineScreen />
+        </div>
+        <div className="split-right">
+          {location.pathname === '/timeline' ? <MapViewScreen /> : children}
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 function App() {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
@@ -131,11 +159,9 @@ function App() {
         ...doc.data()
       })) as any[];
       syncTrips(tripsData);
-      setError(null); // Clear errors if successful
+      setError(null);
     }, (err) => {
       console.error("Firestore Listen Error:", err);
-      // Give Auth a chance to stabilize (especially on iOS link return/background)
-      // Only show error if persistent after 2s or if not a permission error
       if (err.code === 'permission-denied') {
         setTimeout(() => {
           if (!auth.currentUser) {
@@ -169,7 +195,6 @@ function App() {
       case 'sunset':     return ['#FF3B30', '#FF9F0A', '#FFD60A'];
       case 'midnight':   return ['#5E5CE6', '#BF5AF2', '#32ADE6'];
       case 'forest':     return ['#30D158', '#34C759', '#32ADE6'];
-      // New creative themes
       case 'aurora':     return ['#00F5A0', '#8B5CF6', '#06B6D4'];
       case 'desert':     return ['#E2A57E', '#C9415A', '#EDCA7F'];
       case 'ocean':      return ['#0EA5E9', '#0D9488', '#6366F1'];
@@ -201,21 +226,22 @@ function App() {
           <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
         )}
 
-        {/* Global Persistence & Modals */}
         <SyncStatus />
         <GlobalModals />
 
-        <Routes>
-          <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
-          <Route path="/trips" element={<ProtectedRoute><TripSelector /></ProtectedRoute>} />
-          <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <NoTripState />}</ProtectedRoute>} />
-          <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <NoTripState />}</ProtectedRoute>} />
-          <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <NoTripState />}</ProtectedRoute>} />
-          <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <NoTripState />}</ProtectedRoute>} />
-          <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <NoTripState />}</ProtectedRoute>} />
-          <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/timeline" replace />} />
-        </Routes>
+        <MainLayout>
+          <Routes>
+            <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
+            <Route path="/trips" element={<ProtectedRoute><TripSelector /></ProtectedRoute>} />
+            <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/timeline" replace />} />
+          </Routes>
+        </MainLayout>
       </div>
 
       <NavWrapper />

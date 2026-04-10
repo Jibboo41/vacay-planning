@@ -95,7 +95,8 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters } = useTripStore();
+  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters } = useTripStore();
+  const currentTrip = trips.find(t => t.id === currentTripId);
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
 
@@ -305,7 +306,9 @@ export default function TimelineScreen() {
         >
           <Menu size={24} />
         </button>
-        <h1 className="page-title">Itinerary</h1>
+        <h1 className="page-title" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {currentTrip?.title || 'Itinerary'}
+        </h1>
       </header>
 
       <div className="day-timeline-strip" ref={stripRef}>

@@ -2,6 +2,27 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.7.0] - 2026-04-09 (Modernization & Desktop Split-View)
+
+### 🖥️ Responsive Architecture
+- **Desktop Split-View**: Refactored `App.tsx` and `index.css` to enable a side-by-side Timeline and Map layout on screens >= 1000px.
+- **MainLayout Middleware**: Isolated split-logic into a dedicated layout component for cleaner prop propagation.
+
+### 🗺️ Mapping & Interaction
+- **Interactive Map Legend**: The map legend is now an interactive filter; clicking a day toggles its markers/routes visibility.
+- **Inter-Day Route Bridging**: Routes now bridge the gap between the last stop of Day N and the first of Day N+1, as well as same-day checkout/checkin transitions.
+- **Dynamic Legend Position**: Legend automatically adjusts based on hidden/visible days.
+
+### 📋 Outline & Summary Integrity
+- **Empty Day Padding**: Added logic to `SummaryScreen.tsx` to ensure all days in a trip range are rendered, even if scheduling gaps exist.
+- **Virtual Entry Persistence**: Fixed a bug where rental returns weren't appearing in the summary; updated the chronological sorting engine to handle all virtual events correctly.
+
+### 🛡️ UX Hardening & Utilities
+- **iOS Zoom Prevention**: Audited and enforced 16px font sizes across all inputs and modals to prevent browser auto-zoom.
+- **Itinerary Deletion**: Added a "Delete Item" (Trash) action to the expanded state of all timeline items.
+- **Trip Duplication**: New "Copy" action in the `TripSelector` screen for cloning trip templates.
+- **AI Cost Extraction**: Updated the backend `emailParser.ts` prompt to extract `cost` and `paidAmount` from receipts.
+
 ## [1.6.0] - 2026-04-08 (Advanced Settlement & Integrated Editing)
 
 ### 💳 Precision Expense Control

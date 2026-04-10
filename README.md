@@ -182,3 +182,15 @@ stateDiagram-v2
    \`\`\`
 
 *(Note: Production rollouts leverage `firebase deploy` across hosting, functions, and firestore triggers.)*
+
+---
+
+## 📺 Phase 13: The Modernization Sprint (v1.7.0)
+- **Desktop Split-View**: Automatic dual-pane layout (Timeline + Map) on screens >= 1000px.
+- **Interactive Map Filtering**: Click a day in the legend to toggle its visibility on the map instantly.
+- **Chronological Integrity**: Every day in a trip range is now displayed in the Summary, including empty placeholders.
+- **Virtual Item Management**: Hotel checkouts and rental returns are now fully draggable and update their respective end-dates.
+- **iOS Zoom Prevention**: Globally enforced 16px font sizes on all inputs to stop intrusive browser auto-zooming.
+- **Duplicate Trip**: One-click "Copy" function in the Trip Selector to clone itineraries.
+- **Deletion Action**: Integrated Trash icons in the expanded itinerary view for manual maintenance.
+- **Cost Extraction**: AI Parser now identifies and populates 'Total Cost' and 'Paid Amount' from booking emails.

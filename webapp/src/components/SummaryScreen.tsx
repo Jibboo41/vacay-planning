@@ -113,33 +113,56 @@ export default function SummaryScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   
   const dayGroups = useMemo(() => {
-    const sorted = [...items].sort((a, b) => {
-      const dayA = getDayKey(a.startDate), dayB = getDayKey(b.startDate);
-      if (dayA !== dayB) return dayA.localeCompare(dayB);
-      if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
-      if (a.sortOrder !== undefined) return -1;
-      if (b.sortOrder !== undefined) return 1;
-      return a.startDate.localeCompare(b.startDate);
-    });
+    if (items.length === 0) return [];
 
-    const groups: Record<string, { dateKey: string; label: string; items: any[] }> = {};
-    
-    sorted.forEach(item => {
-      // Check-in / base event
-      const key = getDayKey(item.startDate);
-      if (!groups[key]) groups[key] = { dateKey: key, label: getDayLabel(item.startDate), items: [] };
-      groups[key].items.push({ ...item, _isSummaryBase: true });
-
-      // If hotel, add checkout entry
-      if (item.type === 'hotel' && item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate)) {
-        const outKey = getDayKey(item.endDate);
-        if (!groups[outKey]) groups[outKey] = { dateKey: outKey, label: getDayLabel(item.endDate), items: [] };
-        groups[outKey].items.push({ ...item, _isCheckout: true });
+    // 1. Flatten all events including virtual checkouts/returns
+    const flattened: any[] = [];
+    items.forEach(item => {
+      flattened.push({ ...item, _renderDate: item.startDate, _isBase: true });
+      if (item.endDate && (item.type === 'hotel' || item.type === 'rental-car')) {
+        const startKey = getDayKey(item.startDate);
+        const endKey = getDayKey(item.endDate);
+        if (startKey !== endKey) {
+          flattened.push({ ...item, _renderDate: item.endDate, _isCheckout: true });
+        }
       }
     });
 
-    // Sort groups chronologically
-    return Object.values(groups).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+    // 2. Find full trip range
+    const allDates = flattened.map(i => i._renderDate);
+    // Use ISO strings for sorting to find min/max
+    const sortedDateStrings = [...allDates].sort();
+    const minKey = getDayKey(sortedDateStrings[0]);
+    const maxKey = getDayKey(sortedDateStrings[sortedDateStrings.length - 1]);
+
+    const groups: { dateKey: string; label: string; items: any[] }[] = [];
+    
+    // Iterate day by day from minKey to maxKey
+    let current = new Date(minKey.replace(/-/g, '/'));
+    const end = new Date(maxKey.replace(/-/g, '/'));
+
+    // Security break to prevent infinite loop
+    let safety = 0;
+    while (current <= end && safety < 100) {
+      safety++;
+      const key = getDayKey(current.toISOString().split('T')[0]);
+      const label = getDayLabel(current.toISOString().split('T')[0]);
+      
+      const dayItems = flattened.filter(i => getDayKey(i._renderDate) === key)
+        .sort((a, b) => {
+          // Sort checkouts by time if available, otherwise sortOrder
+          if (a._renderDate.includes('T') && b._renderDate.includes('T')) {
+            return a._renderDate.localeCompare(b._renderDate);
+          }
+          if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
+          return a._renderDate.localeCompare(b._renderDate);
+        });
+
+      groups.push({ dateKey: key, label, items: dayItems });
+      current.setDate(current.getDate() + 1);
+    }
+
+    return groups;
   }, [items]);
 
   const handleGenerateSummary = async () => {

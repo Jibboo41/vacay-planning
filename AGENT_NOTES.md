@@ -1,5 +1,5 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-09 | Phase 11 Complete & Deployed
+> Last updated: 2026-04-09 | Phase 13 Modernization Complete
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 
@@ -268,5 +268,29 @@ Live URL: https://vacay-planning.web.app
 - [ ] **Trip Sharing** — Invite collaborators to view/edit
 - [ ] **Offline Mode (PWA)** — Full offline read/write via Service Worker
 - [ ] **Google Maps API** — Replace Leaflet/OSM with official Google Maps
-- [ ] **Edit due date on existing todos** ✅ Now implemented via inline edit
-- [ ] **CHANGELOG.md** — Keep a versioned changelog up to date
+- [ ] **Multi-stop Flight UI** — Better grouping for complex connections
+
+---
+
+## 🧪 Phase 13 Technical Implementation Details
+
+### Desktop Split View
+- **Threshold**: `1000px` screen width.
+- **Mechanism**: `MainLayout.tsx` detects width and renders a `.split-layout` grid.
+- **Left Pane**: Pinned `TimelineScreen` with overflow-y auto.
+- **Right Pane**: Contextual view defaulting to `MapViewScreen`.
+
+### Interactive Map Filtering
+- **State**: `hiddenDayFilters[]` in the store.
+- **Logic**: Legend items click toggle visibility. `MapViewScreen` filters its marker array and OSRM route fetchers based on this array.
+
+### Itinerary Reordering (Suffix Handling)
+- `reorderItems` now strips `-checkout` and `-return` suffixes to identify the "real" parent item.
+- Moving a checkout item updates the parent's `endDate`.
+
+### iOS Auto-Zoom Mitigation
+- iOS Safari zooms if font-size < 16px.
+- **Audit**: Standardized `16px` across `EditItineraryModal`, `AddItineraryModal`, `AddNoteModal`, and `TripSelector`.
+
+### AI Cost Parsing
+- Prompt updated in `backend/src/use-cases/emailParser.ts` to extract `cost` and `paidAmount` fields.

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Trash2, Calendar, MapPin, ChevronRight, LogOut } from 'lucide-react';
+import { Plus, Trash2, Calendar, MapPin, ChevronRight, LogOut, Copy } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,6 +8,7 @@ const TripSelector: React.FC = () => {
   const trips = useTripStore(s => s.trips);
   const addTrip = useTripStore(s => s.addTrip);
   const deleteTrip = useTripStore(s => s.deleteTrip);
+  const duplicateTrip = useTripStore(s => s.duplicateTrip);
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const currentTripId = useTripStore(s => s.currentTripId);
   
@@ -45,15 +46,21 @@ const TripSelector: React.FC = () => {
     }
   };
 
+  const handleDuplicateTrip = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+       await duplicateTrip(id);
+    } catch (err: any) {
+       alert("Failed to duplicate trip: " + err.message);
+    }
+  };
+
   const handleLogout = () => {
     auth.signOut();
   };
 
   useEffect(() => {
-    // Break potential loops: only setCurrentTrip if we have exactly one trip 
-    // AND it's not already set to that ID.
     if (trips && trips.length === 1 && currentTripId !== trips[0].id) {
-      console.log('AUTO-SELECTING SINGLE TRIP:', trips[0].id);
       setCurrentTrip(trips[0].id);
     }
   }, [trips, currentTripId, setCurrentTrip]);
@@ -92,6 +99,13 @@ const TripSelector: React.FC = () => {
               </div>
               <div className="trip-actions">
                 <button 
+                  onClick={(e) => handleDuplicateTrip(e, trip.id)} 
+                  className="duplicate-trip-btn"
+                  title="Duplicate Trip"
+                >
+                  <Copy size={16} />
+                </button>
+                <button 
                   onClick={(e) => handleDeleteTrip(e, trip.id)} 
                   className="delete-trip-btn"
                 >
@@ -123,6 +137,7 @@ const TripSelector: React.FC = () => {
                 placeholder="Trip Title (e.g., Japan Summer 2025)"
                 value={newTripTitle}
                 onChange={e => setNewTripTitle(e.target.value)}
+                style={{ fontSize: '16px' }}
               />
               <div className="modal-actions">
                 <button type="button" onClick={() => setIsAdding(false)} disabled={isCreating}>Cancel</button>
@@ -151,7 +166,7 @@ const TripSelector: React.FC = () => {
           margin-bottom: 32px;
         }
 
-        h1 { font-size: 2.2rem; font-weight: 800; margin: 0; }
+        h1 { font-size: 2.2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
 
         .logout-btn {
           background: rgba(255, 255, 255, 0.1);
@@ -183,7 +198,8 @@ const TripSelector: React.FC = () => {
 
         .trip-card:hover {
           background: rgba(35, 35, 40, 0.9);
-          transform: scale(1.02);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .trip-info h3 { margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 600; }
@@ -201,10 +217,10 @@ const TripSelector: React.FC = () => {
         .trip-actions {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 4px;
         }
 
-        .delete-trip-btn {
+        .duplicate-trip-btn, .delete-trip-btn {
           background: transparent;
           border: none;
           color: #444;
@@ -213,8 +229,9 @@ const TripSelector: React.FC = () => {
           transition: all 0.2s;
         }
 
-        .trip-card:hover .delete-trip-btn { color: #888; }
+        .trip-card:hover .delete-trip-btn, .trip-card:hover .duplicate-trip-btn { color: #888; }
         .delete-trip-btn:hover { color: #ff3b30 !important; background: rgba(255, 59, 48, 0.1); }
+        .duplicate-trip-btn:hover { color: var(--sys-blue) !important; background: rgba(10, 132, 255, 0.1); }
 
         .chevron { color: #333; transition: color 0.2s; }
         .trip-card:hover .chevron { color: #666; }
@@ -247,7 +264,6 @@ const TripSelector: React.FC = () => {
           margin-bottom: 24px;
         }
 
-        /* Modal Styles */
         .modal-overlay {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
@@ -269,32 +285,26 @@ const TripSelector: React.FC = () => {
 
         .modal-content h2 { margin: 0 0 20px 0; font-size: 1.5rem; }
 
-        input {
+        .modal-content input {
           width: 100%;
           background: #2c2c2e;
           border: none;
           border-radius: 12px;
           padding: 16px;
           color: white;
-          font-size: 1rem;
+          font-size: 16px;
           margin-bottom: 24px;
           outline: none;
         }
 
-        input:focus { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
+        .modal-content input:focus { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
 
         .modal-actions {
-          display: flex;
-          gap: 12px;
+          display: flex; gap: 12px;
         }
 
         .modal-actions button {
-          flex: 1;
-          padding: 14px;
-          border-radius: 12px;
-          border: none;
-          font-weight: 600;
-          cursor: pointer;
+          flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer;
         }
 
         .modal-actions button:first-child { background: #2c2c2e; color: #888; }

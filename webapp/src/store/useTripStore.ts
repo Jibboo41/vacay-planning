@@ -40,6 +40,7 @@ interface TripStore {
   editingItem: ItineraryItem | null;
   editingExpense: Expense | null;
   activeFilters: string[];
+  hiddenDayFilters: string[];
   
   // Actions
   setUserId: (userId: string | null) => void;
@@ -58,6 +59,8 @@ interface TripStore {
   updateItem: (id: string, updatedFields: Partial<ItineraryItem>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   toggleFilter: (type: string) => void;
+  toggleDayFilter: (dateKey: string) => void;
+  duplicateTrip: (tripId: string) => Promise<void>;
   addNote: (dayKey: string, title: string, content: string) => Promise<void>;
   reorderItems: (activeId: string, overId: string | null, newDayKey: string) => Promise<void>;
   saveAiSummary: (summary: string) => Promise<void>;
@@ -83,8 +86,8 @@ interface TripStore {
 
 function getDayKey(dateStr: string) {
   if (!dateStr) return '';
-  // Force local interpretation for date-only strings to avoid UTC-midnight jumping to previous day
-  const clean = dateStr.includes('T') ? dateStr : dateStr.replace(/-/g, '/');
+  // Standardize parsing to local time: Remove 'Z' if present, replace T with space for reliable local parsing
+  const clean = dateStr.replace('Z', '').replace('T', ' ').replace(/-/g, '/');
   const d = new Date(clean);
   if (isNaN(d.getTime())) return dateStr.split('T')[0];
   const year = d.getFullYear();
@@ -136,6 +139,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   editingItem: null,
   editingExpense: null,
   activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
+  hiddenDayFilters: [],
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
@@ -146,6 +150,34 @@ export const useTripStore = create<TripStore>((set, get) => ({
       ? state.activeFilters.filter(t => t !== type)
       : [...state.activeFilters, type]
   })),
+  toggleDayFilter: (dateKey: string) => set((state) => ({
+    hiddenDayFilters: state.hiddenDayFilters.includes(dateKey)
+      ? state.hiddenDayFilters.filter(d => d !== dateKey)
+      : [...state.hiddenDayFilters, dateKey]
+  })),
+
+  duplicateTrip: async (tripId: string) => {
+    const { trips, userId } = get();
+    if (!userId) return;
+    const sourceTrip = trips.find(t => t.id === tripId);
+    if (!sourceTrip) return;
+
+    const newTrip = {
+      ...sourceTrip,
+      id: undefined, // Let Firestore generate new ID
+      title: `${sourceTrip.title} (Copy)`,
+      createdAt: Date.now(),
+      userId: userId,
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, "trips"), scrubData(newTrip));
+      console.log("Trip duplicated with ID:", docRef.id);
+    } catch (err) {
+      console.error("Duplicate trip failed:", err);
+    }
+  },
+
   setTheme: (theme) => {
     localStorage.setItem('vacay_theme', theme);
     set({ theme });
@@ -309,20 +341,41 @@ export const useTripStore = create<TripStore>((set, get) => ({
   reorderItems: async (activeId, overId, newDayKey) => {
     const { currentTripId, items } = get();
     if (!currentTripId) return;
+
+    // Handle virtual IDs (suffixes like '-checkout' or '-return')
+    const realActiveId = activeId.replace(/-checkout$|-return$/, '');
+    const realOverId = overId ? overId.replace(/-checkout$|-return$/, '') : null;
+
     const allItems = [...items];
-    const activeItem = allItems.find(i => i.id === activeId);
+    const activeItem = allItems.find(i => i.id === realActiveId);
     if (!activeItem) return;
+
     const oldDayKey = getDayKey(activeItem.startDate);
     const hasTime = activeItem.startDate.includes('T');
     const localTime = hasTime ? getLocalTimeStr(activeItem.startDate) : '';
-    const movedItem: ItineraryItem = oldDayKey !== newDayKey
-        ? { ...activeItem, startDate: hasTime ? `${newDayKey}T${localTime}` : newDayKey } : activeItem;
-    const remaining = allItems.filter(i => i.id !== activeId);
+
+    // If we moved to a new day, update the relevant date 
+    let movedItem: ItineraryItem = { ...activeItem };
+    if (oldDayKey !== newDayKey) {
+        if (activeId.endsWith('-checkout') || activeId.endsWith('-return')) {
+            // Moving the checkout part to a new day updates endDate
+            // Note: This is simplified; usually you'd want to keep start <= end
+            const currentEndTime = activeItem.endDate ? getLocalTimeStr(activeItem.endDate) : '11:00';
+            movedItem.endDate = `${newDayKey}T${currentEndTime}`;
+        } else {
+            movedItem.startDate = hasTime ? `${newDayKey}T${localTime}` : newDayKey;
+        }
+    }
+
+    const remaining = allItems.filter(i => i.id !== realActiveId);
     const targetDay = remaining.filter(i => getDayKey(i.startDate) === newDayKey).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
-    const overIdx = overId ? targetDay.findIndex(i => i.id === overId) : targetDay.length;
+    
+    const overIdx = realOverId ? targetDay.findIndex(i => i.id === realOverId) : targetDay.length;
     targetDay.splice(overIdx === -1 ? targetDay.length : overIdx, 0, movedItem);
+
     const reorderedTarget = targetDay.map((item, idx) => ({ ...item, sortOrder: idx * 10 }));
     const otherItems = remaining.filter(i => getDayKey(i.startDate) !== newDayKey);
+    
     let finalItems: ItineraryItem[];
     if (oldDayKey !== newDayKey) {
       const oldDay = otherItems.filter(i => getDayKey(i.startDate) === oldDayKey).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999)).map((item, idx) => ({ ...item, sortOrder: idx * 10 }));
@@ -331,6 +384,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     } else {
       finalItems = [...otherItems, ...reorderedTarget];
     }
+
     set({ items: finalItems });
     if (get().initialized) {
       try {
