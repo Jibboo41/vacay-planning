@@ -22,6 +22,11 @@ export interface HotelDetails {
   bookingSource?: string;
 }
 
+export interface RentalDetails {
+  refundable: boolean;
+  bookingSource?: string;
+}
+
 export interface ItineraryItem {
   id: string;
   type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'hike' | 'transit' | 'food' | 'note' | 'rental-car' | 'unknown';
@@ -34,6 +39,7 @@ export interface ItineraryItem {
   hikeDetails?: HikeDetails;
   foodDetails?: FoodDetails;
   hotelDetails?: HotelDetails;
+  rentalDetails?: RentalDetails;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
   /** Custom cost for this item (e.g. flight price, hotel total) */

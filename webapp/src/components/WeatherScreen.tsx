@@ -112,8 +112,9 @@ export default function WeatherScreen() {
       return;
     }
     setLoading(true);
-    setError(null);
+    const { addDebugLog } = useTripStore.getState();
     try {
+      addDebugLog('Weather', `Fetching for ${dailyLocations.length} days...`);
       // To optimize, group days by location so we don't call the API for the same город many times
       const locationGroups: Record<string, string[]> = {};
       const coordMap: Record<string, { lat: number; lon: number; name: string }> = {};
@@ -137,6 +138,7 @@ export default function WeatherScreen() {
          const { lat, lon } = coordMap[key];
          
          const results = await fetchWeather(lat, lon, start, end);
+         addDebugLog('Weather', `API Success for ${coordMap[key].name}`, { dates: results.length });
          // Filter to only the specific dates we mapped to this location
          results.forEach(r => {
             if (dates.includes(r.date)) {
@@ -149,6 +151,7 @@ export default function WeatherScreen() {
       allForecasts.sort((a, b) => a.date.localeCompare(b.date));
 
       if (allForecasts.length === 0) {
+        addDebugLog('Weather', 'No results returned');
         setError("Weather forecast not available for these dates (likely too far in the future).");
         return;
       }
@@ -157,7 +160,9 @@ export default function WeatherScreen() {
         lastUpdated: Date.now(),
         forecast: allForecasts
       });
-    } catch (err) {
+      addDebugLog('Weather', 'Store updated successfully', { count: allForecasts.length });
+    } catch (err: any) {
+      addDebugLog('Weather', `Fetch FAILED: ${err.message}`);
       setError("Failed to fetch weather data. Check your connection.");
     } finally {
       setLoading(false);
@@ -223,53 +228,57 @@ export default function WeatherScreen() {
                   key={day.date}
                   className="glass-effect"
                   style={{ 
-                    display: 'flex', alignItems: 'center', gap: '16px', 
-                    padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+                    display: 'flex', alignItems: 'center', gap: '20px', 
+                    padding: '24px', borderRadius: '28px', 
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(40px)',
+                    WebkitBackdropFilter: 'blur(40px)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#FFF' }}>
-                      {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                    <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#FFF', letterSpacing: '-0.3px' }}>
+                      {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
                     </h4>
                     {loc && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: 'var(--sys-label-secondary)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: 'var(--sys-blue)', opacity: 0.9 }}>
                          <MapPin size={12} />
-                         <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                         <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                            {loc.name}
                          </span>
                       </div>
                     )}
-                    <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Thermometer size={14} /> {day.tempHigh}°F / {day.tempLow}°F
-                    </p>
+                    <div style={{ margin: '14px 0 0 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 700, color: '#FFF', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '10px' }}>
+                        <Thermometer size={14} color="var(--sys-blue)" /> {day.tempHigh}°
+                      </div>
+                      <span style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>/ {day.tempLow}°</span>
+                    </div>
                   </div>
                   
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                       {day.isHistorical ? (
-                        <BarChart3 size={32} style={{ color: 'rgba(255,255,255,0.7)', filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }} />
+                        <BarChart3 size={36} style={{ color: 'rgba(255,255,255,0.4)', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} />
                       ) : (
-                        <span style={{ fontSize: '32px' }}>{day.icon}</span>
+                        <span style={{ fontSize: '40px', filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.2))' }}>{day.icon}</span>
                       )}
                     </div>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', fontWeight: 800, color: day.isHistorical ? 'var(--sys-label-secondary)' : 'var(--sys-blue)', textTransform: 'uppercase' }}>
-                      {day.isHistorical ? 'Hist Avg' : day.condition}
+                    <p style={{ margin: 0, fontSize: '11px', fontWeight: 900, color: day.isHistorical ? 'var(--sys-label-tertiary)' : 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      {day.isHistorical ? 'Historical Avg' : day.condition}
                     </p>
                     {day.isHistorical && (
-                      <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                      <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                         {(day.rainfall || 0) > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-blue)', fontSize: '11px', fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0EA5E9', fontSize: '11px', fontWeight: 700 }}>
                             <Droplets size={12} /> {day.rainfall?.toFixed(2)}"
                           </div>
                         )}
                         {(day.snowfall || 0) > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#8E8E93', fontSize: '11px', fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#94A3B8', fontSize: '11px', fontWeight: 700 }}>
                             <Snowflake size={12} /> {day.snowfall?.toFixed(2)}"
                           </div>
-                        )}
-                        {!(day.rainfall || 0) && !(day.snowfall || 0) && (
-                          <span style={{ fontSize: '10px', color: 'var(--sys-label-quaternary)' }}>No Precip</span>
                         )}
                       </div>
                     )}

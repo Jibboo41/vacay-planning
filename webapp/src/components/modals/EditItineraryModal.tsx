@@ -41,8 +41,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [hikeLink, setHikeLink] = useState(item.hikeDetails?.allTrailsLink ?? '');
 
   const [foodMeal, setFoodMeal] = useState<'Breakfast'|'Lunch'|'Dinner'|'Snack'|'Dessert'>(item.foodDetails?.mealType ?? 'Dinner');
-  const [refundable, setRefundable] = useState(item.hotelDetails?.refundable ?? false);
-  const [bookingSource, setBookingSource] = useState(item.hotelDetails?.bookingSource ?? '');
+  const [refundable, setRefundable] = useState(item.hotelDetails?.refundable ?? item.rentalDetails?.refundable ?? false);
+  const [bookingSource, setBookingSource] = useState(item.hotelDetails?.bookingSource ?? item.rentalDetails?.bookingSource ?? '');
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -94,6 +94,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         mealType: foodMeal
       } : undefined,
       hotelDetails: type === 'hotel' ? {
+        refundable,
+        bookingSource: bookingSource || undefined
+      } : undefined,
+      rentalDetails: type === 'rental-car' ? {
         refundable,
         bookingSource: bookingSource || undefined
       } : undefined,
@@ -270,16 +274,20 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
             </div>
           )}
 
-          {/* Conditional Hotel Details */}
-          {type === 'hotel' && (
-            <div style={{ background: 'rgba(10, 132, 255, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(10, 132, 255, 0.2)' }}>
+          {/* Conditional Hotel/Rental Details */}
+          {(type === 'hotel' || type === 'rental-car') && (
+            <div style={{ 
+              background: type === 'hotel' ? 'rgba(10, 132, 255, 0.08)' : 'rgba(175, 82, 222, 0.08)', 
+              padding: '16px', borderRadius: '16px', marginBottom: '16px', 
+              border: type === 'hotel' ? '1px solid rgba(10, 132, 255, 0.2)' : '1px solid rgba(175, 82, 222, 0.2)' 
+            }}>
                <div className="edit-field-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <label className="edit-field-label" style={{ margin: 0 }}>Refundable Booking?</label>
                 <input 
                   type="checkbox" 
                   checked={refundable} 
                   onChange={e => setRefundable(e.target.checked)}
-                  style={{ width: '22px', height: '22px', accentColor: 'var(--sys-blue)' }}
+                  style={{ width: '22px', height: '22px', accentColor: type === 'hotel' ? 'var(--sys-blue)' : 'var(--sys-purple)' }}
                 />
               </div>
               <div className="edit-field-group" style={{ marginBottom: 0 }}>
@@ -289,7 +297,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                   type="text" 
                   value={bookingSource} 
                   onChange={e => setBookingSource(e.target.value)} 
-                  placeholder="e.g. Expedia, Hotels.com, Direct" 
+                  placeholder="e.g. Expedia, Direct, Turo" 
                 />
               </div>
             </div>

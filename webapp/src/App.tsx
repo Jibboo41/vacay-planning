@@ -5,6 +5,7 @@ import MapViewScreen from './components/MapViewScreen';
 import TodoScreen from './components/TodoScreen';
 import CostTrackerScreen from './components/CostTrackerScreen';
 import WeatherScreen from './components/WeatherScreen';
+import DebugScreen from './components/DebugScreen';
 import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
 import GlobalControls from './components/GlobalControls';
@@ -245,6 +246,7 @@ function App() {
             <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/debug" element={<ProtectedRoute><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/timeline" replace />} />
           </Routes>
         </MainLayout>

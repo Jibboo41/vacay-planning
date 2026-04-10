@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Trash2, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, Flower2, Waves, Flame, Flower, Zap, Plane, BedDouble, Car, Navigation, MountainSnow, Utensils, StickyNote, TrainFront } from 'lucide-react';
+import { Plus, Trash2, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, Flower2, Waves, Flame, Flower, Zap, Plane, BedDouble, Car, Navigation, MountainSnow, Utensils, StickyNote, TrainFront, Copy, ArrowLeft, Terminal } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const trips = useTripStore(s => s.trips);
   const addTrip = useTripStore(s => s.addTrip);
   const deleteTrip = useTripStore(s => s.deleteTrip);
+  const duplicateTrip = useTripStore(s => s.duplicateTrip);
   const setCurrentTrip = useTripStore(s => s.setCurrentTrip);
   const currentTripId = useTripStore(s => s.currentTripId);
   const theme = useTripStore(s => s.theme);
@@ -23,6 +24,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [newTripTitle, setNewTripTitle] = React.useState('');
   const [isAdding, setIsAdding] = React.useState(false);
   const navigate = useNavigate();
+
+  const handleDuplicate = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    try {
+      const newId = await duplicateTrip(id);
+      setCurrentTrip(newId);
+      onClose();
+      navigate('/timeline');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const glassIconStyle = {
     color: 'rgba(255,255,255,0.9)',
@@ -57,8 +70,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       />
       
       <aside className={`sidebar-panel ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header">
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>My Trips</h2>
+        <div className="sidebar-header" style={{ paddingBottom: '10px' }}>
+          <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>My Trips</h2>
+            <button 
+              onClick={() => { onClose(); navigate('/trips'); }}
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0 0',
+                background: 'none', border: 'none', color: 'var(--sys-blue)', 
+                fontSize: '13px', fontWeight: 700, padding: 0, cursor: 'pointer' 
+              }}
+            >
+              <ArrowLeft size={14} /> Back to Selector
+            </button>
+          </div>
           <button onClick={onClose} style={{ color: 'var(--sys-label-secondary)' }}>
             <X size={24} />
           </button>
@@ -80,12 +105,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     {trip.items.length} {trip.items.length === 1 ? 'item' : 'items'}
                   </div>
                 </div>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); if(confirm('Delete this trip?')) deleteTrip(trip.id); }}
-                  className="delete-mini-btn"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    onClick={(e) => handleDuplicate(e, trip.id)}
+                    className="delete-mini-btn"
+                    title="Copy Trip"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}
+                  >
+                    <Copy size={14} />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); if(confirm('Delete this trip?')) deleteTrip(trip.id); }}
+                    className="delete-mini-btn"
+                    title="Delete Trip"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -181,10 +217,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
 
-        <div className="sidebar-footer">
-          <button onClick={() => auth.signOut()} className="logout-pill">
+        <div className="sidebar-footer" style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => auth.signOut()} className="logout-pill" style={{ flex: 1 }}>
             <LogOut size={18} />
             <span>Sign Out</span>
+          </button>
+          <button 
+            onClick={() => { onClose(); navigate('/debug'); }} 
+            className="logout-pill" 
+            style={{ width: '50px', justifyContent: 'center', background: 'rgba(255,255,255,0.03)' }}
+            title="System Logs"
+          >
+            <Terminal size={18} />
           </button>
         </div>
 

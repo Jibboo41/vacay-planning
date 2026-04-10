@@ -60,7 +60,7 @@ interface TripStore {
   deleteItem: (id: string) => Promise<void>;
   toggleFilter: (type: string) => void;
   toggleDayFilter: (dateKey: string) => void;
-  duplicateTrip: (tripId: string) => Promise<void>;
+  duplicateTrip: (tripId: string) => Promise<string>;
   addNote: (dayKey: string, title: string, content: string) => Promise<void>;
   reorderItems: (activeId: string, overId: string | null, newDayKey: string) => Promise<void>;
   saveAiSummary: (summary: string) => Promise<void>;
@@ -79,6 +79,11 @@ interface TripStore {
   
   // Weather
   updateWeather: (weather: WeatherCache) => Promise<void>;
+
+  // Debug
+  debugLogs: { timestamp: number; category: string; message: string; data?: any }[];
+  addDebugLog: (category: string, message: string, data?: any) => void;
+  clearDebugLogs: () => void;
 
   // Sync
   syncTrips: (trips: Trip[]) => void;
@@ -113,7 +118,7 @@ function scrubData(obj: any): any {
   if (obj !== null && typeof obj === 'object') {
     return Object.fromEntries(
       Object.entries(obj)
-        .filter(([_, v]) => v !== undefined)
+        .filter(([, v]) => v !== undefined)
         .map(([k, v]) => [k, scrubData(v)])
     );
   }
@@ -140,6 +145,15 @@ export const useTripStore = create<TripStore>((set, get) => ({
   editingExpense: null,
   activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
   hiddenDayFilters: [],
+  debugLogs: [],
+
+  addDebugLog: (category, message, data) => 
+    set((state) => ({ 
+      debugLogs: [
+        { timestamp: Date.now(), category, message, data }, 
+        ...state.debugLogs.slice(0, 49) // Keep last 50
+      ] 
+    })),
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
@@ -155,28 +169,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       ? state.hiddenDayFilters.filter(d => d !== dateKey)
       : [...state.hiddenDayFilters, dateKey]
   })),
-
-  duplicateTrip: async (tripId: string) => {
-    const { trips, userId } = get();
-    if (!userId) return;
-    const sourceTrip = trips.find(t => t.id === tripId);
-    if (!sourceTrip) return;
-
-    const newTrip = {
-      ...sourceTrip,
-      id: undefined, // Let Firestore generate new ID
-      title: `${sourceTrip.title} (Copy)`,
-      createdAt: Date.now(),
-      userId: userId,
-    };
-
-    try {
-      const docRef = await addDoc(collection(db, "trips"), scrubData(newTrip));
-      console.log("Trip duplicated with ID:", docRef.id);
-    } catch (err) {
-      console.error("Duplicate trip failed:", err);
-    }
-  },
+  clearDebugLogs: () => set({ debugLogs: [] }),
 
   setTheme: (theme) => {
     localStorage.setItem('vacay_theme', theme);
@@ -261,6 +254,23 @@ export const useTripStore = create<TripStore>((set, get) => ({
       set({ currentTripId: null, items: [], todos: [], expenses: [], weather: null });
       localStorage.removeItem('vacay_current_trip_id');
     }
+  },
+
+  duplicateTrip: async (tripId: string) => {
+    const { trips } = get();
+    const original = trips.find(t => t.id === tripId);
+    if (!original) throw new Error("Trip not found");
+
+    const newTrip = {
+      ...original,
+      title: `${original.title} (Copy)`,
+      createdAt: Date.now()
+    };
+    // Remove the ID if it's inside the data block
+    delete (newTrip as any).id;
+
+    const docRef = await addDoc(collection(db, "trips"), newTrip);
+    return docRef.id;
   },
 
   addItem: async (item) => {
@@ -355,7 +365,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const localTime = hasTime ? getLocalTimeStr(activeItem.startDate) : '';
 
     // If we moved to a new day, update the relevant date 
-    let movedItem: ItineraryItem = { ...activeItem };
+    const movedItem: ItineraryItem = { ...activeItem };
     if (oldDayKey !== newDayKey) {
         if (activeId.endsWith('-checkout') || activeId.endsWith('-return')) {
             // Moving the checkout part to a new day updates endDate

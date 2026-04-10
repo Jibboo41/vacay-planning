@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -158,6 +158,7 @@ export default function MapViewScreen() {
 
   const [dayRoutes, setDayRoutes] = useState<DayRoute[]>([]);
   const [routeStatus, setRouteStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const routeCache = useRef<Map<string, [number, number][]>>(new Map());
 
   const byDayMap = useMemo(() => {
     const map = new Map<string, any[]>();
@@ -189,15 +190,21 @@ export default function MapViewScreen() {
       return;
     }
     
+    const { addDebugLog } = useTripStore.getState();
     setRouteStatus('loading');
 
     (async () => {
       const results: DayRoute[] = [];
+      let fetchCount = 0;
+      let cacheCount = 0;
 
       for (let i = 0; i < dayKeys.length; i++) {
         const key   = dayKeys[i];
         const stops = byDayMap.get(key)!;
-        // Color should be consistent with the total trip days sequence
+        
+        // Create a unique key for this day's sequence of stops
+        const cacheKey = stops.map(s => `${s.id}-${s.location.latitude}-${s.location.longitude}`).join('|');
+        
         const colorIdx = allTripDayKeys.indexOf(key);
         const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
 
@@ -206,14 +213,28 @@ export default function MapViewScreen() {
           continue;
         }
 
+        if (routeCache.current.has(cacheKey)) {
+          cacheCount++;
+          results.push({ dayKey: key, color, coords: routeCache.current.get(cacheKey)!, distance: 0 });
+          continue;
+        }
+
         try {
+          fetchCount++;
+          addDebugLog('Directions', `Fetching OSRM for Day: ${key}`, { stops: stops.length });
           const coords = await fetchOSRMRoute(stops);
+          routeCache.current.set(cacheKey, coords);
           results.push({ dayKey: key, color, coords, distance: 0 });
-        } catch {
+        } catch (err: any) {
+          addDebugLog('Directions', `OSRM Failed for ${key}: ${err.message}`);
           results.push({ dayKey: key, color, coords: straightLine(stops), distance: 0 });
         }
       }
 
+      if (fetchCount > 0 || cacheCount > 0) {
+        addDebugLog('Directions', `Calculation complete. Fetched: ${fetchCount}, Cached: ${cacheCount}`);
+      }
+      
       setDayRoutes(results);
       setRouteStatus('done');
     })();

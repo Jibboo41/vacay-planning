@@ -8,7 +8,7 @@ import AddNoteModal from './modals/AddNoteModal';
 import EditItineraryModal from './modals/EditItineraryModal';
 
 export default function GlobalControls() {
-  const { items, addItem, updateItem } = useTripStore();
+  const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen } = useTripStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,6 +19,8 @@ export default function GlobalControls() {
   const [addNoteVisible, setAddNoteVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editItem, setEditItem] = useState<ItineraryItem | null>(null);
+
+  const shouldHide = isSidebarOpen || !!editingItem || !!editingExpense || addVisible || addNoteVisible || editVisible;
 
   const getEarliestDate = () => {
     if (items.length === 0) return new Date().toISOString();
@@ -44,7 +46,7 @@ export default function GlobalControls() {
   return (
     <>
       {/* ── Sparkles Action FAB (Bottom Left) ── */}
-      {location.pathname !== '/map' && (
+      {location.pathname !== '/map' && !shouldHide && (
         <div className="fab-group left">
         <button 
           className={`fab-main ${isSparkleOpen ? 'active' : ''}`} 
@@ -95,8 +97,9 @@ export default function GlobalControls() {
       )}
 
       {/* ── View Switcher FAB (Bottom Right) ── */}
-      <div className="fab-group right">
-        <button 
+      {!shouldHide && (
+        <div className="fab-group right">
+          <button 
           className={`fab-main ${isViewOpen ? 'active' : ''}`}
           onClick={() => { setIsViewOpen(!isViewOpen); setIsSparkleOpen(false); }}
           aria-label="Switch Views"
@@ -113,6 +116,7 @@ export default function GlobalControls() {
           <NavButton icon={<CloudSun size={18} />} onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} />
         </div>
       </div>
+      )}
 
       {/* Modals */}
       {addVisible && <AddItineraryModal onClose={() => setAddVisible(false)} onAdd={(item) => {

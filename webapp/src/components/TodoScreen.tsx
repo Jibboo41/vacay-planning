@@ -5,6 +5,7 @@ import type { TodoItem } from '../core/models';
 
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, toggleTodo, deleteTodo, reorderTodos, setSidebarOpen } = useTripStore();
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -12,19 +13,19 @@ export default function TodoScreen() {
   const [editDueDate, setEditDueDate] = useState('');
 
   // Drag state
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  // Touch drag state
-  const touchStartY = useRef<number>(0);
-  const touchDragIndex = useRef<number | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+  const touchStartY = useRef<number>(0);
+  const touchDragIndex = useRef<number | null>(null);
 
   const handleAdd = () => {
     if (!newTodo.trim()) return;
     addTodo(newTodo.trim(), newDueDate || undefined);
     setNewTodo('');
     setNewDueDate('');
+    setShowAddForm(false);
   };
 
   const startEdit = (todo: TodoItem) => {
@@ -40,16 +41,26 @@ export default function TodoScreen() {
   };
 
   // Mouse drag handlers
-  const handleDragStart = (index: number) => { dragItem.current = index; };
-  const handleDragEnter = (index: number) => { dragOverItem.current = index; };
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    dragItem.current = index;
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragEnter = (index: number) => {
+    dragOverItem.current = index;
+    setOverIndex(index);
+  };
   const handleDragEnd = () => {
-    if (dragItem.current === null || dragOverItem.current === null) return;
-    const ordered = [...todos];
-    const [dragged] = ordered.splice(dragItem.current, 1);
-    ordered.splice(dragOverItem.current, 0, dragged);
-    reorderTodos(ordered);
+    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+      const ordered = [...todos];
+      const [dragged] = ordered.splice(dragItem.current, 1);
+      ordered.splice(dragOverItem.current, 0, dragged);
+      reorderTodos(ordered);
+    }
     dragItem.current = null;
     dragOverItem.current = null;
+    setDraggingIndex(null);
+    setOverIndex(null);
   };
 
   // Touch drag handlers
@@ -62,7 +73,6 @@ export default function TodoScreen() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchDragIndex.current === null) return;
-    e.preventDefault();
     const y = e.touches[0].clientY;
     const items = document.querySelectorAll('[data-todo-item]');
     let newOver: number | null = null;
@@ -70,7 +80,7 @@ export default function TodoScreen() {
       const rect = el.getBoundingClientRect();
       if (y >= rect.top && y <= rect.bottom) newOver = i;
     });
-    setOverIndex(newOver);
+    if (newOver !== overIndex) setOverIndex(newOver);
   };
 
   const handleTouchEnd = () => {
@@ -92,7 +102,7 @@ export default function TodoScreen() {
   const completedCount = todos.filter(t => t.completed).length;
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
+    <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
       {/* Header */}
       <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
         <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
@@ -109,58 +119,74 @@ export default function TodoScreen() {
       </div>
 
       <div style={{ padding: '24px', paddingBottom: '120px' }}>
-        {/* Input Area */}
-        <div style={{
-          display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px',
-          background: 'rgba(255,255,255,0.05)', padding: '16px',
-          borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)'
-        }}>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <input
-              type="text"
-              value={newTodo}
-              onChange={e => setNewTodo(e.target.value)}
-              placeholder="What needs to be done?"
-              onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              style={{
-                flex: 1, background: 'transparent', border: 'none',
-                color: '#fff', fontSize: '17px', outline: 'none', fontWeight: 500
-              }}
-            />
-            <button
-              onClick={handleAdd}
-              disabled={!newTodo.trim()}
-              className={newTodo.trim() ? 'btn-glass-blue' : ''}
-              style={{
-                width: '40px', height: '40px', borderRadius: '12px',
-                background: newTodo.trim() ? undefined : 'rgba(255,255,255,0.08)',
-                border: newTodo.trim() ? undefined : 'none',
-                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              <Plus size={22} />
-            </button>
-          </div>
+        {/* New Todo Area */}
+        {!showAddForm ? (
+          <button 
+            onClick={() => setShowAddForm(true)}
+            className="btn-glass-blue"
+            style={{ 
+              width: '100%', padding: '16px', borderRadius: '16px', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              marginBottom: '24px', fontSize: '16px'
+            }}
+          >
+            <Plus size={20} />
+            New Todo
+          </button>
+        ) : (
+          <div style={{
+            background: 'rgba(255,255,255,0.05)', padding: '20px',
+            borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)',
+            marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px'
+          }}>
+            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+              <label className="edit-field-label">What needs to be done?</label>
+              <input
+                type="text"
+                autoFocus
+                value={newTodo}
+                onChange={e => setNewTodo(e.target.value)}
+                placeholder="Pack gear, Check in, etc."
+                style={{
+                  background: 'rgba(255,255,255,0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  fontSize: '17px', outline: 'none', width: '100%'
+                }}
+              />
+            </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            <Calendar size={14} color="var(--sys-label-secondary)" />
-            <span style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>Due Date (Optional):</span>
-            <input
-              type="date"
-              value={newDueDate}
-              onChange={e => setNewDueDate(e.target.value)}
-              style={{
-                background: 'rgba(255,255,255,0.05)', border: 'none',
-                borderRadius: '6px', padding: '4px 8px', color: '#fff',
-                fontSize: '12px', colorScheme: 'dark'
-              }}
-            />
-            {newDueDate && (
-              <button onClick={() => setNewDueDate('')} style={{ fontSize: '11px', color: 'var(--sys-blue)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
-            )}
+            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+              <label className="edit-field-label">Due Date (Optional)</label>
+              <input
+                type="date"
+                value={newDueDate}
+                onChange={e => setNewDueDate(e.target.value)}
+                style={{
+                  background: 'rgba(255,255,255,0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  fontSize: '16px', colorScheme: 'dark', width: '100%'
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <button 
+                onClick={() => setShowAddForm(false)}
+                style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleAdd}
+                disabled={!newTodo.trim()}
+                className="btn-glass-blue"
+                style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', opacity: !newTodo.trim() ? 0.5 : 1 }}
+              >
+                Save Task
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Todo List */}
         <div
@@ -187,7 +213,7 @@ export default function TodoScreen() {
                   key={todo.id}
                   data-todo-item
                   draggable
-                  onDragStart={() => handleDragStart(index)}
+                  onDragStart={(e) => handleDragStart(e, index)}
                   onDragEnter={() => handleDragEnter(index)}
                   onDragEnd={handleDragEnd}
                   onDragOver={e => e.preventDefault()}

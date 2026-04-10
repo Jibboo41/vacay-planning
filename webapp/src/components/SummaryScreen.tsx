@@ -109,11 +109,13 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
 }
 
 export default function SummaryScreen() {
-  const { items, setSidebarOpen, currentTripAiSummary, saveAiSummary } = useTripStore();
+  const { items, setSidebarOpen, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
   const [isGenerating, setIsGenerating] = useState(false);
   
   const dayGroups = useMemo(() => {
     if (items.length === 0) return [];
+    
+    // ... logic for flattened and groups remains same (omitted for brevity in replace call)
 
     // 1. Flatten all events including virtual checkouts/returns
     const flattened: any[] = [];
@@ -236,24 +238,37 @@ export default function SummaryScreen() {
               )}
             </div>
 
-            {dayGroups.map((group, groupIdx) => (
-              <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
-                    {groupIdx + 1}
+            {dayGroups.map((group, groupIdx) => {
+              const dayWeather = weather?.forecast?.find(w => w.date === group.dateKey);
+              return (
+                <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
+                      {groupIdx + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, marginLeft: '12px' }}>
+                      <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {group.label}
+                      </h2>
+                    </div>
+                    {dayWeather && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                        <img src={dayWeather.icon} alt={dayWeather.condition} style={{ width: '28px', height: '28px' }} title={dayWeather.condition} />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                          <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{Math.round(dayWeather.tempHigh)}°</span>
+                          <span style={{ fontSize: '10px', color: 'var(--sys-label-secondary)', fontWeight: 700 }}>{Math.round(dayWeather.tempLow)}°</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#FFF', margin: '0 0 0 12px', letterSpacing: '0.5px' }}>
-                    {group.label}
-                  </h2>
+                  <div style={{ marginLeft: '4px' }}>
+                    {group.items.map((item, idx) => (
+                      <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />
+                    ))}
+                  </div>
                 </div>
-
-                <div style={{ marginLeft: '4px' }}>
-                  {group.items.map((item, idx) => (
-                    <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

@@ -282,16 +282,20 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </div>
           )}
 
-          {item.type === 'hotel' && item.hotelDetails && (
+          {(item.type === 'hotel' || item.type === 'rental-car') && (item.hotelDetails || item.rentalDetails) && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-              {item.hotelDetails.refundable && (
-                <div style={{ background: 'rgba(48, 209, 88, 0.15)', color: '#30D158', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 }}>
+              {(item.hotelDetails?.refundable || item.rentalDetails?.refundable) && (
+                <div style={{ 
+                  background: item.type === 'hotel' ? 'rgba(48, 209, 88, 0.15)' : 'rgba(175, 82, 222, 0.15)', 
+                  color: item.type === 'hotel' ? '#30D158' : '#AF52DE', 
+                  padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
+                }}>
                   ✓ REFUNDABLE
                 </div>
               )}
-              {item.hotelDetails.bookingSource && (
+              {(item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource) && (
                 <div style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--sys-label-secondary)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600 }}>
-                  via <span style={{ color: '#fff', fontWeight: 700 }}>{item.hotelDetails.bookingSource}</span>
+                  via <span style={{ color: '#fff', fontWeight: 700 }}>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource}</span>
                 </div>
               )}
             </div>
@@ -299,19 +303,19 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
           {(item.cost !== undefined || item.paidAmount !== undefined) && (
             <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-              {item.cost !== undefined && (
+              {item.cost !== undefined && item.cost !== null && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
                   <DollarSign size={14} />
                   <span style={{ fontWeight: 600 }}>Cost:</span>
-                  <span style={{ color: '#fff', fontWeight: 700 }}>${item.cost.toLocaleString()}</span>
+                  <span style={{ color: '#fff', fontWeight: 700 }}>${(item.cost || 0).toLocaleString()}</span>
                 </div>
               )}
-              {item.paidAmount !== undefined && (
+              {item.paidAmount !== undefined && item.paidAmount !== null && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
                   <CreditCard size={14} />
                   <span style={{ fontWeight: 600 }}>Paid:</span>
-                  <span style={{ color: item.cost && item.paidAmount > item.cost ? '#FF453A' : 'var(--sys-green)', fontWeight: 700 }}>
-                    ${item.paidAmount.toLocaleString()}
+                  <span style={{ color: (item.cost && item.paidAmount > item.cost) ? '#FF453A' : 'var(--sys-green)', fontWeight: 700 }}>
+                    ${(item.paidAmount || 0).toLocaleString()}
                   </span>
                 </div>
               )}
