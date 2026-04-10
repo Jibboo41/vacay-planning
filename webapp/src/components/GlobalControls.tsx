@@ -61,7 +61,6 @@ export default function GlobalControls() {
             aria-label="Add note"
           >
             <span style={{ fontSize: '18px' }}>📝</span>
-            <span className="fab-sub-label" style={{ left: '60px', right: 'auto', opacity: 1 }}>Note</span>
           </button>
 
           <button 
@@ -82,7 +81,6 @@ export default function GlobalControls() {
             aria-label="Manual Entry"
           >
             <PenLine size={18} color="#fff" />
-            <span className="fab-sub-label" style={{ left: '60px', right: 'auto', opacity: 1 }}>Manual</span>
           </button>
 
           <button 
@@ -91,7 +89,6 @@ export default function GlobalControls() {
             aria-label="AI Parse"
           >
             <Sparkles size={20} color="#fff" />
-            <span className="fab-sub-label" style={{ left: '60px', right: 'auto', opacity: 1 }}>Parse AI</span>
           </button>
         </div>
       </div>
@@ -108,12 +105,12 @@ export default function GlobalControls() {
         </button>
 
         <div className={`fab-options ${isViewOpen ? 'open' : ''}`}>
-          <NavButton icon={<Calendar size={18} />} label="Timeline" onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} isActive={location.pathname === '/timeline'} isRightSide={true} />
-          <NavButton icon={<Compass size={18} />} label="Map" onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} isRightSide={true} />
-          <NavButton icon={<BookOpen size={18} />} label="Outline" onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} isRightSide={true} />
-          <NavButton icon={<CheckSquare size={18} />} label="Todos" onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} isRightSide={true} />
-          <NavButton icon={<DollarSign size={18} />} label="Costs" onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} isRightSide={true} />
-          <NavButton icon={<CloudSun size={18} />} label="Weather" onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} isRightSide={true} />
+          <NavButton icon={<Calendar size={18} />} onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} isActive={location.pathname === '/timeline'} />
+          <NavButton icon={<Compass size={18} />} onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} />
+          <NavButton icon={<BookOpen size={18} />} onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} />
+          <NavButton icon={<CheckSquare size={18} />} onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} />
+          <NavButton icon={<DollarSign size={18} />} onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} />
+          <NavButton icon={<CloudSun size={18} />} onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} />
         </div>
       </div>
 
@@ -147,7 +144,7 @@ export default function GlobalControls() {
   );
 }
 
-function NavButton({ icon, label, onClick, isActive, isRightSide }: { icon: React.ReactNode, label: string, onClick: () => void, isActive: boolean, isRightSide?: boolean }) {
+function NavButton({ icon, onClick, isActive }: { icon: React.ReactNode, onClick: () => void, isActive: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -161,16 +158,6 @@ function NavButton({ icon, label, onClick, isActive, isRightSide }: { icon: Reac
       <div style={{ opacity: isActive ? 1 : 0.7 }}>
         {icon}
       </div>
-      <span 
-        className="fab-sub-label" 
-        style={{ 
-          opacity: 1,
-          right: isRightSide ? '60px' : 'auto',
-          left: isRightSide ? 'auto' : '60px'
-        }}
-      >
-        {label}
-      </span>
     </button>
   );
 }

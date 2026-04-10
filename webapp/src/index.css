@@ -101,48 +101,7 @@ input, textarea {
 }
 
 /* ── Split Layout & Desktop Optimizations ── */
-.split-layout {
-  display: flex;
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  z-index: 10;
-  overflow: hidden;
-}
-
-@media (min-width: 1000px) {
-  .split-left {
-    width: 450px;
-    height: 100vh;
-    overflow-y: auto;
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    position: relative;
-    z-index: 20;
-    scrollbar-width: none;
-  }
-  .split-left::-webkit-scrollbar { display: none; }
-
-  .split-right {
-    flex: 1;
-    height: 100vh;
-    position: relative;
-    z-index: 15;
-    overflow: hidden;
-  }
-
-  /* Adjustments for components when in split view */
-  .split-layout .screen-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  /* Make map header fit right pane */
-  .split-right .MapViewScreen-header {
-    left: 450px; /* offset by left pane */
-  }
-}
+/* Modern split-layout definition moved to the bottom of the file for grid consistency */
 
 .blob-1 { width: 500px; height: 500px; background: var(--sys-blue); top: -60px; left: -100px; opacity: 0.35; } 
 .blob-2 { width: 600px; height: 600px; background: var(--sys-purple); bottom: -40px; right: -120px; opacity: 0.35; } 
@@ -568,7 +527,7 @@ select.edit-field-input option {
 /* ── Split Layout (Desktop) ── */
 .split-layout {
   display: grid;
-  grid-template-columns: 450px 1fr;
+  grid-template-columns: 1fr 1fr;
   height: 100vh;
   width: 100vw;
   overflow: hidden;

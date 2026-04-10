@@ -53,7 +53,7 @@ function DraggableCard({
   onDragStart, onDragEnter, onDragEnd, onDrop,
   onGripTouchStart, isCheckout, groupPosition
 }: DraggableCardProps & { isCheckout?: boolean }) {
-  const dragId = item.id + (isCheckout ? '-checkout' : '');
+  const dragId = item.id + (isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
   const gripHandler = (e: React.TouchEvent) => {
     e.preventDefault();
     onGripTouchStart(dragId);
@@ -62,7 +62,7 @@ function DraggableCard({
   return (
     <div
       data-drag-id={dragId}
-      draggable={!isCheckout}
+      draggable={true}
       onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; onDragStart(dragId); }}
       onDragEnter={e => { e.preventDefault(); onDragEnter(dragId); }}
       onDragOver={e => e.preventDefault()}
@@ -200,17 +200,16 @@ export default function TimelineScreen() {
 
   const handleDrop = (overId: string) => {
     if (!draggingId) return;
-    const rawDraggingId = draggingId.replace('-checkout', '');
     if (overId.startsWith('end-of-')) {
       const targetDayKey = overId.replace('end-of-', '');
-      reorderItems(rawDraggingId, null, targetDayKey);
+      reorderItems(draggingId, null, targetDayKey);
     } else if (draggingId !== overId) {
-      const isOverCheckout = overId.endsWith('-checkout');
-      const rawOverId = overId.replace('-checkout', '');
+      const isOverCheckout = overId.endsWith('-checkout') || overId.endsWith('-return');
+      const rawOverId = overId.replace('-checkout', '').replace('-return', '');
       const overItem = items.find(i => i.id === rawOverId);
       if (overItem) {
         const targetDayKey = (isOverCheckout && overItem.endDate) ? getDayKey(overItem.endDate) : getDayKey(overItem.startDate);
-        reorderItems(rawDraggingId, rawOverId, targetDayKey);
+        reorderItems(draggingId, rawOverId, targetDayKey);
       }
     }
     handleDragEnd();
