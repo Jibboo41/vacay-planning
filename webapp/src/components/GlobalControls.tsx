@@ -164,7 +164,7 @@ function NavButton({ icon, label, onClick, isActive, isRightSide }: { icon: Reac
       <span 
         className="fab-sub-label" 
         style={{ 
-          opacity: isActive ? 1 : undefined,
+          opacity: 1,
           right: isRightSide ? '60px' : 'auto',
           left: isRightSide ? 'auto' : '60px'
         }}

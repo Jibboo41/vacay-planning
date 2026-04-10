@@ -565,3 +565,34 @@ select.edit-field-input option {
   font-size: 16px;
   padding: 10px;
 }
+/* ── Split Layout (Desktop) ── */
+.split-layout {
+  display: grid;
+  grid-template-columns: 450px 1fr;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--sys-bg-base);
+}
+
+.split-left {
+  position: relative;
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.split-right {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+@media (max-width: 999px) {
+  .split-layout {
+    display: block;
+    grid-template-columns: none;
+  }
+}

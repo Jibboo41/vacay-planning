@@ -236,7 +236,7 @@ export default function MapViewScreen() {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10 }}>
+    <div style={{ position: 'relative', height: '100%', width: '100%', zIndex: 10, overflow: 'hidden' }}>
       <div className="map-header glass-effect screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000 }}>
         <button 
           className="header-icon-btn"

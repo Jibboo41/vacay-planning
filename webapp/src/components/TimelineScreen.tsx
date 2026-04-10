@@ -15,7 +15,9 @@ interface DayGroup {
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
-  const d = new Date(dateString);
+  // Force local interpretation by replacing dashes with slashes if no time present
+  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
+  const d = new Date(clean);
   if (isNaN(d.getTime())) return dateString.split('T')[0];
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -24,7 +26,8 @@ function getDayKey(dateString: string) {
 }
 
 function getDayLabel(dateString: string) {
-  const d = new Date(dateString);
+  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
+  const d = new Date(clean);
   return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getMonth() + 1}/${d.getDate()}`;
 }
 
