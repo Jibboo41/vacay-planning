@@ -41,6 +41,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [hikeLink, setHikeLink] = useState(item.hikeDetails?.allTrailsLink ?? '');
 
   const [foodMeal, setFoodMeal] = useState<'Breakfast'|'Lunch'|'Dinner'|'Snack'|'Dessert'>(item.foodDetails?.mealType ?? 'Dinner');
+  const [refundable, setRefundable] = useState(item.hotelDetails?.refundable ?? false);
+  const [bookingSource, setBookingSource] = useState(item.hotelDetails?.bookingSource ?? '');
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -90,6 +92,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       } : undefined,
       foodDetails: type === 'food' ? {
         mealType: foodMeal
+      } : undefined,
+      hotelDetails: type === 'hotel' ? {
+        refundable,
+        bookingSource: bookingSource || undefined
       } : undefined,
       cost: cost ? parseFloat(cost) : undefined,
       paidAmount: paidAmount ? parseFloat(paidAmount) : undefined
@@ -261,6 +267,31 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                 onChange={e => setConfirmationNumber(e.target.value)}
                 placeholder="e.g. AB12345 (Optional)"
               />
+            </div>
+          )}
+
+          {/* Conditional Hotel Details */}
+          {type === 'hotel' && (
+            <div style={{ background: 'rgba(10, 132, 255, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(10, 132, 255, 0.2)' }}>
+               <div className="edit-field-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <label className="edit-field-label" style={{ margin: 0 }}>Refundable Booking?</label>
+                <input 
+                  type="checkbox" 
+                  checked={refundable} 
+                  onChange={e => setRefundable(e.target.checked)}
+                  style={{ width: '22px', height: '22px', accentColor: 'var(--sys-blue)' }}
+                />
+              </div>
+              <div className="edit-field-group" style={{ marginBottom: 0 }}>
+                <label className="edit-field-label">Booking Source</label>
+                <input 
+                  className="edit-field-input" 
+                  type="text" 
+                  value={bookingSource} 
+                  onChange={e => setBookingSource(e.target.value)} 
+                  placeholder="e.g. Expedia, Hotels.com, Direct" 
+                />
+              </div>
             </div>
           )}
 

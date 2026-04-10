@@ -23,7 +23,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
     const getTheme = () => {
       // Resilience: If hikeDetails exist, force it to be a hike theme regardless of type string
       if (item.hikeDetails) {
-        return { icon: <MountainSnow size={24} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
+        return { icon: <MountainSnow size={24} />, color: '#1E8449', bg: 'rgba(30, 132, 73, 0.1)' };
       }
 
       switch (item.type) {
@@ -50,9 +50,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         };
         case 'activity': return { icon: <Navigation size={24} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
         case 'hike':
-        case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
+        case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#1E8449', bg: 'rgba(30, 132, 73, 0.1)' };
         case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-        case 'food':     return { icon: <Utensils size={24} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
+        case 'food':     return { icon: <Utensils size={24} />, color: '#FF7000', bg: 'rgba(255, 112, 0, 0.1)' };
         case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
         default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
       }
@@ -279,6 +279,21 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               <Hash size={14} />
               <span style={{ fontWeight: 600 }}>Confirmation:</span>
               <span style={{ color: '#fff', fontWeight: 700 }}>{item.confirmationNumber}</span>
+            </div>
+          )}
+
+          {item.type === 'hotel' && item.hotelDetails && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+              {item.hotelDetails.refundable && (
+                <div style={{ background: 'rgba(48, 209, 88, 0.15)', color: '#30D158', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 }}>
+                  ✓ REFUNDABLE
+                </div>
+              )}
+              {item.hotelDetails.bookingSource && (
+                <div style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--sys-label-secondary)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600 }}>
+                  via <span style={{ color: '#fff', fontWeight: 700 }}>{item.hotelDetails.bookingSource}</span>
+                </div>
+              )}
             </div>
           )}
 

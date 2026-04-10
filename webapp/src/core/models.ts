@@ -17,6 +17,11 @@ export interface FoodDetails {
   mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
 }
 
+export interface HotelDetails {
+  refundable: boolean;
+  bookingSource?: string;
+}
+
 export interface ItineraryItem {
   id: string;
   type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'hike' | 'transit' | 'food' | 'note' | 'rental-car' | 'unknown';
@@ -28,6 +33,7 @@ export interface ItineraryItem {
   location: Location;
   hikeDetails?: HikeDetails;
   foodDetails?: FoodDetails;
+  hotelDetails?: HotelDetails;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
   /** Custom cost for this item (e.g. flight price, hotel total) */

@@ -1,5 +1,5 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-10 | Phase 14 Modernization Complete
+> Last updated: 2026-04-10 | Phase 14.10 Complete
 
 ## 🛠 Project Progress (Phase 14 Refinement)
 - **Balanced Desktop Layout**: Transitioned to 50/50 split (`grid-template-columns: 1fr 1fr`) in `index.css`.
@@ -10,6 +10,8 @@
     - FAB menus (Left and Right) are now **icon-only**. Labels removed from `GlobalControls.tsx`.
     - Compact **Trash Icon** delete action added to `TimelineItem.tsx` next to Edit.
 - **Mobile Stabilization**: Fixed 0px map height issues in standalone view mode via `height: 100dvh` in `MapViewScreen.tsx`.
+- **Intelligent Coloring**: Updated Hikes to Forest Green (`#1E8449`) and Dining to Orange-Coral (`#FF7000`) for visual distinction from Hotel entries.
+- **Hotel Metadata**: Added `refundable` and `bookingSource` fields to `ItineraryItem` model, editor, and timeline cards.
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 
