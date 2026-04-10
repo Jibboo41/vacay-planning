@@ -1,5 +1,15 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-09 | Phase 13 Modernization Complete
+> Last updated: 2026-04-10 | Phase 14 Modernization Complete
+
+## 🛠 Project Progress (Phase 14 Refinement)
+- **Balanced Desktop Layout**: Transitioned to 50/50 split (`grid-template-columns: 1fr 1fr`) in `index.css`.
+- **Advanced Timeline Interactivity**:
+    - Hotel checkouts (`-checkout`) and rental car returns (`-return`) are now draggable.
+    - Updated `useTripStore.ts` reorder logic and `TimelineScreen.tsx` dragId generation.
+- **Minimalist UI**:
+    - FAB menus (Left and Right) are now **icon-only**. Labels removed from `GlobalControls.tsx`.
+    - Compact **Trash Icon** delete action added to `TimelineItem.tsx` next to Edit.
+- **Mobile Stabilization**: Fixed 0px map height issues in standalone view mode via `height: 100dvh` in `MapViewScreen.tsx`.
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 

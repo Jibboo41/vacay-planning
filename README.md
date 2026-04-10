@@ -7,8 +7,8 @@
 ## 🌟 Key Features
 
 ### 🔹 Modern Nav Controls
-- **Global Floating Menus**: Replaced the legacy TabBar with a sophisticated dual-FAB navigation layer (Sparkle Menu and View Switcher).
-- **iOS-Inspired Aesthetics**: 60px glassmorphic buttons with high-performance backdrop blurs, spring-curved transitions, and symmetric navigation labels.
+- **Minimalist Layout**: Icon-only floating menus (Sparkle Menu and View Switcher) for a clean, distraction-free aesthetic.
+- **iOS-Inspired Aesthetics**: 60px glassmorphic buttons with spring-curved transitions and balanced 50/50 desktop split-view.
 
 ### 🔹 AI Itinerary Ingestion
 - **Email Parser**: Paste raw booking confirmations and Gemini 2.5 Flash will digest, categorize, and intelligently map them into your timeline.
@@ -17,9 +17,8 @@
 
 ### 🔹 Dynamic Trip Outlining
 - **Trip Synopsis**: Generate a beautifully written AI summary of your entire journey's vibe and destination trajectory with one click.
-- **Compact Summary View**: A presentation-ready, high-density outline of your itinerary. No clutter—just destination names, chronological days, and calculated stay lengths.
-- **Efficient Header Layout**: Itinerary cards feature a high-density header containing both the date and the START/END time badges, maximizing horizontal space for titles and locations. Cross-day indicator (`+1`) appears for multi-day activities.
-- **Responsive Chronology**: Shift your entire trip by dragging a single day. Improved sorting logic ensures that multi-day rental car returns and hotel check-outs appear at their precise chronological time within the destination day, regardless of their original start date.
+- **Balanced Desktop Split**: A 50/50 grid layout provides equal real-estate for the Timeline and Map on desktop screens.
+- **Advanced Reordering**: Full drag-and-drop support for all items, including hotel check-outs and rental car returns, automatically recalculating routes and stay durations.
 
 ### 🔹 Leaflet Destination Mapping
 - **Interactive Map**: Visualize your stops on a reactive vector map.

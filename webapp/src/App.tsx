@@ -103,7 +103,11 @@ function MainLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
+      {children}
+    </div>
+  );
 }
 
 function App() {

@@ -236,7 +236,7 @@ export default function MapViewScreen() {
   }
 
   return (
-    <div style={{ position: 'relative', height: '100%', width: '100%', zIndex: 10, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', zIndex: 10, overflow: 'hidden' }}>
       <div className="map-header glass-effect screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000 }}>
         <button 
           className="header-icon-btn"
@@ -259,7 +259,7 @@ export default function MapViewScreen() {
       <MapContainer
         center={center}
         zoom={10}
-        style={{ height: '100%', width: '100%' }}
+        style={{ flex: 1, width: '100%' }}
         zoomControl={false}
       >
         <TileLayer

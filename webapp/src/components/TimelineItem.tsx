@@ -129,15 +129,13 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               </div>
             )}
           </div>
-          {!isCheckout && (
-            <div
-              className="drag-handle"
-              onClick={e => e.stopPropagation()}
-              onTouchStart={onGripTouchStart}
-            >
-              <GripVertical size={16} />
-            </div>
-          )}
+          <div
+            className="drag-handle"
+            onClick={e => e.stopPropagation()}
+            onTouchStart={onGripTouchStart}
+          >
+            <GripVertical size={16} />
+          </div>
         </div>
       </div>
 
@@ -316,32 +314,26 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             >
               Edit
             </button>
-          </div>
-          {/* Delete Action (Bottom Right) */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
-            {!isCheckout && (
-               <button
-                 onClick={(e) => {
-                   e.stopPropagation();
-                   if (window.confirm(`Delete "${item.title}"?`)) {
-                     useTripStore.getState().deleteItem(item.id);
-                   }
-                 }}
-                 style={{ 
-                   display: 'flex', alignItems: 'center', gap: '8px',
-                   padding: '10px 18px', borderRadius: '12px',
-                   color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
-                   fontSize: '14px', fontWeight: 700,
-                   transition: 'all 0.2s ease',
-                   border: '1px solid rgba(255, 69, 58, 0.2)'
-                 }}
-                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
-                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
-               >
-                 <Trash2 size={16} color="var(--sys-red)" />
-                 Delete Item
-               </button>
-            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Delete "${item.title}"?`)) {
+                  useTripStore.getState().deleteItem(item.id);
+                }
+              }}
+              style={{ 
+                width: '46px', height: '46px', borderRadius: '12px',
+                color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s ease', border: '1px solid rgba(255, 69, 58, 0.2)',
+                cursor: 'pointer', flexShrink: 0
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
+              aria-label="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
           </div>
         </div>
       )}
