@@ -102,6 +102,7 @@ export default function TimelineScreen() {
   const currentTrip = trips.find(t => t.id === currentTripId);
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
+  const isScrollingToDay = useRef(false);
 
   // Shared drag state (used by both HTML5 and touch paths)
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -111,7 +112,6 @@ export default function TimelineScreen() {
   const pillRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const pillBarRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
-
   const touchRef = useRef<{
     draggingId: string | null;
     dropTargetId: string | null;
@@ -156,44 +156,76 @@ export default function TimelineScreen() {
     dayMap[key].items.push(item);
   });
 
-  useEffect(() => {
-    if (dayGroups.length > 0 && !activeDayKey) setActiveDayKey(dayGroups[0].dateKey);
-  }, [dayGroups, activeDayKey]);
+  const getScrollContainer = () => {
+    return document.querySelector('.split-left') || window;
+  };
 
-  // ── Scroll spy ─────────────────────────────────────────────────────────────
-  const handleWindowScroll = useCallback(() => {
-    if (touchRef.current.draggingId) return; 
-    const stripHeight = stripRef.current?.offsetHeight ?? 52;
-    const triggerY = window.scrollY + stripHeight + 20;
-    let current = dayGroups[0]?.dateKey ?? '';
-    for (const group of dayGroups) {
-      const el = dayRefs.current[group.dateKey];
-      if (el) {
-        const elTop = el.getBoundingClientRect().top + window.scrollY;
-        if (elTop <= triggerY) current = group.dateKey;
+  // ── Intersection Observer (Scroll Spy) ─────────────────────────────────────
+  useEffect(() => {
+    const container = getScrollContainer();
+    const options = {
+      root: container === window ? null : (container as Element),
+      rootMargin: '-120px 0px -80% 0px', // Adjusted for double-height header
+      threshold: [0, 1]
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      if (isScrollingToDay.current) return;
+
+      // Find the first intersecting entry that is within our top margin
+      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      
+      if (visible.length > 0) {
+        const key = visible[0].target.getAttribute('data-day-key');
+        if (key && key !== activeDayKey) {
+          setActiveDayKey(key);
+          const pill = pillRefs.current[key];
+          const bar = pillBarRef.current;
+          if (pill && bar) {
+            bar.scrollTo({ 
+              left: pill.offsetLeft - bar.offsetWidth / 2 + pill.offsetWidth / 2, 
+              behavior: 'smooth' 
+            });
+          }
+        }
       }
-    }
-    if (current !== activeDayKey) {
-      setActiveDayKey(current);
-      const pill = pillRefs.current[current];
-      const bar = pillBarRef.current;
-      if (pill && bar)
-        bar.scrollTo({ left: pill.offsetLeft - bar.offsetWidth / 2 + pill.offsetWidth / 2, behavior: 'smooth' });
-    }
-  }, [dayGroups, activeDayKey]);
+    }, options);
 
-  useEffect(() => {
-    window.addEventListener('scroll', handleWindowScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleWindowScroll);
-  }, [handleWindowScroll]);
+    Object.values(dayRefs.current).forEach(el => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [dayGroups, activeDayKey]);
 
   const scrollToDay = (key: string) => {
     const el = dayRefs.current[key];
     if (el) {
-      const strip = stripRef.current?.offsetHeight ?? 52;
-      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - strip - 8, behavior: 'smooth' });
+      isScrollingToDay.current = true;
+      setActiveDayKey(key);
+      
+      const container = getScrollContainer();
+      const stripHeight = stripRef.current?.offsetHeight ?? 100;
+      
+      // Calculate target scroll position - adjusted for 'above the title' cushion
+      let targetTop = 0;
+      const cushion = 12; // Extra space above the title
+      const offset = stripHeight + cushion;
+
+      if (container === window) {
+        targetTop = el.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
+      } else {
+        const cEl = container as HTMLElement;
+        targetTop = el.offsetTop - offset;
+        cEl.scrollTo({ top: targetTop, behavior: 'smooth' });
+      }
+
+      // Briefly disable observer
+      setTimeout(() => {
+        isScrollingToDay.current = false;
+      }, 1000);
     }
-    setActiveDayKey(key);
   };
 
   // ── HTML5 drag handlers (desktop) ─────────────────────────────────────────
@@ -302,8 +334,8 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '4px' }}>
+      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(8px + env(safe-area-inset-top))' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '2px' }}>
           <button 
             className="header-icon-btn"
             onClick={() => setSidebarOpen(true)}
@@ -311,12 +343,12 @@ export default function TimelineScreen() {
           >
             <Menu size={24} />
           </button>
-          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.8rem' }}>
             {currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
-        <div className="day-timeline-strip" ref={stripRef} style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '8px 0 14px 0' }}>
+        <div className="day-timeline-strip" ref={stripRef} style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '4px 0 10px 0' }}>
           <div className="day-pill-bar" ref={pillBarRef}>
             {dayGroups.map((group) => (
               <button
@@ -345,7 +377,7 @@ export default function TimelineScreen() {
 
           return (
             <div key={group.dateKey}>
-              <div className="day-section-header" ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className="day-section-label">{group.label}</span>
                 {high !== null && low !== null && (
                   <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
