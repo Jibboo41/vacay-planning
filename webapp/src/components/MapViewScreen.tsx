@@ -95,7 +95,11 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
   useEffect(() => {
     if (!positions.length) return;
     if (positions.length === 1) { map.setView(positions[0], 12); return; }
-    map.fitBounds(L.latLngBounds(positions), { padding: [60, 60] });
+    // Add extra top padding for the translucent header (especially on iOS)
+    map.fitBounds(L.latLngBounds(positions), { 
+      paddingTopLeft: [20, 120], 
+      paddingBottomRight: [20, 60] 
+    });
   }, [positions, map]); 
   return null;
 }
