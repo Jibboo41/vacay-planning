@@ -100,7 +100,7 @@
 ### User Input Pipeline
 Whenever a user adds an activity, either through our rich-data modal or via the magical AI text extraction system, the lifecycle of that data scales linearly through our models before resolving gracefully on the frontend.
 
-\`\`\`mermaid
+```mermaid
 flowchart TD
   A[User Inputs Data] --> B{Entry Method}
   B -->|AI Parse| C[Express Route: /api/parse-email]
@@ -112,18 +112,16 @@ flowchart TD
   G --> H
   H --> I[(Firestore Synchronizer)]
   I <--> J[Active Realtime Sync]
-\`\`\`
+```
 
 ### Global UI Routing Diagram
 The application centers around an abstract floating control module which manipulates overarching global routing and spawns contextual editing modalities.
 
-\`\`\`mermaid
+```mermaid
 stateDiagram-v2
   [*] --> TripSelector
   TripSelector --> ActiveTrip: Select Trip
   
-  state ActiveTrip {
-    direction LR
   state ActiveTrip {
     direction LR
     Timeline(Calendar) <--> Summary(Book)
@@ -147,7 +145,7 @@ stateDiagram-v2
   SparkleMenu --> AddNoteModal
   SparkleMenu --> ParseAIModal
   SparkleMenu --> EditActivityModal
-\`\`\`
+```
 
 ---
 
@@ -156,7 +154,7 @@ stateDiagram-v2
 **Requirements**: NodeJS `>= 18.x`, NPM
 
 1. **Clone & Install**:
-   \`\`\`bash
+   ```bash
    # Terminal A - Webapp
    cd webapp
    npm install
@@ -164,25 +162,30 @@ stateDiagram-v2
    # Terminal B - Backend
    cd backend
    npm install
-   \`\`\`
+   ```
    
 2. **Setup Environments Phase**:
    Ensure you duplicate `.env.example` inside `webapp` to `.env` and map your Firebase `VITE_FIREBASE_` config keys.
    Ensure you duplicate `.env.example` inside `backend` to `.env` and map your `GEMINI_API_KEY`.
 
 3. **Start Servers**:
-   \`\`\`bash
+   ```bash
    # Terminal A - Webapp
    npm run dev
    
    # Terminal B - Backend
    npm run build:watch
    npm run dev
-   \`\`\`
+   ```
 
 *(Note: Production rollouts leverage `firebase deploy` across hosting, functions, and firestore triggers.)*
 
 ---
+
+## 📺 Phase 18: Timeline Hardening & AI Refinement (v1.11.1)
+- **Reorder Logic Integrity**: Restored specific handling for virtual checkout items during drag-and-drop, ensuring Hotel stays remain at their correct duration.
+- **AI Year Fail-safe**: Implemented a robust regex-based year sanitizer that catches malformed AI date outputs and surfaces valid trip years.
+- **Premium Expense Ergonomics**: Standardized button placement and iOS date containment across all manual entry forms.
 
 ## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.11.0)
 - **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic, resolving the "Infinite Calculation" hang.

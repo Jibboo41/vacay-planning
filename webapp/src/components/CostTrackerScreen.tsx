@@ -253,7 +253,7 @@ export default function CostTrackerScreen() {
               <div style={{ flex: 1 }}>
                 <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>{exp.title}</h4>
                 <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--sys-label-tertiary)' }}>
-                  {exp.date || 'TBD'} {exp.category === 'itinerary' && '· Itinerary'}
+                  {exp.date || ''} {exp.category === 'itinerary' && '· Itinerary'}
                 </p>
               </div>
 

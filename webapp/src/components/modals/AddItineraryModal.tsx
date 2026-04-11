@@ -36,16 +36,24 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
       }
 
       items = items.map(item => {
-        // If the date string has a year in the 2000s, assume it's correct.
-        // If not (e.g. 0001-07-10 or 2001-07-10 from some parsers), replace year with defaultYear.
+        // Robust Year Sanitizer: AI sometimes returns invalid years (NaN or 0001).
+        // We ensure a valid year is present by looking at the segment before the first hyphen.
+        const fixDate = (dateStr: string) => {
+          if (!dateStr) return dateStr;
+          // Standard check: is it a valid date in the 2000s?
+          const d = new Date(dateStr.replace(/-/g, '/'));
+          if (isNaN(d.getFullYear()) || d.getFullYear() < 2020) {
+            // Replace whatever is before the first '-' with the defaultYear
+            return dateStr.replace(/^[^T-]+/, defaultYear.toString());
+          }
+          return dateStr;
+        };
+
         if (item.startDate) {
-           const d = new Date(item.startDate.replace(/-/g, '/'));
-           if (isNaN(d.getFullYear()) || d.getFullYear() < 2020) { // Safety threshold
-              item.startDate = item.startDate.replace(/^\d{4}/, defaultYear.toString());
-              if (item.endDate) {
-                item.endDate = item.endDate.replace(/^\d{4}/, defaultYear.toString());
-              }
-           }
+          item.startDate = fixDate(item.startDate);
+          if (item.endDate) {
+            item.endDate = fixDate(item.endDate);
+          }
         }
         return item;
       });

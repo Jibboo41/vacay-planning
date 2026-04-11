@@ -98,21 +98,18 @@ export default function EditManualExpenseModal() {
             </div>
             <div className="edit-field-group" style={{ flex: 1 }}>
               <label className="edit-field-label">Date (Optional)</label>
-              <input 
-                className="edit-field-input"
-                type="date" value={date} onChange={e => setDate(e.target.value)}
-              />
+              <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
+                <input 
+                  className="edit-field-input"
+                  type="date" value={date} onChange={e => setDate(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', display: 'block', margin: 0 }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         <div style={{ marginTop: '30px', display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={handleDelete}
-            style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 69, 58, 0.1)', border: 'none', color: '#FF453A' }}
-          >
-            <Trash2 size={20} />
-          </button>
           <button 
             onClick={handleSave}
             className="btn-glass-blue"
@@ -120,6 +117,12 @@ export default function EditManualExpenseModal() {
           >
             <Save size={18} />
             Save Changes
+          </button>
+          <button 
+            onClick={handleDelete}
+            style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 69, 58, 0.1)', border: 'none', color: '#FF453A' }}
+          >
+            <Trash2 size={20} />
           </button>
         </div>
       </div>

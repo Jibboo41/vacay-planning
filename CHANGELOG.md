@@ -2,6 +2,14 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.11.1] - 2026-04-10
+### Fixed
+- **Timeline Reordering**: Fixed a bug where moving a Hotel checkout or Rental Car return would accidentally reset the start date of the item.
+- **AI Date Sanitization**: Overhauled the year-sanitizer to catch and fix "NaN" or missing years during AI imports, preventing "Invalid Date" UI crashes.
+- **Expense UI Logic**: Removed the "TBD" fallback text for undated expenses for a cleaner look.
+### UI/UX
+- **Edit Expense Polish**: Swapped button positions (Save on left, Delete on right) to match iOS ergonomics and standardized date input scaling.
+
 ## [1.11.0] - 2026-04-10
 ### Fixed
 - **Map Routing Overhaul**: Redesigned the path calculation engine to use parallel fetches with `AbortController` timeouts (6s), resolving the infinite "Calculating routes..." hang on slow networks.

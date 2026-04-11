@@ -267,16 +267,15 @@ export default function TimelineScreen() {
       setDropTargetId(null);
 
       if (fromId && toId && fromId !== toId) {
-        const rawFromId = fromId.replace('-checkout', '');
         if (toId.startsWith('end-of-')) {
-          reorderItems(rawFromId, null, toId.replace('end-of-', ''));
+          reorderItems(fromId, null, toId.replace('end-of-', ''));
         } else {
-          const isOverCheckout = toId.endsWith('-checkout');
-          const rawToId = toId.replace('-checkout', '');
+          const isOverCheckout = toId.endsWith('-checkout') || toId.endsWith('-return');
+          const rawToId = toId.replace('-checkout', '').replace('-return', '');
           const overItem = items.find(i => i.id === rawToId);
           if (overItem) {
             const targetDayKey = (isOverCheckout && overItem.endDate) ? getDayKey(overItem.endDate) : getDayKey(overItem.startDate);
-            reorderItems(rawFromId, rawToId, targetDayKey);
+            reorderItems(fromId, rawToId, targetDayKey);
           }
         }
       }
