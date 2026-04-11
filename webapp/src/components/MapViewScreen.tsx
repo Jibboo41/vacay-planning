@@ -122,11 +122,37 @@ function MapController() {
 function ResizeHandler() {
   const map = useMap();
   useEffect(() => {
-    const timer = setTimeout(() => map.invalidateSize(), 300);
-    window.addEventListener('resize', () => map.invalidateSize());
+    if (!map) return;
+
+    const handleResize = () => {
+      // Use requestAnimationFrame to ensure the browser has finished layout
+      requestAnimationFrame(() => {
+        try {
+          // Additional safety check: ensure the map still has a container/pane
+          if (map && (map as any)._loaded && map.getContainer()) {
+            map.invalidateSize({ animate: false });
+          }
+        } catch (e) {
+          // Fail gracefully if map is in an inconsistent state
+        }
+      });
+    };
+
+    const container = map.getContainer();
+    const observer = new ResizeObserver(handleResize);
+    
+    if (container) {
+      observer.observe(container);
+    }
+
+    // Initial trigger to ensure correct fit on mount
+    const timer = setTimeout(handleResize, 100);
+
+    window.addEventListener('resize', handleResize);
     return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
       clearTimeout(timer);
-      window.removeEventListener('resize', () => map.invalidateSize());
     };
   }, [map]);
   return null;
