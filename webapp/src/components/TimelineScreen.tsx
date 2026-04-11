@@ -336,7 +336,7 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(6px + env(safe-area-inset-top))' }}>
+      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
           <button 
             className="header-icon-btn"
