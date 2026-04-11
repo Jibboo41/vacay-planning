@@ -1,12 +1,8 @@
-# 🤖 Agent Session Notes
-> Last updated: 2026-04-11 | Phase 21 Complete
-
-## 🛠 Recent Project Milestones
-- **Phase 21 (Final Refinements)**:
-    - **Independent Event Reordering**: Implemented decoupled sort orders for starts and ends of multi-day items. Added `endSortOrder` to `ItineraryItem`.
-    - **Store Logic**: `reorderItems` now uses a "wrapper-based" day-event extractor to calculate relative positions for check-ins vs checkouts independently.
-    - **MapView ResizeHandler**: Added a `ResizeHandler` component using `useMap` to trigger `invalidateSize()` whenever the container width changes (essential for split-screen stability).
-    - **Aesthetic Branding**: Action buttons in `TripSelector` are now semantically colored (Red for delete, White for edit/copy) with a high-blur glass theme.
+- **Phase 22 (Branding & Detail Refinement)**:
+    - **Branding**: Deployed custom PNG logo to `public/logo.png`. Updated `index.html` with `apple-touch-icon`.
+    - **Refundable System**: Added `FlightDetails` to the model. Normalized `refundableCutoffDate` across Hotels, Flights, and Rentals.
+    - **Display Logic**: Implemented auto-formatting for cutoff dates (e.g., `new Date(d.replace(/-/g, '/'))`) to prevent UTC offset issues.
+    - **Cost UX**: Styled native `<select>` with custom SVG chevron and glass aesthetics for consistency.
 - **Data Hardening**: Standardized date reconciliation for cross-browser reliability (ISO parsing fixes).
 - **Rental Car Branding**: Updated car segments to use consistent purple branding across all screens.
 

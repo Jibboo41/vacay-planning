@@ -107,9 +107,34 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
         </h3>
         
         {item.location.name && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', color: 'var(--sys-label-tertiary)', fontSize: '13px', marginBottom: '0px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', color: 'var(--sys-label-tertiary)', fontSize: '13px', marginBottom: '4px' }}>
             <MapPin size={12} style={{ marginTop: '2px', marginRight: '4px', flexShrink: 0 }} />
             <span style={{ lineHeight: '1.4' }}>{item.location.name}</span>
+          </div>
+        )}
+
+        {/* Refundable Badge */}
+        {(item.hotelDetails?.refundable || item.rentalDetails?.refundable || item.flightDetails?.refundable) && (
+          <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+            <div style={{ 
+              fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
+              background: 'rgba(48, 209, 88, 0.1)', color: '#30D158', border: '1px solid rgba(48, 209, 88, 0.2)'
+            }}>
+              ✓ REFUNDABLE
+            </div>
+            {(item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate) && (
+              <div style={{ 
+                fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
+                background: 'rgba(255, 159, 10, 0.1)', color: '#FF9F0A', border: '1px solid rgba(255, 159, 10, 0.2)'
+              }}>
+                ⌛ {(() => {
+                  const dStr = item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate;
+                  if (!dStr) return '';
+                  const d = new Date(dStr.replace(/-/g, '/'));
+                  return d.toLocaleDateString([], { month: 'short', day: 'numeric' }).toUpperCase();
+                })()}
+              </div>
+            )}
           </div>
         )}
       </div>

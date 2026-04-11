@@ -2,11 +2,14 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
-## [1.11.6] - 2026-04-11
-### Fixed
-- **Timeline Event Decoupling**: Introduced `endSortOrder` to allow check-in and checkout events of multi-day items to be reordered independently on their respective days.
-- **Trip Action Branding**: Updated action buttons (Copy, Rename, Delete) on the My Trips screen to use semantic colors (White/Red) for improved UX.
-- **UI Contrast**: Brightened chevron icons and refined hover states on trip selector cards.
+## [1.11.7] - 2026-04-11
+### Added
+- **Refundable Cutoff Tracking**: Users can now track "Refundable Until" dates for Flights, Hotels, and Rental Cars.
+- **Flight Detail Expansion**: Marked flights as refundable and added booking source tracking.
+- **Custom App Branding**: Implemented a new premium Vacay logo across all platforms (web favicon and iOS home screen icons).
+### UI/UX
+- **Cost Tracker Polish**: Renamed 'Manual/Extra' to 'Manual' and applied glass-morphism styling to category selection dropdowns.
+- **Badge Synchronization**: Added formatted refundable badges to both Timeline and Summary views.
 
 
 

@@ -19,11 +19,19 @@ export interface FoodDetails {
 
 export interface HotelDetails {
   refundable: boolean;
+  refundableCutoffDate?: string;
   bookingSource?: string;
 }
 
 export interface RentalDetails {
   refundable: boolean;
+  refundableCutoffDate?: string;
+  bookingSource?: string;
+}
+
+export interface FlightDetails {
+  refundable: boolean;
+  refundableCutoffDate?: string;
   bookingSource?: string;
 }
 
@@ -40,6 +48,7 @@ export interface ItineraryItem {
   foodDetails?: FoodDetails;
   hotelDetails?: HotelDetails;
   rentalDetails?: RentalDetails;
+  flightDetails?: FlightDetails;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
   /** Independent sort order for the end-event of multi-day items (e.g. Hotel Checkout) */

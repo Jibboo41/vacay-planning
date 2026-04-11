@@ -131,7 +131,7 @@ export default function CostTrackerScreen() {
         </div>
         <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
           <div style={{ color: 'var(--sys-green)', marginBottom: '12px' }}><CreditCard size={24} /></div>
-          <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Manual/Extra</p>
+          <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Manual</p>
           <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
             ${expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
           </h3>
@@ -175,9 +175,15 @@ export default function CostTrackerScreen() {
             </div>
             <select 
               value={newCategory} onChange={e => setNewCategory(e.target.value as any)}
-              style={{ padding: '12px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+              style={{ 
+                padding: '0 32px 0 16px', background: 'rgba(255,255,255,0.08)', 
+                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '14px', 
+                color: '#fff', fontSize: '15px', fontWeight: 600,
+                appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E")',
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px'
+              }}
             >
-              <option value="manual">Wallet</option>
+              <option value="manual">Manual</option>
               <option value="food">Food</option>
               <option value="transport">Transit</option>
               <option value="other">Other</option>

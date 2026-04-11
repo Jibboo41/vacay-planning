@@ -41,8 +41,24 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [hikeLink, setHikeLink] = useState(item.hikeDetails?.allTrailsLink ?? '');
 
   const [foodMeal, setFoodMeal] = useState<'Breakfast'|'Lunch'|'Dinner'|'Snack'|'Dessert'>(item.foodDetails?.mealType ?? 'Dinner');
-  const [refundable, setRefundable] = useState(item.hotelDetails?.refundable ?? item.rentalDetails?.refundable ?? false);
-  const [bookingSource, setBookingSource] = useState(item.hotelDetails?.bookingSource ?? item.rentalDetails?.bookingSource ?? '');
+  const [refundable, setRefundable] = useState(
+    item.hotelDetails?.refundable ?? 
+    item.rentalDetails?.refundable ?? 
+    item.flightDetails?.refundable ?? 
+    false
+  );
+  const [refundableCutoffDate, setRefundableCutoffDate] = useState(
+    item.hotelDetails?.refundableCutoffDate ?? 
+    item.rentalDetails?.refundableCutoffDate ?? 
+    item.flightDetails?.refundableCutoffDate ?? 
+    ''
+  );
+  const [bookingSource, setBookingSource] = useState(
+    item.hotelDetails?.bookingSource ?? 
+    item.rentalDetails?.bookingSource ?? 
+    item.flightDetails?.bookingSource ?? 
+    ''
+  );
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -95,10 +111,17 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       } : undefined,
       hotelDetails: type === 'hotel' ? {
         refundable,
+        refundableCutoffDate: refundable ? (refundableCutoffDate || undefined) : undefined,
         bookingSource: bookingSource || undefined
       } : undefined,
       rentalDetails: type === 'rental-car' ? {
         refundable,
+        refundableCutoffDate: refundable ? (refundableCutoffDate || undefined) : undefined,
+        bookingSource: bookingSource || undefined
+      } : undefined,
+      flightDetails: type === 'flight' ? {
+        refundable,
+        refundableCutoffDate: refundable ? (refundableCutoffDate || undefined) : undefined,
         bookingSource: bookingSource || undefined
       } : undefined,
       cost: cost ? parseFloat(cost) : undefined,
@@ -274,30 +297,48 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
             </div>
           )}
 
-          {/* Conditional Hotel/Rental Details */}
-          {(type === 'hotel' || type === 'rental-car') && (
+          {/* Conditional Hotel/Rental/Flight Details */}
+          {(type === 'hotel' || type === 'rental-car' || type === 'flight') && (
             <div style={{ 
-              background: type === 'hotel' ? 'rgba(10, 132, 255, 0.08)' : 'rgba(175, 82, 222, 0.08)', 
+              background: type === 'hotel' ? 'rgba(10, 132, 255, 0.08)' : 
+                          type === 'rental-car' ? 'rgba(175, 82, 222, 0.08)' :
+                          'rgba(10, 132, 255, 0.08)', 
               padding: '16px', borderRadius: '16px', marginBottom: '16px', 
-              border: type === 'hotel' ? '1px solid rgba(10, 132, 255, 0.2)' : '1px solid rgba(175, 82, 222, 0.2)' 
+              border: type === 'hotel' ? '1px solid rgba(10, 132, 255, 0.2)' : 
+                      type === 'rental-car' ? '1px solid rgba(175, 82, 222, 0.2)' :
+                      '1px solid rgba(10, 132, 255, 0.2)' 
             }}>
-               <div className="edit-field-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+               <div className="edit-field-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: refundable ? '16px' : '12px' }}>
                 <label className="edit-field-label" style={{ margin: 0 }}>Refundable Booking?</label>
                 <input 
                   type="checkbox" 
                   checked={refundable} 
                   onChange={e => setRefundable(e.target.checked)}
-                  style={{ width: '22px', height: '22px', accentColor: type === 'hotel' ? 'var(--sys-blue)' : 'var(--sys-purple)' }}
+                  style={{ width: '22px', height: '22px', accentColor: type === 'rental-car' ? 'var(--sys-purple)' : 'var(--sys-blue)' }}
                 />
               </div>
+
+              {refundable && (
+                <div className="edit-field-group" style={{ marginBottom: '16px' }}>
+                  <label className="edit-field-label">Refundable Until (Cutoff Date)</label>
+                  <input 
+                    className="edit-field-input" 
+                    type="date" 
+                    value={refundableCutoffDate} 
+                    onChange={e => setRefundableCutoffDate(e.target.value)}
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              )}
+
               <div className="edit-field-group" style={{ marginBottom: 0 }}>
-                <label className="edit-field-label">Booking Source</label>
+                <label className="edit-field-label">Booking Source / Agency</label>
                 <input 
                   className="edit-field-input" 
                   type="text" 
                   value={bookingSource} 
                   onChange={e => setBookingSource(e.target.value)} 
-                  placeholder="e.g. Expedia, Direct, Turo" 
+                  placeholder={type === 'flight' ? "e.g. United, Expedia, Chase Travel" : "e.g. Expedia, Direct, Turo"} 
                 />
               </div>
             </div>

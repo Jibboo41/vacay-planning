@@ -284,20 +284,38 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </div>
           )}
 
-          {(item.type === 'hotel' || item.type === 'rental-car') && (item.hotelDetails || item.rentalDetails) && (
+          {(item.type === 'hotel' || item.type === 'rental-car' || item.type === 'flight') && (item.hotelDetails || item.rentalDetails || item.flightDetails) && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-              {(item.hotelDetails?.refundable || item.rentalDetails?.refundable) && (
+              {(item.hotelDetails?.refundable || item.rentalDetails?.refundable || item.flightDetails?.refundable) && (
                 <div style={{ 
-                  background: item.type === 'hotel' ? 'rgba(48, 209, 88, 0.15)' : 'rgba(175, 82, 222, 0.15)', 
-                  color: item.type === 'hotel' ? '#30D158' : '#AF52DE', 
+                  background: item.type === 'hotel' ? 'rgba(48, 209, 88, 0.15)' : 
+                             item.type === 'rental-car' ? 'rgba(175, 82, 222, 0.15)' :
+                             'rgba(10, 132, 255, 0.15)', 
+                  color: item.type === 'hotel' ? '#30D158' : 
+                         item.type === 'rental-car' ? '#AF52DE' :
+                         '#0A84FF', 
                   padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
                 }}>
                   ✓ REFUNDABLE
                 </div>
               )}
-              {(item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource) && (
+              {(item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate) && (
+                <div style={{ 
+                  background: 'rgba(255, 159, 10, 0.15)', 
+                  color: '#FF9F0A', 
+                  padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
+                }}>
+                  ⌛ REFUND UNTIL {(() => {
+                    const dStr = item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate;
+                    if (!dStr) return '';
+                    const d = new Date(dStr.replace(/-/g, '/'));
+                    return d.toLocaleDateString([], { month: 'short', day: 'numeric' }).toUpperCase();
+                  })()}
+                </div>
+              )}
+              {(item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource) && (
                 <div style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--sys-label-secondary)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600 }}>
-                  via <span style={{ color: '#fff', fontWeight: 700 }}>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource}</span>
+                  via <span style={{ color: '#fff', fontWeight: 700 }}>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource}</span>
                 </div>
               )}
             </div>
