@@ -179,7 +179,7 @@ function App() {
     });
 
     return unsubSnap;
-  }, [syncTrips, loading]);
+  }, [syncTrips, loading, userId]);
 
   if (error) {
     return (

@@ -22,11 +22,22 @@
       window.onerror = function(msg, url, lineNo, columnNo, error) {
         var root = document.getElementById('root');
         if (root) {
-          root.innerHTML = '<div style="background:#000;color:#fff;padding:20px;font-family:monospace;height:100vh;">' +
-            '<h1 style="color:#ff3b30;font-size:16px;">SYSTEM FATAL ERROR</h1>' +
-            '<p style="font-size:12px;margin-top:10px;">' + (error ? error.stack : msg) + '</p>' +
-            '<p style="font-size:10px;color:#888;margin-top:10px;">' + url + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
-            '<button onclick="window.location.reload()" style="margin-top:20px;padding:10px 20px;background:#fff;color:#000;border:none;border-radius:8px;">RELOAD</button>' +
+          var errorName = error ? (error.name + ': ') : '';
+          var fullMessage = errorName + (error ? error.message : msg);
+          var stack = error ? error.stack : '';
+          
+          // Handle "Script error." which is generic due to CORS
+          if (msg === 'Script error.') {
+             fullMessage = 'Script Error: An external script failed (CORS restriction). Check browser console for specific details if possible.';
+          }
+
+          root.innerHTML = '<div style="background:#0F1014;color:#fff;padding:40px 20px;font-family:-apple-system, system-ui, sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">' +
+            '<div style="font-size:4rem;margin-bottom:20px;">⚠️</div>' +
+            '<h1 style="color:#FF3B30;font-size:18px;font-weight:800;letter-spacing:0.05em;margin:0 0 10px 0;">SYSTEM FATAL ERROR</h1>' +
+            '<p style="font-size:14px;line-height:1.6;color:#fafafa;max-width:500px;margin:0 auto 20px auto;">' + fullMessage + '</p>' +
+            (stack ? '<div style="font-size:10px;color:#888;background:rgba(255,255,255,0.05);padding:15px;border-radius:12px;text-align:left;max-width:90%;overflow:auto;max-height:200px;margin-bottom:30px;font-family:monospace;white-space:pre-wrap;">' + stack + '</div>' : '') +
+            '<p style="font-size:11px;color:#555;margin-bottom:30px;">' + (url || 'unknown-file') + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
+            '<button onclick="window.location.reload()" style="padding:14px 28px;background:#fff;color:#000;border:none;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,0.3);">RELOAD APP</button>' +
             '</div>';
         }
         return false;

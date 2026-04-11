@@ -132,8 +132,9 @@ function ResizeHandler() {
       // Use requestAnimationFrame to ensure the browser has finished layout
       requestAnimationFrame(() => {
         try {
-          // Additional safety check: ensure the map still has a container/pane
-          if (map && (map as any)._loaded && map.getContainer()) {
+          // Additional safety check: ensure the map still has a container/pane and non-zero dimensions
+          const container = map.getContainer();
+          if (map && (map as any)._loaded && container && container.offsetWidth > 0 && container.offsetHeight > 0) {
             map.invalidateSize({ animate: false });
           }
         } catch (e) {
