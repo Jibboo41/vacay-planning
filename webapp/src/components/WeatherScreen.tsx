@@ -176,9 +176,6 @@ export default function WeatherScreen() {
     }
   }, [items.length]); // Re-calculates if items change significantly
 
-  const lastUpdatedText = weather?.lastUpdated 
-    ? new Date(weather.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-    : 'Never';
 
   return (
     <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
