@@ -184,8 +184,9 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 17: UX Hardening & iOS Compatibility (v1.9.9)
-- **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms to place the primary action on the left for consistent mobile reach.
+## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.10.0)
+- **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching from `img` tags to emoji-compatible text spans.
+- **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms for consistent "Primary Action on Left" pattern.
 - **Visual Unification**: Synchronized the Todo and Expense form cards with high-contrast elevated backgrounds and blue border highlights.
 - **Definitive Date Scaling**: Applied robust overflow containment to all date inputs, resolving persistent iOS width overflow issues.
 - **iOS Drag-to-Reorder Fix**: Implemented `e.preventDefault()` and `touch-action: none` for smooth Todo reordering.

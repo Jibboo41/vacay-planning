@@ -259,7 +259,9 @@ export default function SummaryScreen() {
                     </div>
                     {dayWeather && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                        <img src={dayWeather.icon} alt={dayWeather.condition} style={{ width: '28px', height: '28px' }} title={dayWeather.condition} />
+                        <span style={{ fontSize: '24px', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} title={dayWeather.condition}>
+                          {dayWeather.icon}
+                        </span>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
                           <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{Math.round(dayWeather.tempHigh)}°</span>
                           <span style={{ fontSize: '10px', color: 'var(--sys-label-secondary)', fontWeight: 700 }}>{Math.round(dayWeather.tempLow)}°</span>
