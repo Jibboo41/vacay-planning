@@ -125,20 +125,33 @@ function MapController() {
  */
 function ResizeHandler() {
   const map = useMap();
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
   useEffect(() => {
     if (!map) return;
 
     const handleResize = () => {
       // Use requestAnimationFrame to ensure the browser has finished layout
       requestAnimationFrame(() => {
+        if (!isMounted.current) return;
+        
         try {
-          // Additional safety check: ensure the map still has a container/pane and non-zero dimensions
+          // Robust safety check: ensure map is initialized, has a container, and is not in the middle of being destroyed
           const container = map.getContainer();
-          if (map && (map as any)._loaded && container && container.offsetWidth > 0 && container.offsetHeight > 0) {
+          const isLoaded = (map as any)._loaded;
+          const hasPanes = (map as any)._panes;
+
+          if (isLoaded && hasPanes && container && container.offsetWidth > 0) {
             map.invalidateSize({ animate: false });
           }
         } catch (e) {
-          // Fail gracefully if map is in an inconsistent state
+          // Silently handle any edge cases where Leaflet's internal state is inconsistent
+          console.warn('Map resize suppressed due to inconsistent state:', e);
         }
       });
     };
@@ -150,14 +163,8 @@ function ResizeHandler() {
       observer.observe(container);
     }
 
-    // Initial trigger to ensure correct fit on mount
-    const timer = setTimeout(handleResize, 100);
-
-    window.addEventListener('resize', handleResize);
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timer);
     };
   }, [map]);
   return null;

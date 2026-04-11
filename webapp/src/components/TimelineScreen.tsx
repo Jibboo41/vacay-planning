@@ -195,7 +195,9 @@ export default function TimelineScreen() {
       if (el) observer.observe(el);
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [dayGroups, activeDayKey]);
 
   const scrollToDay = (key: string) => {
@@ -209,7 +211,7 @@ export default function TimelineScreen() {
       
       // Calculate target scroll position - adjusted for 'above the title' cushion
       let targetTop = 0;
-      const cushion = 12; // Extra space above the title
+      const cushion = 32; // Comfortable space above the title (prevents cutoff)
       const offset = stripHeight + cushion;
 
       if (container === window) {
@@ -334,8 +336,8 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(8px + env(safe-area-inset-top))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '2px' }}>
+      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(6px + env(safe-area-inset-top))' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
           <button 
             className="header-icon-btn"
             onClick={() => setSidebarOpen(true)}
@@ -343,12 +345,12 @@ export default function TimelineScreen() {
           >
             <Menu size={24} />
           </button>
-          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.8rem' }}>
+          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.7rem' }}>
             {currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
-        <div className="day-timeline-strip" ref={stripRef} style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '4px 0 10px 0' }}>
+        <div className="day-timeline-strip" ref={stripRef} style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '0 0 8px 0' }}>
           <div className="day-pill-bar" ref={pillBarRef}>
             {dayGroups.map((group) => (
               <button
