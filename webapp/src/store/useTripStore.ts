@@ -173,18 +173,38 @@ export const useTripStore = create<TripStore>((set, get) => ({
   syncTrips: (trips) => {
     const { initialized, currentTripId, items: currentItems } = get();
     
-    if (trips.length === 0 && !initialized && currentTripId) {
+    // Handle empty trip state (new users or all trips deleted)
+    if (trips.length === 0) {
+      set({ 
+        trips: [],
+        items: [],
+        todos: [],
+        expenses: [],
+        weather: null,
+        currentTripAiSummary: null,
+        initialized: true 
+      });
+      // If we had a stale ID in storage but no trips exist, clear it
+      if (currentTripId) {
+        set({ currentTripId: null });
+        localStorage.removeItem('vacay_current_trip_id');
+      }
       return;
     }
 
     const sorted = [...trips].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     const currentTrip = sorted.find(t => t.id === currentTripId);
 
-    // CRITICAL: If we have a trip ID but the snapshot doesn't show it yet,
-    // DON'T set items to [] which would trigger a UI clear/redirect.
-    if (currentTripId && !currentTrip && initialized) {
-       console.warn("Sync: currentTripId exists but trip not in snapshot. Keeping current state.");
-       set({ trips: sorted });
+    // If we have a trip ID but the snapshot doesn't show it (stale storage or deleted)
+    if (currentTripId && !currentTrip) {
+       console.warn("Sync: currentTripId exists but trip not in snapshot. Clearing stale ID.");
+       localStorage.removeItem('vacay_current_trip_id');
+       set({ 
+         trips: sorted, 
+         currentTripId: null,
+         items: [],
+         initialized: true 
+       });
        return;
     }
 

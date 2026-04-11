@@ -310,7 +310,7 @@ export default function TimelineScreen() {
         >
           <Menu size={24} />
         </button>
-        <h1 className="page-title" style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {currentTrip?.title || 'Itinerary'}
         </h1>
       </header>
