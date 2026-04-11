@@ -183,15 +183,17 @@ export default function CostTrackerScreen() {
               <option value="other">Other</option>
             </select>
           </div>
-          <input 
-            type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
-            style={{ 
-              width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.05)', 
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', 
-              marginBottom: '20px', boxSizing: 'border-box', colorScheme: 'dark',
-              fontSize: '16px', display: 'block'
-            }}
-          />
+          <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%', marginBottom: '20px' }}>
+            <input 
+              type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+              style={{ 
+                width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.05)', 
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', 
+                boxSizing: 'border-box', colorScheme: 'dark',
+                fontSize: '16px', display: 'block', margin: 0
+              }}
+            />
+          </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}>Cancel</button>
             <button onClick={handleAdd} className="btn-glass-blue" style={{ flex: 1, padding: '12px', borderRadius: '12px' }}>Save</button>

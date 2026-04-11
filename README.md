@@ -184,11 +184,12 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 17: UX Hardening & iOS Compatibility (v1.9.7)
-- **iOS Drag-to-Reorder Fix**: Implemented `e.preventDefault()` and `touch-action: none` to prevent unintended browser scrolling during Todo reordering.
-- **Button Ergonomics**: Swapped "Save Task" and "Cancel" positions and standardized to equal-width premium styling for better single-handed reach.
-- **Robust Date Scaling**: Optimized date input containment for narrow iOS viewports to eliminate horizontal layout overflow.
-- **Native Reordering Engine**: Successfully implemented `document.elementFromPoint` for bulletproof Todo reordering.
+## 📺 Phase 17: UX Hardening & iOS Compatibility (v1.9.8)
+- **Visual Unification**: Synchronized the Todo and Expense form cards with high-contrast elevated backgrounds and blue border highlights for a consistent "Active Form" aesthetic.
+- **Definitive Date Scaling**: Applied robust overflow containment to all date inputs, resolving persistent iOS width overflow issues.
+- **iOS Drag-to-Reorder Fix**: Implemented `e.preventDefault()` and `touch-action: none` for smooth Todo reordering.
+- **Button Ergonomics**: Swapped button order (Save on Left) and standardized to equal-width premium styling.
+- **Native Reordering Engine**: Successfully implemented `document.elementFromPoint` for bulletproof detection.
 - **Sidebar Ergonomics**: Reordered utility sections and added a collapsible Appearance manager.
 
 ## 📺 Phase 16: UI Polishing & Feature Hardening (v1.9.5)

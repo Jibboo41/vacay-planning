@@ -2,6 +2,13 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.9.8] - 2026-04-10
+### Added
+- **Visual Unification**: Synchronized Todo and Expense form card styles (Elevated-2 bg + Blue border focus) for consistent transparency and highlighting on iOS.
+
+### Fixed
+- **iOS Date Overflow**: Implemented robust overflow-hidden containment for all date inputs to ensure they respect container boundaries on mobile.
+
 ## [1.9.7] - 2026-04-10
 ### Fixed
 - **iOS Todo Reordering**: Added `e.preventDefault()` to touch move events and `touch-action: none` to handles to prevent page scrolling during drag operations.

@@ -140,8 +140,8 @@ export default function TodoScreen() {
           </button>
         ) : (
           <div style={{
-            background: 'rgba(255,255,255,0.05)', padding: '20px',
-            borderRadius: '20px', border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--sys-bg-elevated-2)', padding: '24px',
+            borderRadius: '24px', border: '1px solid var(--sys-blue)',
             marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px'
           }}>
             <div className="edit-field-group" style={{ marginBottom: 0 }}>
@@ -160,19 +160,21 @@ export default function TodoScreen() {
               />
             </div>
 
-            <div className="edit-field-group" style={{ marginBottom: 0, width: '100%' }}>
+            <div className="edit-field-group" style={{ marginBottom: 0, width: '100%', overflow: 'hidden' }}>
               <label className="edit-field-label">Due Date (Optional)</label>
-              <input
-                type="date"
-                value={newDueDate}
-                onChange={e => setNewDueDate(e.target.value)}
-                style={{
-                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '12px', padding: '14px 16px', color: '#fff',
-                  fontSize: '16px', colorScheme: 'dark', width: '100%',
-                  boxSizing: 'border-box', display: 'block', margin: 0
-                }}
-              />
+              <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
+                <input
+                  type="date"
+                  value={newDueDate}
+                  onChange={e => setNewDueDate(e.target.value)}
+                  style={{
+                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px', padding: '14px 16px', color: '#fff',
+                    fontSize: '16px', colorScheme: 'dark', width: '100%',
+                    boxSizing: 'border-box', display: 'block', margin: 0
+                  }}
+                />
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
