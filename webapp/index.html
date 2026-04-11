@@ -26,9 +26,15 @@
           var fullMessage = errorName + (error ? error.message : msg);
           var stack = error ? error.stack : '';
           
-          // Handle "Script error." which is generic due to CORS
-          if (msg === 'Script error.') {
-             fullMessage = 'Script Error: An external script failed (CORS restriction). Check browser console for specific details if possible.';
+          // Handle "Script error." which is generic due to CORS or browser interrupts (common on iOS Share)
+          if (msg === 'Script error.' || (!url && lineNo === 0)) {
+             // If we have a real error object with a stack, it might still be a real issue.
+             // But if it's just "Script error." with no info, it's a browser noise event.
+             if (!error || !error.stack || error.stack.length < 10) {
+                console.warn('Suppressed noisy browser error:', msg);
+                return; 
+             }
+             fullMessage = 'Script Error: An external resource failed. Check console for details.';
           }
 
           root.innerHTML = '<div style="background:#0F1014;color:#fff;padding:40px 20px;font-family:-apple-system, system-ui, sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">' +

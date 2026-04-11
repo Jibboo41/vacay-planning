@@ -225,7 +225,9 @@ const TripSelector: React.FC = () => {
           background: transparent;
           color: white;
           padding: 24px;
+          padding-top: calc(24px + env(safe-area-inset-top));
           padding-bottom: 120px;
+          box-sizing: border-box;
         }
 
         .header-top {
@@ -233,6 +235,7 @@ const TripSelector: React.FC = () => {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 32px;
+          padding-top: 8px;
         }
 
         h1 { font-size: 2.2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
