@@ -190,54 +190,58 @@ export default function MapViewScreen() {
       return;
     }
     
+    let isMounted = true;
     const { addDebugLog } = useTripStore.getState();
     setRouteStatus('loading');
 
-    (async () => {
-      const results: DayRoute[] = [];
-      let fetchCount = 0;
-      let cacheCount = 0;
+    const fetchAllRoutes = async () => {
+      try {
+        const routePromises = dayKeys.map(async (key, i) => {
+          const stops = byDayMap.get(key)!;
+          const colorIdx = allTripDayKeys.indexOf(key);
+          const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
 
-      for (let i = 0; i < dayKeys.length; i++) {
-        const key   = dayKeys[i];
-        const stops = byDayMap.get(key)!;
+          if (stops.length < 2) {
+            return { dayKey: key, color, coords: straightLine(stops), distance: 0 };
+          }
+
+          const cacheKey = stops.map(s => `${s.id}-${s.location.latitude}-${s.location.longitude}`).join('|');
+          if (routeCache.current.has(cacheKey)) {
+            return { dayKey: key, color, coords: routeCache.current.get(cacheKey)!, distance: 0 };
+          }
+
+          try {
+            // Add a timeout to the fetch to prevent hanging forever
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+
+            addDebugLog('Directions', `Fetching OSRM for Day: ${key}`, { stops: stops.length });
+            const coords = await fetchOSRMRoute(stops);
+            clearTimeout(timeoutId);
+            
+            routeCache.current.set(cacheKey, coords);
+            return { dayKey: key, color, coords, distance: 0 };
+          } catch (err: any) {
+            addDebugLog('Directions', `OSRM Failed or Mocked for ${key}: ${err.name === 'AbortError' ? 'Timeout' : err.message}`);
+            return { dayKey: key, color, coords: straightLine(stops), distance: 0 };
+          }
+        });
+
+        const results = await Promise.all(routePromises);
         
-        // Create a unique key for this day's sequence of stops
-        const cacheKey = stops.map(s => `${s.id}-${s.location.latitude}-${s.location.longitude}`).join('|');
-        
-        const colorIdx = allTripDayKeys.indexOf(key);
-        const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
-
-        if (stops.length < 2) {
-          results.push({ dayKey: key, color, coords: straightLine(stops), distance: 0 });
-          continue;
+        if (isMounted) {
+          setDayRoutes(results);
+          setRouteStatus('done');
         }
-
-        if (routeCache.current.has(cacheKey)) {
-          cacheCount++;
-          results.push({ dayKey: key, color, coords: routeCache.current.get(cacheKey)!, distance: 0 });
-          continue;
-        }
-
-        try {
-          fetchCount++;
-          addDebugLog('Directions', `Fetching OSRM for Day: ${key}`, { stops: stops.length });
-          const coords = await fetchOSRMRoute(stops);
-          routeCache.current.set(cacheKey, coords);
-          results.push({ dayKey: key, color, coords, distance: 0 });
-        } catch (err: any) {
-          addDebugLog('Directions', `OSRM Failed for ${key}: ${err.message}`);
-          results.push({ dayKey: key, color, coords: straightLine(stops), distance: 0 });
-        }
+      } catch (err: any) {
+        addDebugLog('Directions', `Critical Route Failure: ${err.message}`);
+        if (isMounted) setRouteStatus('error');
       }
+    };
 
-      if (fetchCount > 0 || cacheCount > 0) {
-        addDebugLog('Directions', `Calculation complete. Fetched: ${fetchCount}, Cached: ${cacheCount}`);
-      }
-      
-      setDayRoutes(results);
-      setRouteStatus('done');
-    })();
+    fetchAllRoutes();
+
+    return () => { isMounted = false; };
   }, [dayKeys, byDayMap, mappable.length, allTripDayKeys]);
 
   const crossDayLines: [number, number][][] = [];

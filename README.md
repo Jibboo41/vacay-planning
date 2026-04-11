@@ -184,10 +184,11 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.10.2)
-- **Desktop Scroll Fix**: Restored `overflow-y: auto` to the right-hand split-view panel, allowing Summary and Expense screens to scroll properly on widescreen.
+## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.11.0)
+- **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic, resolving the "Infinite Calculation" hang.
+- **Desktop Scroll Fix**: Restored `overflow-y: auto` to the right-hand split-view panel for independent desktop scrolling.
 - **Aesthetic Icon Refinement**: Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
-- **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching from `img` tags to emoji-compatible text spans.
+- **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching to emoji-compatible text spans.
 - **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms for consistent "Primary Action on Left" pattern.
 - **Visual Unification**: Synchronized the Todo and Expense form cards with high-contrast elevated backgrounds and blue border highlights.
 - **Definitive Date Scaling**: Applied robust overflow containment to all date inputs, resolving persistent iOS width overflow issues.

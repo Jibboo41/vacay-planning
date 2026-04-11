@@ -2,6 +2,10 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.11.0] - 2026-04-10
+### Fixed
+- **Map Routing Overhaul**: Redesigned the path calculation engine to use parallel fetches with `AbortController` timeouts (6s), resolving the infinite "Calculating routes..." hang on slow networks.
+
 ## [1.10.2] - 2026-04-10
 ### Fixed
 - **Desktop Split-View Scrolling**: Fixed a CSS regression in `.split-right` that prevented independent content scrolling on widescreen displays.
