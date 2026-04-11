@@ -330,7 +330,7 @@ export default function TimelineScreen() {
         </div>
       </div>
 
-      <main className="timeline-main" style={{ paddingTop: '20px' }}>
+      <main className="timeline-main">
         {dayGroups.map((group) => {
           const dayWeather = weather?.forecast.filter(f => f.date === group.dateKey);
           let high: number | null = null;

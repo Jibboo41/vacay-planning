@@ -109,21 +109,23 @@ export default function TodoScreen() {
   return (
     <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
       {/* Header */}
-      <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
+      <header className="screen-header">
         <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 800, letterSpacing: '-1px', color: '#FFF', margin: 0 }}>
-            Todo List
-          </h1>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>Things to Do</h1>
+          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>TRIP CHECKLIST</div>
+        </div>
+        <div style={{ width: 44 }} /> {/* Balance header */}
+      </header>
+      <div style={{ padding: '0 24px 12px 24px' }}>
           <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
             {completedCount} of {todos.length} tasks completed
           </p>
-        </div>
       </div>
 
-      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+      <div style={{ padding: '0 24px 120px 24px' }}>
         {/* New Todo Area */}
         {!showAddForm ? (
           <button 

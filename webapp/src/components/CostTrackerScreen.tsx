@@ -80,8 +80,7 @@ export default function CostTrackerScreen() {
 
   return (
     <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
-      {/* Header */}
-      <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
+      <header className="screen-header">
         <button 
           className="header-icon-btn"
           onClick={() => setSidebarOpen(true)}
@@ -117,7 +116,7 @@ export default function CostTrackerScreen() {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       <div style={{ padding: '24px', paddingBottom: '120px' }}>
         {/* Summary Cards */}

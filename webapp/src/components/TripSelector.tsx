@@ -112,16 +112,15 @@ const TripSelector: React.FC = () => {
 
   return (
     <div className="trip-selector-screen">
-      <header className="trip-header">
-        <div className="header-top">
-          <h1>My Trips</h1>
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={18} />
-          </button>
-        </div>
+      <header className="screen-header">
+        <h1 style={{ flex: 1, fontSize: '2rem', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>My Trips</h1>
+        <button onClick={handleLogout} className="logout-btn" aria-label="Logout">
+          <LogOut size={18} />
+        </button>
       </header>
 
-      <main className="trip-list">
+      <main className="trip-list-container">
+        <div className="trip-list">
         {trips.length === 0 ? (
           <div className="empty-state">
             <p>No trips yet. Plan your first adventure!</p>
@@ -193,6 +192,7 @@ const TripSelector: React.FC = () => {
           <Plus size={24} />
           <span>Plan New Trip</span>
         </button>
+        </div>
       </main>
 
       {isAdding && (
@@ -224,21 +224,13 @@ const TripSelector: React.FC = () => {
           min-height: 100vh;
           background: transparent;
           color: white;
-          padding: 24px;
-          padding-top: calc(24px + env(safe-area-inset-top));
-          padding-bottom: 120px;
           box-sizing: border-box;
         }
 
-        .header-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 32px;
-          padding-top: 8px;
+        .trip-list-container {
+          padding: 24px;
+          padding-bottom: 120px;
         }
-
-        h1 { font-size: 2.2rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
 
         .logout-btn {
           background: rgba(255, 255, 255, 0.1);

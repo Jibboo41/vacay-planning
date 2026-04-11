@@ -183,16 +183,19 @@ export default function WeatherScreen() {
   return (
     <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
       {/* Header */}
-      <div className="screen-header glass-effect" style={{ marginBottom: '0' }}>
-        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
+      <header className="screen-header">
+        <button 
+          className="header-icon-btn"
+          onClick={() => setSidebarOpen(true)}
+        >
           <Menu size={24} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <h1 style={{ fontSize: '30px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
-            Weather
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
+            Local Weather
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            Location-specific • Updated: {lastUpdatedText}
+            {weather?.forecast.length ? `${weather.forecast.length} Day Forecast` : 'No data'}
           </p>
         </div>
         <button 
@@ -203,7 +206,7 @@ export default function WeatherScreen() {
         >
           <RefreshCw size={20} className={loading ? 'spinning' : ''} />
         </button>
-      </div>
+      </header>
 
       <div style={{ padding: '24px', paddingBottom: '120px' }}>
         {dailyLocations.length === 0 ? (

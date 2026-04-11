@@ -224,7 +224,7 @@ export default function SummaryScreen() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <header className="screen-header" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+      <header className="screen-header">
         <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
