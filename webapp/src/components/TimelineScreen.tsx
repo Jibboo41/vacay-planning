@@ -111,7 +111,7 @@ export default function TimelineScreen() {
   const dayRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const pillRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const pillBarRef = useRef<HTMLDivElement>(null);
-  const stripRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
   const touchRef = useRef<{
     draggingId: string | null;
     dropTargetId: string | null;
@@ -207,12 +207,12 @@ export default function TimelineScreen() {
       setActiveDayKey(key);
       
       const container = getScrollContainer();
-      const stripHeight = stripRef.current?.offsetHeight ?? 100;
+      const fullHeaderHeight = headerRef.current?.offsetHeight ?? 140;
       
       // Calculate target scroll position - adjusted for 'above the title' cushion
       let targetTop = 0;
-      const cushion = 32; // Comfortable space above the title (prevents cutoff)
-      const offset = stripHeight + cushion;
+      const cushion = 32; // Stable space above the title (prevents cutoff)
+      const offset = fullHeaderHeight + cushion;
 
       if (container === window) {
         targetTop = el.getBoundingClientRect().top + window.scrollY - offset;
@@ -336,7 +336,7 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
+      <header ref={headerRef} className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
           <button 
             className="header-icon-btn"
@@ -350,7 +350,7 @@ export default function TimelineScreen() {
           </h1>
         </div>
 
-        <div className="day-timeline-strip" ref={stripRef} style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '0 0 8px 0' }}>
+        <div className="day-timeline-strip" style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '0 0 4px 0' }}>
           <div className="day-pill-bar" ref={pillBarRef}>
             {dayGroups.map((group) => (
               <button
