@@ -302,33 +302,35 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header className="screen-header">
-        <button 
-          className="header-icon-btn"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open sidebar"
-        >
-          <Menu size={24} />
-        </button>
-        <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {currentTrip?.title || 'Itinerary'}
-        </h1>
-      </header>
-
-      <div className="day-timeline-strip" ref={stripRef}>
-        <div className="day-pill-bar" ref={pillBarRef}>
-          {dayGroups.map((group) => (
-            <button
-              key={group.dateKey}
-              ref={el => { pillRefs.current[group.dateKey] = el; }}
-              className={`day-pill ${activeDayKey === group.dateKey ? 'day-pill--active' : ''}`}
-              onClick={() => scrollToDay(group.dateKey)}
-            >
-              {group.label}
-            </button>
-          ))}
+      <header className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '4px' }}>
+          <button 
+            className="header-icon-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
+          >
+            <Menu size={24} />
+          </button>
+          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {currentTrip?.title || 'Itinerary'}
+          </h1>
         </div>
-      </div>
+
+        <div className="day-timeline-strip" ref={stripRef} style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '8px 0 14px 0' }}>
+          <div className="day-pill-bar" ref={pillBarRef}>
+            {dayGroups.map((group) => (
+              <button
+                key={group.dateKey}
+                ref={el => { pillRefs.current[group.dateKey] = el; }}
+                className={`day-pill ${activeDayKey === group.dateKey ? 'day-pill--active' : ''}`}
+                onClick={() => scrollToDay(group.dateKey)}
+              >
+                {group.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
 
       <main className="timeline-main">
         {dayGroups.map((group) => {

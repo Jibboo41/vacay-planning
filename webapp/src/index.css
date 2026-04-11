@@ -117,13 +117,14 @@ input, textarea {
 
 .day-timeline-strip {
   position: sticky;
-  top: env(safe-area-inset-top);
-  z-index: 30;
-  background: rgba(0, 0, 0, 0.35); /* Extremely thin background to show blobs more vividly */
-  backdrop-filter: blur(32px) saturate(1.8);
-  -webkit-backdrop-filter: blur(32px) saturate(1.8);
-  border-bottom: 0.5px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  top: 0; /* Fallback */
+  z-index: 999;
+  background: rgba(15, 16, 20, 0.35);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 0;
+  margin-top: -1px; /* Overlap header border slightly for seamless look */
 }
 
 .day-pill-bar {
@@ -211,10 +212,10 @@ input, textarea {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(15, 16, 20, 0.45);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 16, 20, 0.35); /* Increased translucency */
+  backdrop-filter: blur(40px) saturate(200%); /* High saturation for premium feel */
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Finer border */
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
