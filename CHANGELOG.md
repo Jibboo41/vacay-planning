@@ -2,6 +2,33 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.9.7] - 2026-04-10
+### Fixed
+- **iOS Todo Reordering**: Added `e.preventDefault()` to touch move events and `touch-action: none` to handles to prevent page scrolling during drag operations.
+- **Form Scaling**: Standardized date input containment to prevent layout overflow on narrow iOS viewports.
+
+### Changed
+- **Button Ergonomics**: Swapped "Save Task" and "Cancel" positions on Todo form for better mobile reach; updated to equal-width premium button styling.
+- **Todo Reorder Engine**: Refactored logic to use `document.elementFromPoint` for high-reliability target detection.
+
+## [1.9.6] - 2026-04-10
+### Added
+- **Trip Renaming**: Inline title editing support in Sidebar with real-time Firestore sync.
+- **Collapsible Sidebar Sections**: Added theme picker collapsing for a cleaner UI.
+- **Enhanced Debug Trace**: Improved System Logs screen with high-contrast raw data visualization.
+
+## [1.9.0] - 2026-04-10
+### Added
+- **System Trace Logs**: Dedicated `/debug` screen for real-time monitoring of API interactions and background sync.
+- **Todo System Overhaul**: Replaced inline inputs with a structured "New Todo" form and hardened reordering logic.
+- **Weather Integration**: Added H/L temperatures and condition icons directly to itinerary headers.
+
+## [1.8.0] - 2026-04-09
+### Added
+- **Financial Status Parity**: Removed visibility dimming on paid items in Cost Tracker; fixed currency alignment.
+- **Rental Car Summaries**: Itinerary summary view now uses 'PICKUP' and 'RETURN' labels for rental entries.
+- **RentalCar Metadata**: Added "Booked via" and "Refundable" fields to rental car items.
+
 ## [1.7.0] - 2026-04-09 (Modernization & Desktop Split-View)
 
 ### 🖥️ Responsive Architecture

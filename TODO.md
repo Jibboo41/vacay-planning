@@ -7,7 +7,8 @@
 - [x] **Financial Settlement**: Granular "Paid Amount" tracking with over-budget alerts.
 - [x] **Global Editing**: Centralized modal orchestration for cross-screen triggers.
 - [x] **Climate Intelligence**: 5-year historical averaging in Fahrenheit + Precipitation.
-- [x] **Productivity Suite**: Overdue task tracking and ergonomic navigation swaps.
+- [x] **Productivity Suite**: Overdue task tracking and ergonomic reordering logic.
+- [x] **UI Infrastructure**: Collapsible units, refined button diagnostics, and iOS viewport scaling.
 - [ ] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
 - [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
 - [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.

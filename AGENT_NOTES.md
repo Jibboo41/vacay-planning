@@ -1,17 +1,12 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-10 | Phase 14.10 Complete
+> Last updated: 2026-04-10 | Phase 17.02 Complete
 
-## 🛠 Project Progress (Phase 14 Refinement)
-- **Balanced Desktop Layout**: Transitioned to 50/50 split (`grid-template-columns: 1fr 1fr`) in `index.css`.
-- **Advanced Timeline Interactivity**:
-    - Hotel checkouts (`-checkout`) and rental car returns (`-return`) are now draggable.
-    - Updated `useTripStore.ts` reorder logic and `TimelineScreen.tsx` dragId generation.
-- **Minimalist UI**:
-    - FAB menus (Left and Right) are now **icon-only**. Labels removed from `GlobalControls.tsx`.
-    - Compact **Trash Icon** delete action added to `TimelineItem.tsx` next to Edit.
-- **Mobile Stabilization**: Fixed 0px map height issues in standalone view mode via `height: 100dvh` in `MapViewScreen.tsx`.
-- **Intelligent Coloring**: Updated Hikes to Forest Green (`#1E8449`) and Dining to Orange-Coral (`#FF7000`) for visual distinction from Hotel entries.
-- **Hotel Metadata**: Added `refundable` and `bookingSource` fields to `ItineraryItem` model, editor, and timeline cards.
+## 🛠 Recent Project Milestones (Phase 17: UX Hardening)
+- **Robust Todo Reordering**: Transitioned to `document.elementFromPoint` for high-reliability touch reordering. Fixed iOS scroll-conflict by adding `e.preventDefault()` and `touch-action: none` to drag handles.
+- **Sidebar UX**: Reordered utility sections (Filters first) and implemented a collapsible Theme Picker to save vertical space.
+- **Form Containment**: Standardized `box-sizing: border-box` and width constraints for date inputs in Todo and Expense forms to prevent iOS viewport overflow.
+- **Debug Trace Screen**: New `/debug` route providing formatted, high-contrast raw data logs for all API and sync events.
+- **Ergonomic Buttons**: Swapped Todo form buttons (Save on Left) and standardized to equal-width premium glass styling.
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 
