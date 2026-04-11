@@ -135,9 +135,12 @@ export default function TimelineScreen() {
   flattened.sort((a, b) => {
     const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
     if (dayA !== dayB) return dayA.localeCompare(dayB);
-    if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
-    if (a.sortOrder !== undefined) return -1;
-    if (b.sortOrder !== undefined) return 1;
+    
+    // Independent sort orders: checkouts use endSortOrder
+    const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
+    const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
+    
+    if (aOrder !== bOrder) return aOrder - bOrder;
     return a._renderDate.localeCompare(b._renderDate);
   });
 

@@ -182,8 +182,9 @@ stateDiagram-v2
 
 ---
 
-### Phase 21 (v1.11.4): Stability & Premium Polish
-- **Day-Aware Reordering**: Re-engineered logic in `useTripStore.ts` that distinguishes between check-in and checkout events during drag-and-drop, preventing date drift for multi-day items.
+### Phase 21 (v1.11.6): Stability & Premium Polish
+- **Independent Event Reordering**: Introduced a decoupled sorting system for multi-day items (Hotels/Rentals). Check-in and check-out events now have independent sort orders, preventing "ghost movement" where reordering one event affected the other.
+- **Enhanced Action Branding**: Color-coded the "My Trips" selector actions (White for Rename/Duplicate, Red for Delete) for faster recognition and semantic clarity.
 - **Map Layout Recalibration**: Fixed split-screen centering by adding a `ResizeHandler` to trigger Leaflet's `invalidateSize()` during layout transitions.
 - **Glass-Morphism Unification**:
   - Upgraded "My Trips" cards with high-blur, semi-transparent backgrounds and subtle highlights.

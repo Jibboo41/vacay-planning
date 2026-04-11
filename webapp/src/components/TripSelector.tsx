@@ -308,21 +308,34 @@ const TripSelector: React.FC = () => {
           gap: 4px;
         }
 
-        .duplicate-trip-btn, .delete-trip-btn {
+        .duplicate-trip-btn {
           background: transparent;
           border: none;
-          color: #444;
+          color: rgba(255, 255, 255, 0.4);
           padding: 8px;
           border-radius: 8px;
           transition: all 0.2s;
         }
+        .duplicate-trip-btn:hover {
+          color: #fff !important;
+          background: rgba(255, 255, 255, 0.1);
+        }
 
-        .trip-card:hover .delete-trip-btn, .trip-card:hover .duplicate-trip-btn { color: #888; }
-        .delete-trip-btn:hover { color: #ff3b30 !important; background: rgba(255, 59, 48, 0.1); }
-        .duplicate-trip-btn:hover { color: var(--sys-blue) !important; background: rgba(10, 132, 255, 0.1); }
+        .delete-trip-btn {
+          background: transparent;
+          border: none;
+          color: rgba(255, 69, 58, 0.4);
+          padding: 8px;
+          border-radius: 8px;
+          transition: all 0.2s;
+        }
+        .delete-trip-btn:hover {
+          color: #ff453a !important;
+          background: rgba(255, 69, 58, 0.15);
+        }
 
-        .chevron { color: #333; transition: color 0.2s; }
-        .trip-card:hover .chevron { color: #666; }
+        .chevron { color: rgba(255, 255, 255, 0.2); transition: color 0.2s; }
+        .trip-card:hover .chevron { color: rgba(255, 255, 255, 0.6); }
 
         .add-trip-btn-large {
           margin-top: 16px;

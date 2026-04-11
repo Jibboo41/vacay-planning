@@ -2,16 +2,12 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
-## [1.11.4] - 2026-04-11
+## [1.11.6] - 2026-04-11
 ### Fixed
-- **Timeline Reordering Logic**: Re-engineered `reorderItems` to be fully aware of check-in vs checkout days, preventing multi-day item drift.
-- **Map Centering**: Added a `ResizeHandler` and `invalidateSize` trigger to correct map centering in desktop split-view after container size changes.
-- **Date String Reconciliation**: Implemented a robust local string-to-date helper to eliminate cross-browser "Invalid Date" errors.
-- **CSS Hierarchy Fixes**: Removed hardcoded background overrides that were preventing the premium blue glass-morphism style from applying to primary buttons.
-### UI/UX
-- **Premium Glass Selection**: Enhanced the "My Trips" selector cards with higher blur, subtle highlights, and iOS-style spring transitions.
-- **Consistently Colored Summaries**: Updated the Rental Car theme colors in the Summary screen to match the Timeline's purple branding.
-- **Sidebar Cleanliness**: Removed manual deletion icons from the sidebar trip list to finalize a navigation-first UX.
+- **Timeline Event Decoupling**: Introduced `endSortOrder` to allow check-in and checkout events of multi-day items to be reordered independently on their respective days.
+- **Trip Action Branding**: Updated action buttons (Copy, Rename, Delete) on the My Trips screen to use semantic colors (White/Red) for improved UX.
+- **UI Contrast**: Brightened chevron icons and refined hover states on trip selector cards.
+
 
 
 ## [1.11.2] - 2026-04-10

@@ -42,6 +42,8 @@ export interface ItineraryItem {
   rentalDetails?: RentalDetails;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
+  /** Independent sort order for the end-event of multi-day items (e.g. Hotel Checkout) */
+  endSortOrder?: number;
   /** Custom cost for this item (e.g. flight price, hotel total) */
   cost?: number;
   /** Amount already paid specifically for this itinerary item */

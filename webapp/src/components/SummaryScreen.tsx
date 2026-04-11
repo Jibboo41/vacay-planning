@@ -159,11 +159,11 @@ export default function SummaryScreen() {
       
       const dayItems = flattened.filter(i => getDayKey(i._renderDate) === key)
         .sort((a, b) => {
-          // Sort checkouts by time if available, otherwise sortOrder
-          if (a._renderDate.includes('T') && b._renderDate.includes('T')) {
-            return a._renderDate.localeCompare(b._renderDate);
-          }
-          if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
+          // Independent sort orders: checkouts use endSortOrder
+          const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
+          const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
+          
+          if (aOrder !== bOrder) return aOrder - bOrder;
           return a._renderDate.localeCompare(b._renderDate);
         });
 

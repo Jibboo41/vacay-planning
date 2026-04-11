@@ -1,10 +1,12 @@
 # 🤖 Agent Session Notes
 > Last updated: 2026-04-11 | Phase 21 Complete
 
-## 🛠 Recent Project Milestones (Phase 21: Stability & Polish)
-- **Day-Aware Reordering**: Fixed 'Date Drift' bugs in `reorderItems` by implementing a render-day logic that correctly targets `startDate` vs `endDate` based on drag-id suffixes (`-checkout`, `-return`).
-- **Map Recalibration**: Resolved Map centering bugs in desktop split-view using `ResizeHandler` and `invalidateSize()`.
-- **Glass-Morphism Standard**: Unified all primary action buttons and trip cards under a high-blur glass design (`btn-glass-blue`).
+## 🛠 Recent Project Milestones
+- **Phase 21 (Final Refinements)**:
+    - **Independent Event Reordering**: Implemented decoupled sort orders for starts and ends of multi-day items. Added `endSortOrder` to `ItineraryItem`.
+    - **Store Logic**: `reorderItems` now uses a "wrapper-based" day-event extractor to calculate relative positions for check-ins vs checkouts independently.
+    - **MapView ResizeHandler**: Added a `ResizeHandler` component using `useMap` to trigger `invalidateSize()` whenever the container width changes (essential for split-screen stability).
+    - **Aesthetic Branding**: Action buttons in `TripSelector` are now semantically colored (Red for delete, White for edit/copy) with a high-blur glass theme.
 - **Data Hardening**: Standardized date reconciliation for cross-browser reliability (ISO parsing fixes).
 - **Rental Car Branding**: Updated car segments to use consistent purple branding across all screens.
 

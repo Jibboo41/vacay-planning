@@ -102,14 +102,7 @@ function getDayKey(dateStr: string) {
   return `${year}-${month}-${day}`;
 }
 
-function getLocalTimeStr(dateStr: string) {
-  if (!dateStr) return '12:00:00';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr.split('T')[1]?.replace('Z', '') ?? '12:00:00';
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}:00`;
-}
+
 
 /** Recursively remove all "undefined" values from an object for Firestore compatibility */
 function scrubData(obj: any): any {
@@ -357,67 +350,93 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
   },
 
-  reorderItems: async (activeId, overId, newDayKey) => {
-    const { currentTripId, items } = get();
-    if (!currentTripId) return;
+    reorderItems: async (activeId, overId, newDayKey) => {
+      const { currentTripId, items } = get();
+      if (!currentTripId) return;
 
-    const realActiveId = activeId.replace(/-checkout$|-return$/, '');
-    const realOverId = overId ? overId.replace(/-checkout$|-return$/, '') : null;
+      const allItems = [...items];
+      const isDraggingCheckout = activeId.endsWith('-checkout') || activeId.endsWith('-return');
+      const realActiveId = activeId.replace(/-checkout$|-return$/, '');
 
-    const allItems = [...items];
-    const activeItem = allItems.find(i => i.id === realActiveId);
-    if (!activeItem) return;
+      const activeItem = allItems.find(i => i.id === realActiveId);
+      if (!activeItem) return;
 
-    const oldDayKey = getDayKey(activeItem.startDate);
-    const hasTime = activeItem.startDate.includes('T');
-    const localTime = hasTime ? getLocalTimeStr(activeItem.startDate) : '';
-
-    const movedItem: ItineraryItem = { ...activeItem };
-    if (oldDayKey !== newDayKey) {
-        if (activeId.endsWith('-checkout') || activeId.endsWith('-return')) {
-            const currentEndTime = activeItem.endDate ? getLocalTimeStr(activeItem.endDate) : '11:00';
-            movedItem.endDate = `${newDayKey}T${currentEndTime}`;
-        } else {
-            movedItem.startDate = hasTime ? `${newDayKey}T${localTime}` : newDayKey;
-        }
-    }
-
-    const remaining = allItems.filter(i => i.id !== realActiveId);
-    const getTargetDayItems = (dayKey: string) => {
-        return remaining.filter(i => {
-            const startKey = getDayKey(i.startDate);
-            const isHotel = i.type === 'hotel' || i.type === 'rental-car';
-            const endKey = i.endDate ? getDayKey(i.endDate) : startKey;
-            return startKey === dayKey || (isHotel && endKey === dayKey);
-        });
-    };
-
-    const targetDay = getTargetDayItems(newDayKey).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
-    
-    const overIdx = realOverId ? targetDay.findIndex(i => i.id === realOverId) : targetDay.length;
-    targetDay.splice(overIdx === -1 ? targetDay.length : overIdx, 0, movedItem);
-
-    const reorderedTarget = targetDay.map((item, idx) => ({ ...item, sortOrder: idx * 10 }));
-    const otherItems = remaining.filter(i => !getTargetDayItems(newDayKey).some(tdi => tdi.id === i.id));
-    
-    let finalItems: ItineraryItem[];
-    if (oldDayKey !== newDayKey) {
-      const oldDay = otherItems.filter(i => getDayKey(i.startDate) === oldDayKey).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999)).map((item, idx) => ({ ...item, sortOrder: idx * 10 }));
-      const rest = otherItems.filter(i => getDayKey(i.startDate) !== oldDayKey);
-      finalItems = [...rest, ...oldDay, ...reorderedTarget];
-    } else {
-      finalItems = [...otherItems, ...reorderedTarget];
-    }
-
-    set({ items: finalItems });
-    if (get().initialized) {
-      try {
-        await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(finalItems) });
-      } catch (err) {
-        console.error("Reorder failed:", err);
+      const movedItem = { ...activeItem };
+      
+      // Update the correct date field
+      if (isDraggingCheckout && movedItem.endDate) {
+        const timePart = movedItem.endDate.includes('T') ? movedItem.endDate.split('T')[1] : '11:00:00';
+        movedItem.endDate = `${newDayKey}T${timePart}`;
+      } else {
+        const timePart = movedItem.startDate.includes('T') ? movedItem.startDate.split('T')[1] : '12:00:00';
+        movedItem.startDate = `${newDayKey}T${timePart}`;
       }
-    }
-  },
+
+      const remaining = allItems.filter(i => i.id !== realActiveId);
+
+      // Helper to get items relevant to a specific day
+      const getDayEventWrappers = (dayKey: string) => {
+        const wrappers: { id: string, item: ItineraryItem, isCheckout: boolean }[] = [];
+        remaining.forEach(item => {
+          const startKey = getDayKey(item.startDate);
+          const endKey = item.endDate ? getDayKey(item.endDate) : startKey;
+          const isHotel = item.type === 'hotel' || item.type === 'rental-car';
+
+          if (startKey === dayKey) {
+            wrappers.push({ id: item.id, item, isCheckout: false });
+          }
+          if (isHotel && endKey === dayKey && endKey !== startKey) {
+            wrappers.push({ id: item.id + (item.type === 'hotel' ? '-checkout' : '-return'), item, isCheckout: true });
+          }
+        });
+        return wrappers.sort((a, b) => {
+          const aOrder = a.isCheckout ? (a.item.endSortOrder ?? a.item.sortOrder ?? 0) : (a.item.sortOrder ?? 0);
+          const bOrder = b.isCheckout ? (b.item.endSortOrder ?? b.item.sortOrder ?? 0) : (b.item.sortOrder ?? 0);
+          return aOrder - bOrder;
+        });
+      };
+
+      const targetDayWrappers = getDayEventWrappers(newDayKey);
+      const overIdx = overId ? targetDayWrappers.findIndex(w => w.id === overId) : targetDayWrappers.length;
+      
+      // Insert moved item wrapper for calculation
+      targetDayWrappers.splice(overIdx === -1 ? targetDayWrappers.length : overIdx, 0, { 
+        id: activeId, 
+        item: movedItem, 
+        isCheckout: isDraggingCheckout 
+      });
+
+      // Assign new sort orders for everything on that day
+      targetDayWrappers.forEach((wrapper, idx) => {
+        const newOrder = idx * 10;
+        if (wrapper.isCheckout) {
+          wrapper.item.endSortOrder = newOrder;
+        } else {
+          wrapper.item.sortOrder = newOrder;
+        }
+      });
+
+      // Reconstruct final items list
+      const updatedItemsMap = new Map<string, ItineraryItem>();
+      // First, keep all items not on the target day untouched (or updated if they were on the old day)
+      remaining.forEach(i => updatedItemsMap.set(i.id, i));
+      
+      // Overwrite target day items with updated sort orders
+      targetDayWrappers.forEach(w => {
+        updatedItemsMap.set(w.item.id, w.item);
+      });
+
+      const finalItems = Array.from(updatedItemsMap.values());
+
+      set({ items: finalItems });
+      if (get().initialized) {
+        try {
+          await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(finalItems) });
+        } catch (err) {
+          console.error("Reorder failed:", err);
+        }
+      }
+    },
 
   saveAiSummary: async (summary) => {
     const { currentTripId } = get();
