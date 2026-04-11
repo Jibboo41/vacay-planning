@@ -2,6 +2,10 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.10.1] - 2026-04-10
+### Changed
+- **Weather Icon Refinement**: Replaced the emoji-based bargraph (📊) on the Summary screen with the premium Lucide `BarChart3` icon for better visual consistency with the main Weather view.
+
 ## [1.10.0] - 2026-04-10
 ### Fixed
 - **Weather Icon Rendering**: Switched to emoji-compatible text spans on SummaryScreen to fix broken image placeholders (question marks) on iOS.
