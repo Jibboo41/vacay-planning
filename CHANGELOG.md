@@ -2,6 +2,25 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.11.4] - 2026-04-11
+### Fixed
+- **Timeline Reordering Logic**: Re-engineered `reorderItems` to be fully aware of check-in vs checkout days, preventing multi-day item drift.
+- **Map Centering**: Added a `ResizeHandler` and `invalidateSize` trigger to correct map centering in desktop split-view after container size changes.
+- **Date String Reconciliation**: Implemented a robust local string-to-date helper to eliminate cross-browser "Invalid Date" errors.
+- **CSS Hierarchy Fixes**: Removed hardcoded background overrides that were preventing the premium blue glass-morphism style from applying to primary buttons.
+### UI/UX
+- **Premium Glass Selection**: Enhanced the "My Trips" selector cards with higher blur, subtle highlights, and iOS-style spring transitions.
+- **Consistently Colored Summaries**: Updated the Rental Car theme colors in the Summary screen to match the Timeline's purple branding.
+- **Sidebar Cleanliness**: Removed manual deletion icons from the sidebar trip list to finalize a navigation-first UX.
+
+
+## [1.11.2] - 2026-04-10
+### Fixed
+- **AI Date Reconstruction**: Overhauled the date sanitizer to manually rebuild dates from unstructured AI output, ensuring consistency via trip-year validation.
+- **iOS Safari Refinement**: Normalized height and padding for Date/Time inputs in Safari to prevent layout overflows.
+- **Split-View Background**: Restored desktop split-view transparency to allow ambient themed backgrounds to flow across the entire UI.
+- **UI Resilience**: Added "Date TBD" fallbacks to Timeline and Summary views to prevent "NaN" error displays.
+
 ## [1.11.1] - 2026-04-10
 ### Fixed
 - **Timeline Reordering**: Fixed a bug where moving a Hotel checkout or Rental Car return would accidentally reset the start date of the item.

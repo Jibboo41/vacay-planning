@@ -182,10 +182,20 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 18: Timeline Hardening & AI Refinement (v1.11.1)
-- **Reorder Logic Integrity**: Restored specific handling for virtual checkout items during drag-and-drop, ensuring Hotel stays remain at their correct duration.
-- **AI Year Fail-safe**: Implemented a robust regex-based year sanitizer that catches malformed AI date outputs and surfaces valid trip years.
-- **Premium Expense Ergonomics**: Standardized button placement and iOS date containment across all manual entry forms.
+### Phase 21 (v1.11.4): Stability & Premium Polish
+- **Day-Aware Reordering**: Re-engineered logic in `useTripStore.ts` that distinguishes between check-in and checkout events during drag-and-drop, preventing date drift for multi-day items.
+- **Map Layout Recalibration**: Fixed split-screen centering by adding a `ResizeHandler` to trigger Leaflet's `invalidateSize()` during layout transitions.
+- **Glass-Morphism Unification**:
+  - Upgraded "My Trips" cards with high-blur, semi-transparent backgrounds and subtle highlights.
+  - Standardized all primary "Add Trip" buttons (Sidebar & Selector) to the consistent blue glass style.
+- **Robust Date Parsing**: Resolved cross-browser "Invalid Date" issues by implementing a safer string-reconciliation helper for ISO dates.
+- **Rental Car Coloring**: Synchronized the Summary screen with the Timeline's purple theme for car segments.
+
+
+### Phase 20 (v1.11.3): Trip Management & UI Polish
+- **Centralized Admin**: Shifted Rename/Copy options to the Trip Selector and streamlined the Sidebar for purely navigation tasks.
+- **Smart Itinerary Metadata**: Trip cards now feature automatic date-range calculation ("MMM D - MMM D, YYYY") for instant journey recognition.
+- **Premium Styling Fixes**: Restored full transparency to the desktop split-view and perfected vertical alignment for iOS date inputs.
 
 ## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.11.0)
 - **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic, resolving the "Infinite Calculation" hang.

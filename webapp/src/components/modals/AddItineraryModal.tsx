@@ -27,26 +27,52 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
       
       // Year Sanitizer: If any items have missing/invalid years (usually defaults to 2001 or 1970 if yearless)
       // or if we just want to ensure consistency with the current trip.
+      // Year Sanitizer: Robustly calculate the default year.
       const currentItems = useTripStore.getState().items;
       let defaultYear = new Date().getFullYear();
       
       if (currentItems.length > 0) {
         const sorted = [...currentItems].sort((a,b) => a.startDate.localeCompare(b.startDate));
-        defaultYear = new Date(sorted[0].startDate.replace(/-/g, '/')).getFullYear();
+        const firstYear = new Date(sorted[0].startDate.replace(/-/g, '/')).getFullYear();
+        if (!isNaN(firstYear) && firstYear >= 2000) {
+          defaultYear = firstYear;
+        }
       }
 
       items = items.map(item => {
-        // Robust Year Sanitizer: AI sometimes returns invalid years (NaN or 0001).
-        // We ensure a valid year is present by looking at the segment before the first hyphen.
+        // Advanced Date Recon: AI sometimes returns invalid years, missing years, or "MM-DD".
         const fixDate = (dateStr: string) => {
           if (!dateStr) return dateStr;
-          // Standard check: is it a valid date in the 2000s?
+          
+          // Try parsing. If it has a year >= 2000, it's likely fine.
           const d = new Date(dateStr.replace(/-/g, '/'));
-          if (isNaN(d.getFullYear()) || d.getFullYear() < 2020) {
-            // Replace whatever is before the first '-' with the defaultYear
-            return dateStr.replace(/^[^T-]+/, defaultYear.toString());
+          if (!isNaN(d.getFullYear()) && d.getFullYear() >= 2024) {
+             return dateStr;
           }
-          return dateStr;
+
+          // Case 1: "NaN-MM-DD..." or "0001-MM-DD..."
+          // Extract the parts after the first hyphen
+          const parts = dateStr.split('-');
+          if (parts.length >= 3) {
+            // Reconstruct: YYYY-MM-DD[T...]
+            return `${defaultYear}-${parts[1]}-${parts[2]}`;
+          }
+
+          // Case 2: "MM-DD" or unstructured
+          // Look for digits like XX-XX
+          const match = dateStr.match(/(\d{1,2})[/-](\d{1,2})/);
+          if (match) {
+            const m = match[1].padStart(2, '0');
+            const dStr = match[2].padStart(2, '0');
+            const timePart = dateStr.includes('T') ? dateStr.split('T')[1] : '12:00:00';
+            return `${defaultYear}-${m}-${dStr}T${timePart}`;
+          }
+
+          // Case 3: Just the year is bad but it starts with hyphen? No.
+          // Let's use a very aggressive regex to find the FIRST M-D pattern
+          return dateStr.replace(/^.*?(\d{4}|\d{2})[-/](\d{1,2})[-/](\d{1,2})/, (_match, _y, m, d) => {
+             return `${defaultYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          });
         };
 
         if (item.startDate) {

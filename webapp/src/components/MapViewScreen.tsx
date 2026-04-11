@@ -115,6 +115,23 @@ function MapController() {
   return null;
 }
 
+/** 
+ * Forces Leaflet to recalibrate its size/center when the container dimensions change.
+ * Vital for split-screen layouts where the pane width is dynamic.
+ */
+function ResizeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    const timer = setTimeout(() => map.invalidateSize(), 300);
+    window.addEventListener('resize', () => map.invalidateSize());
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', () => map.invalidateSize());
+    };
+  }, [map]);
+  return null;
+}
+
 export default function MapViewScreen() {
   const { items, setSidebarOpen, activeFilters, hiddenDayFilters, toggleDayFilter } = useTripStore();
 
@@ -261,7 +278,7 @@ export default function MapViewScreen() {
   }
 
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', zIndex: 10, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', zIndex: 10, overflow: 'hidden' }}>
       <div className="map-header glass-effect screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000 }}>
         <button 
           className="header-icon-btn"
@@ -295,6 +312,7 @@ export default function MapViewScreen() {
 
         <FitBounds positions={allPositions} />
         <MapController />
+        <ResizeHandler />
 
         {dayRoutes.map(route =>
           route.coords.length >= 2 && (

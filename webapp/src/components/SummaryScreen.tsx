@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, BarChart3 } from 'lucide-react';
+import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, BarChart3, Car } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
@@ -17,8 +17,10 @@ function getDayKey(dateString: string) {
 }
 
 function getDayLabel(dateString: string) {
+  if (!dateString) return 'Date TBD';
   const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
   const d = new Date(clean);
+  if (isNaN(d.getTime())) return 'Date TBD';
   return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
@@ -35,14 +37,15 @@ interface SummaryItemProps {
 function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
   const getTheme = () => {
     switch (item.type) {
-      case 'flight':   return { icon: <Plane size={20} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
-      case 'hotel':    return { icon: <BedDouble size={20} />, color: isCheckout ? '#FF3B30' : '#30D158', bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(48, 209, 88, 0.1)' };
-      case 'activity': return { icon: <Navigation size={20} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
-      case 'hiking':   return { icon: <MountainSnow size={20} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
-      case 'transit':  return { icon: <TrainFront size={20} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-      case 'food':     return { icon: <Utensils size={20} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
-      case 'note':     return { icon: <StickyNote size={20} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
-      default:         return { icon: <CalendarClock size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
+      case 'flight':     return { icon: <Plane size={20} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
+      case 'hotel':      return { icon: <BedDouble size={20} />, color: isCheckout ? '#FF3B30' : '#30D158', bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(48, 209, 88, 0.1)' };
+      case 'rental-car': return { icon: <Car size={20} />, color: '#AF52DE', bg: 'rgba(175, 82, 222, 0.1)' };
+      case 'activity':   return { icon: <Navigation size={20} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
+      case 'hiking':     return { icon: <MountainSnow size={20} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
+      case 'transit':    return { icon: <TrainFront size={20} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
+      case 'food':       return { icon: <Utensils size={20} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
+      case 'note':       return { icon: <StickyNote size={20} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+      default:           return { icon: <CalendarClock size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };
 
@@ -121,8 +124,6 @@ export default function SummaryScreen() {
   const dayGroups = useMemo(() => {
     if (items.length === 0) return [];
     
-    // ... logic for flattened and groups remains same (omitted for brevity in replace call)
-
     // 1. Flatten all events including virtual checkouts/returns
     const flattened: any[] = [];
     items.forEach(item => {

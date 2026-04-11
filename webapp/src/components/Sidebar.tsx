@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useTripStore } from '../store/useTripStore';
 import { 
-  Plus, Trash2, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, 
+  Plus, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, 
   Flower2, Waves, Flame, Flower, Zap, Plane, BedDouble, Car, Navigation, 
-  MountainSnow, Utensils, StickyNote, TrainFront, Copy, ArrowLeft, Terminal, Pencil, Check,
+  MountainSnow, Utensils, StickyNote, TrainFront, ArrowLeft, Terminal,
   ChevronDown, ChevronUp 
 } from 'lucide-react';
 import { auth } from '../core/firebase';
@@ -16,42 +16,15 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { 
-    trips, currentTripId, setCurrentTrip, addTrip, deleteTrip, duplicateTrip, renameTrip,
+    trips, currentTripId, setCurrentTrip, addTrip,
     theme, setTheme, activeFilters, toggleFilter
   } = useTripStore();
   
   const [newTripTitle, setNewTripTitle] = useState('');
   const [isAdding, setIsAdding] = useState(false);
-  const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState('');
   const [appearanceExpanded, setAppearanceExpanded] = useState(false);
   const navigate = useNavigate();
 
-  const handleDuplicate = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    try {
-      const newId = await duplicateTrip(id);
-      setCurrentTrip(newId);
-      onClose();
-      navigate('/timeline');
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const startRename = (e: React.MouseEvent, id: string, title: string) => {
-    e.stopPropagation();
-    setRenamingId(id);
-    setRenameValue(title);
-  };
-
-  const handleRename = async (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
-    e.stopPropagation();
-    if (renameValue.trim()) {
-      await renameTrip(id, renameValue.trim());
-    }
-    setRenamingId(null);
-  };
 
   const glassIconStyle = {
     color: 'rgba(255,255,255,0.9)',
@@ -114,66 +87,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={() => handleSelectTrip(trip.id)}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  {renamingId === trip.id ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <input 
-                        className="new-trip-input"
-                        autoFocus
-                        value={renameValue}
-                        onChange={e => setRenameValue(e.target.value)}
-                        onKeyDown={e => { if(e.key === 'Enter') handleRename(e, trip.id); if(e.key === 'Escape') setRenamingId(null); }}
-                        onClick={e => e.stopPropagation()}
-                        style={{ fontSize: '14px', padding: '4px 8px', height: '28px' }}
-                      />
-                      <button className="delete-mini-btn" onClick={(e) => handleRename(e, trip.id)}>
-                        <Check size={14} color="var(--sys-green)" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div style={{ fontWeight: 700, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {trip.title}
-                      </div>
-                      <div style={{ fontSize: '12px', opacity: 0.5, marginTop: '2px' }}>
-                        {trip.items.length} {trip.items.length === 1 ? 'item' : 'items'}
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {!renamingId && (
-                    <button 
-                      onClick={(e) => startRename(e, trip.id, trip.title)}
-                      className="delete-mini-btn"
-                      title="Rename Trip"
-                      style={{ background: 'rgba(255,255,255,0.05)' }}
-                    >
-                      <Pencil size={12} />
-                    </button>
-                  )}
-                  <button 
-                    onClick={(e) => handleDuplicate(e, trip.id)}
-                    className="delete-mini-btn"
-                    title="Copy Trip"
-                    style={{ background: 'rgba(255,255,255,0.05)' }}
-                  >
-                    <Copy size={13} />
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); if(confirm('Delete this trip?')) deleteTrip(trip.id); }}
-                    className="delete-mini-btn"
-                    title="Delete Trip"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  <div style={{ fontWeight: 700, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {trip.title}
+                  </div>
+                  <div style={{ fontSize: '12px', opacity: 0.5, marginTop: '2px' }}>
+                    {trip.items.length} {trip.items.length === 1 ? 'item' : 'items'}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          <button className="add-trip-pill" onClick={() => setIsAdding(true)}>
+          <button className="btn-glass-blue add-trip-pill" onClick={() => setIsAdding(true)}>
             <Plus size={20} />
-            <span>New Trip</span>
+            <span>Add Trip</span>
           </button>
           <div style={{ padding: '24px 0 10px' }}>
             <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filter Views</h3>

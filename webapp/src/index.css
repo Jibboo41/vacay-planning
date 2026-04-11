@@ -398,7 +398,7 @@ input, textarea {
 .trip-pill.active { background: rgba(10, 132, 255, 0.12); border: 1px solid rgba(10, 132, 255, 0.25); }
 
 .add-trip-pill {
-  width: 100%; padding: 14px; border-radius: 14px; background: #fff; color: #000;
+  width: 100%; padding: 14px; border-radius: 14px;
   font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;
 }
 
@@ -448,6 +448,19 @@ input, textarea {
   font-size: 16px;
   transition: all 0.2s ease;
   color-scheme: dark; /* Makes date/time picker icons look correct in dark mode */
+}
+
+/* iOS Safari normalization for date/time inputs */
+input[type="date"].edit-field-input,
+input[type="time"].edit-field-input {
+  height: 52px;
+  line-height: 52px;
+  padding-top: 0;
+  padding-bottom: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
 }
 
 .edit-field-input:focus {
@@ -540,7 +553,7 @@ select.edit-field-input option {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background: var(--sys-bg-base);
+  background: transparent;
 }
 
 .split-left {
@@ -555,7 +568,7 @@ select.edit-field-input option {
   position: relative;
   height: 100vh;
   overflow-y: auto;
-  background: #000;
+  background: transparent;
 }
 
 @media (max-width: 999px) {

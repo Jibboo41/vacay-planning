@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Trash2, Calendar, MapPin, ChevronRight, LogOut, Copy } from 'lucide-react';
+import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Trash2 } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +16,50 @@ const TripSelector: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
+  
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const renameTrip = useTripStore(s => s.renameTrip);
+
+  const handleStartRename = (e: React.MouseEvent, id: string, title: string) => {
+    e.stopPropagation();
+    setRenamingId(id);
+    setRenameValue(title);
+  };
+
+  const handleSaveRename = async (e: React.MouseEvent | React.KeyboardEvent, id: string) => {
+    e.stopPropagation();
+    if (renameValue.trim()) {
+      await renameTrip(id, renameValue.trim());
+    }
+    setRenamingId(null);
+  };
+
+  const getTripDates = (items: any[]) => {
+    if (!items || items.length === 0) return 'No dates set';
+    
+    const parse = (d: string) => {
+      if (!d) return NaN;
+      if (d.includes('T')) return new Date(d).getTime();
+      return new Date(d.replace(/-/g, '/')).getTime();
+    };
+
+    const startDates = items.map(i => parse(i.startDate)).filter(t => !isNaN(t));
+    const endDates = items.map(i => {
+       const d = i.endDate ? i.endDate : i.startDate;
+       return parse(d);
+    }).filter(t => !isNaN(t));
+    
+    if (startDates.length === 0) return 'No dates set';
+    const min = new Date(Math.min(...startDates));
+    const max = new Date(Math.max(...endDates));
+    
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+    const startStr = min.toLocaleDateString(undefined, options);
+    const endStr = max.toLocaleDateString(undefined, { ...options, year: 'numeric' });
+    
+    return `${startStr} - ${endStr}`;
+  };
 
   const handleAddTrip = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +79,7 @@ const TripSelector: React.FC = () => {
   };
 
   const handleSelectTrip = (id: string) => {
+    if (renamingId) return; // Don't navigate while renaming
     setCurrentTrip(id);
     navigate('/timeline');
   };
@@ -85,32 +130,56 @@ const TripSelector: React.FC = () => {
           trips.map(trip => (
             <div 
               key={trip.id} 
-              className="trip-card"
+              className={`trip-card ${currentTripId === trip.id ? 'active' : ''}`}
               onClick={() => handleSelectTrip(trip.id)}
             >
               <div className="trip-info">
-                <h3>{trip.title}</h3>
-                <div className="trip-meta">
-                  <span><Calendar size={14} /> {trip.items.length} items</span>
-                  {trip.items.length > 0 && (
-                     <span><MapPin size={14} /> {trip.items[0]?.location?.name}</span>
-                  )}
-                </div>
+                {renamingId === trip.id ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={e => e.stopPropagation()}>
+                    <input 
+                      autoFocus
+                      className="edit-field-input"
+                      value={renameValue}
+                      onChange={e => setRenameValue(e.target.value)}
+                      onKeyDown={e => { if(e.key === 'Enter') handleSaveRename(e, trip.id); if(e.key === 'Escape') setRenamingId(null); }}
+                      style={{ height: '44px', margin: 0 }}
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <h3>{trip.title}</h3>
+                    <div className="trip-meta">
+                      <span><Calendar size={14} /> {getTripDates(trip.items)}</span>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="trip-actions">
-                <button 
-                  onClick={(e) => handleDuplicateTrip(e, trip.id)} 
-                  className="duplicate-trip-btn"
-                  title="Duplicate Trip"
-                >
-                  <Copy size={16} />
-                </button>
-                <button 
-                  onClick={(e) => handleDeleteTrip(e, trip.id)} 
-                  className="delete-trip-btn"
-                >
-                  <Trash2 size={18} />
-                </button>
+                {!renamingId && (
+                  <>
+                    <button 
+                      onClick={(e) => handleStartRename(e, trip.id, trip.title)}
+                      className="duplicate-trip-btn"
+                      title="Rename"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button 
+                      onClick={(e) => handleDuplicateTrip(e, trip.id)} 
+                      className="duplicate-trip-btn"
+                      title="Duplicate Trip"
+                    >
+                      <Copy size={18} />
+                    </button>
+                    <button 
+                      onClick={(e) => handleDeleteTrip(e, trip.id)} 
+                      className="delete-trip-btn"
+                      title="Delete"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </>
+                )}
                 <ChevronRight size={20} className="chevron" />
               </div>
             </div>
@@ -119,7 +188,7 @@ const TripSelector: React.FC = () => {
 
         <button 
           onClick={() => setIsAdding(true)} 
-          className="add-trip-btn-large"
+          className="btn-glass-blue add-trip-btn-large"
         >
           <Plus size={24} />
           <span>Plan New Trip</span>
@@ -184,22 +253,41 @@ const TripSelector: React.FC = () => {
         }
 
         .trip-card {
-          background: rgba(25, 25, 28, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 20px;
-          padding: 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          padding: 24px;
           display: flex;
           justify-content: space-between;
           align-items: center;
           cursor: pointer;
-          transition: all 0.2s;
-          backdrop-filter: blur(10px);
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+          position: relative;
+          overflow: hidden;
+        }
+
+        .trip-card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+          pointer-events: none;
         }
 
         .trip-card:hover {
-          background: rgba(35, 35, 40, 0.9);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          background: rgba(255, 255, 255, 0.07);
+          transform: translateY(-4px);
+          border-color: rgba(255, 255, 255, 0.15);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .trip-card.active {
+          border-color: var(--sys-blue);
+          background: rgba(10, 132, 255, 0.06);
+          box-shadow: 0 0 0 1px var(--sys-blue), 0 15px 45px rgba(0, 0, 0, 0.25);
         }
 
         .trip-info h3 { margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 600; }
@@ -238,22 +326,17 @@ const TripSelector: React.FC = () => {
 
         .add-trip-btn-large {
           margin-top: 16px;
-          background: white;
-          color: black;
-          border: none;
           border-radius: 20px;
           padding: 20px;
           font-size: 1.1rem;
-          font-weight: 700;
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 12px;
-          cursor: pointer;
-          transition: transform 0.2s, background 0.2s;
+          transition: all 0.2s ease;
         }
 
-        .add-trip-btn-large:hover { background: #f0f0f0; transform: translateY(-2px); }
+        .add-trip-btn-large:hover { transform: translateY(-2px); }
 
         .empty-state {
           padding: 40px;

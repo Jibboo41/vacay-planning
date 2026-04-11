@@ -361,7 +361,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const { currentTripId, items } = get();
     if (!currentTripId) return;
 
-    // Handle virtual IDs (suffixes like '-checkout' or '-return')
     const realActiveId = activeId.replace(/-checkout$|-return$/, '');
     const realOverId = overId ? overId.replace(/-checkout$|-return$/, '') : null;
 
@@ -373,12 +372,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const hasTime = activeItem.startDate.includes('T');
     const localTime = hasTime ? getLocalTimeStr(activeItem.startDate) : '';
 
-    // If we moved to a new day, update the relevant date 
     const movedItem: ItineraryItem = { ...activeItem };
     if (oldDayKey !== newDayKey) {
         if (activeId.endsWith('-checkout') || activeId.endsWith('-return')) {
-            // Moving the checkout part to a new day updates endDate
-            // Note: This is simplified; usually you'd want to keep start <= end
             const currentEndTime = activeItem.endDate ? getLocalTimeStr(activeItem.endDate) : '11:00';
             movedItem.endDate = `${newDayKey}T${currentEndTime}`;
         } else {
@@ -387,13 +383,22 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
 
     const remaining = allItems.filter(i => i.id !== realActiveId);
-    const targetDay = remaining.filter(i => getDayKey(i.startDate) === newDayKey).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
+    const getTargetDayItems = (dayKey: string) => {
+        return remaining.filter(i => {
+            const startKey = getDayKey(i.startDate);
+            const isHotel = i.type === 'hotel' || i.type === 'rental-car';
+            const endKey = i.endDate ? getDayKey(i.endDate) : startKey;
+            return startKey === dayKey || (isHotel && endKey === dayKey);
+        });
+    };
+
+    const targetDay = getTargetDayItems(newDayKey).sort((a, b) => (a.sortOrder ?? 9999) - (b.sortOrder ?? 9999));
     
     const overIdx = realOverId ? targetDay.findIndex(i => i.id === realOverId) : targetDay.length;
     targetDay.splice(overIdx === -1 ? targetDay.length : overIdx, 0, movedItem);
 
     const reorderedTarget = targetDay.map((item, idx) => ({ ...item, sortOrder: idx * 10 }));
-    const otherItems = remaining.filter(i => getDayKey(i.startDate) !== newDayKey);
+    const otherItems = remaining.filter(i => !getTargetDayItems(newDayKey).some(tdi => tdi.id === i.id));
     
     let finalItems: ItineraryItem[];
     if (oldDayKey !== newDayKey) {

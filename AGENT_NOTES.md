@@ -1,12 +1,12 @@
 # 🤖 Agent Session Notes
-> Last updated: 2026-04-10 | Phase 17.02 Complete
+> Last updated: 2026-04-11 | Phase 21 Complete
 
-## 🛠 Recent Project Milestones (Phase 17: UX Hardening)
-- **Robust Todo Reordering**: Transitioned to `document.elementFromPoint` for high-reliability touch reordering. Fixed iOS scroll-conflict by adding `e.preventDefault()` and `touch-action: none` to drag handles.
-- **Sidebar UX**: Reordered utility sections (Filters first) and implemented a collapsible Theme Picker to save vertical space.
-- **Form Containment**: Standardized `box-sizing: border-box` and width constraints for date inputs in Todo and Expense forms to prevent iOS viewport overflow.
-- **Debug Trace Screen**: New `/debug` route providing formatted, high-contrast raw data logs for all API and sync events.
-- **Ergonomic Buttons**: Swapped Todo form buttons (Save on Left) and standardized to equal-width premium glass styling.
+## 🛠 Recent Project Milestones (Phase 21: Stability & Polish)
+- **Day-Aware Reordering**: Fixed 'Date Drift' bugs in `reorderItems` by implementing a render-day logic that correctly targets `startDate` vs `endDate` based on drag-id suffixes (`-checkout`, `-return`).
+- **Map Recalibration**: Resolved Map centering bugs in desktop split-view using `ResizeHandler` and `invalidateSize()`.
+- **Glass-Morphism Standard**: Unified all primary action buttons and trip cards under a high-blur glass design (`btn-glass-blue`).
+- **Data Hardening**: Standardized date reconciliation for cross-browser reliability (ISO parsing fixes).
+- **Rental Car Branding**: Updated car segments to use consistent purple branding across all screens.
 
 These notes are for the AI agent to resume work on this project without needing conversation history.
 

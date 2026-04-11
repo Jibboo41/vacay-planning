@@ -61,10 +61,12 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
   const theme = getTheme();
 
   const getDayLabel = (dateString: string) => {
+    if (!dateString) return 'DATE TBD';
     // Force local interpretation by replacing dashes with slashes if no time present
     const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-    return new Date(clean)
-      .toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
+    const d = new Date(clean);
+    if (isNaN(d.getTime())) return 'DATE TBD';
+    return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
       .toUpperCase();
   };
 
