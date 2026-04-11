@@ -184,8 +184,9 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.10.1)
-- **Aesthetic Icon Refinement**: Replaced the emoji-based historical weather bargraph on the Summary page with the premium, glassmorphic `BarChart3` icon to match the core Weather view.
+## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.10.2)
+- **Desktop Scroll Fix**: Restored `overflow-y: auto` to the right-hand split-view panel, allowing Summary and Expense screens to scroll properly on widescreen.
+- **Aesthetic Icon Refinement**: Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
 - **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching from `img` tags to emoji-compatible text spans.
 - **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms for consistent "Primary Action on Left" pattern.
 - **Visual Unification**: Synchronized the Todo and Expense form cards with high-contrast elevated backgrounds and blue border highlights.

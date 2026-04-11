@@ -2,6 +2,10 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.10.2] - 2026-04-10
+### Fixed
+- **Desktop Split-View Scrolling**: Fixed a CSS regression in `.split-right` that prevented independent content scrolling on widescreen displays.
+
 ## [1.10.1] - 2026-04-10
 ### Changed
 - **Weather Icon Refinement**: Replaced the emoji-based bargraph (📊) on the Summary screen with the premium Lucide `BarChart3` icon for better visual consistency with the main Weather view.

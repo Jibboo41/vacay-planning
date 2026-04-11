@@ -554,7 +554,7 @@ select.edit-field-input option {
 .split-right {
   position: relative;
   height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
   background: #000;
 }
 
