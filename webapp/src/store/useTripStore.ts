@@ -53,6 +53,7 @@ interface TripStore {
   setEditingExpense: (exp: Expense | null) => void;
   addTrip: (title: string) => Promise<string>;
   deleteTrip: (tripId: string) => Promise<void>;
+  renameTrip: (tripId: string, newTitle: string) => Promise<void>;
   
   // Item Actions
   addItem: (item: ItineraryItem) => Promise<void>;
@@ -254,6 +255,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
       set({ currentTripId: null, items: [], todos: [], expenses: [], weather: null });
       localStorage.removeItem('vacay_current_trip_id');
     }
+  },
+
+  renameTrip: async (tripId, newTitle) => {
+    const { trips } = get();
+    await updateDoc(doc(db, "trips", tripId), { title: newTitle });
+    set({ 
+      trips: trips.map(t => t.id === tripId ? { ...t, title: newTitle } : t)
+    });
   },
 
   duplicateTrip: async (tripId: string) => {

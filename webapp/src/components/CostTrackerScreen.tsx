@@ -162,11 +162,15 @@ export default function CostTrackerScreen() {
             style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', marginBottom: '12px' }}
           />
           <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
-              <span style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--sys-label-tertiary)' }}>$</span>
+            <div style={{ 
+              display: 'flex', alignItems: 'center', flex: 1,
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
+              borderRadius: '12px', padding: '0 12px'
+            }}>
+              <span style={{ color: 'var(--sys-label-tertiary)', fontSize: '16px', marginRight: '4px' }}>$</span>
               <input 
                 type="number" placeholder="0.00" value={newAmount} onChange={e => setNewAmount(e.target.value)}
-                style={{ width: '100%', padding: '12px 12px 12px 24px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
               />
             </div>
             <select 
@@ -181,7 +185,11 @@ export default function CostTrackerScreen() {
           </div>
           <input 
             type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
-            style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', marginBottom: '20px' }}
+            style={{ 
+              width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', 
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', 
+              marginBottom: '20px', boxSizing: 'border-box', colorScheme: 'dark'
+            }}
           />
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}>Cancel</button>
@@ -211,7 +219,6 @@ export default function CostTrackerScreen() {
                 display: 'flex', alignItems: 'center', gap: '16px', 
                 background: 'var(--sys-bg-elevated)', padding: '16px', 
                 borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)',
-                opacity: exp.paid ? 0.6 : 1,
                 transition: 'all 0.2s ease',
                 cursor: 'pointer'
               }}

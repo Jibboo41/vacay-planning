@@ -66,6 +66,12 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
       }
       timeText = `CHECK-IN${item.startDate.includes('T') ? ` • ${getTimeLabel(item.startDate)}` : ''}${nightsStr}`;
     }
+  } else if (item.type === 'rental-car') {
+    if (isCheckout) {
+      timeText = `RETURN${item.endDate && item.endDate.includes('T') ? ` • ${getTimeLabel(item.endDate)}` : ''}`;
+    } else {
+      timeText = `PICKUP${item.startDate.includes('T') ? ` • ${getTimeLabel(item.startDate)}` : ''}`;
+    }
   } else {
     // Normal activity
     if (item.startDate.includes('T')) {

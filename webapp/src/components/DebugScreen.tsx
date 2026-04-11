@@ -62,17 +62,22 @@ export default function DebugScreen({ onBack }: { onBack: () => void }) {
                   {log.message}
                 </p>
                 {log.data && (
-                  <pre style={{ 
-                    margin: '8px 0 0 0', 
-                    fontSize: '10px', 
-                    color: 'rgba(255,255,255,0.4)', 
-                    background: 'rgba(0,0,0,0.3)',
-                    padding: '8px',
-                    borderRadius: '6px',
-                    overflowX: 'auto'
-                  }}>
-                    {JSON.stringify(log.data, null, 2)}
-                  </pre>
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--sys-label-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 700 }}>Raw Data Detail</div>
+                    <pre style={{ 
+                      margin: 0, 
+                      fontSize: '11px', 
+                      color: '#30D158', 
+                      background: 'rgba(0,0,0,0.6)',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      overflowX: 'auto',
+                      border: '1px solid rgba(255,255,255,0.05)',
+                      lineHeight: 1.5
+                    }}>
+                      {JSON.stringify(log.data, null, 2)}
+                    </pre>
+                  </div>
                 )}
               </div>
             ))}

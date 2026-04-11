@@ -184,11 +184,14 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 15: The System Refinement Sprint (v1.9.0)
-- **System Trace Logs**: Dedicated `/debug` screen for real-time monitoring of API interactions (Weather, Directions) and background sync events.
-- **Todo System Overhaul**: Replaced inline inputs with a dedicated "New Todo" button and structured form; hardened reordering logic for perfect cross-device touch support.
-- **Spatial Awareness**: Integrated weather forecasts (H/L temps and condition icons) into the daily itinerary headers on the Summary screen.
-- **Route Cache**: Optimized Map View performance with persistent caching of OSRM routing splines, making visibility toggles near-instant.
-- **Expanded Sidebar**: One-click Trip Duplication and navigation shortcuts integrated into the sidebar panel.
-- **Rental Parity**: Full metadata support (Booked via, Refundable) for rental car items to match hotel logic.
-- **AI Intelligence**: Enhanced Gemini parsing with automatic year sanitization based on existing itinerary context.
+## 📺 Phase 17: UX Hardening & System Transparency (v1.9.6)
+- **Native Reordering Engine**: Successfully implemented `document.elementFromPoint` for bulletproof Todo reordering across all mobile touch devices.
+- **Sidebar Ergonomics**: Reordered utility sections to prioritize Filters and added a collapsible Appearance manager to declutter the UI.
+- **Form Containment**: Fixed responsiveness issues with Date inputs in Todo and Expense forms to prevent layout overflow on small screens.
+- **Enhanced Debug Trace**: Improved System Logs screen with high-contrast raw data visualization for total transparency.
+
+## 📺 Phase 16: UI Polishing & Feature Hardening (v1.9.5)
+- **Inline Trip Renaming**: Added renaming capabilities directly within the Sidebar with real-time Firestore synchronization.
+- **Financial Parity**: Standardized expense visualization by removing dimming on paid items and perfecting the currency alignment.
+- **Improved Todo Experience**: Fixed date input scaling and overhauled the touch-based reordering engine with tactile feedback.
+- **Contextual Labels**: Summary view now displays 'PICKUP' and 'RETURN' for rental car segments for better itinerary clarity.

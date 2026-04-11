@@ -73,14 +73,18 @@ export default function TodoScreen() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchDragIndex.current === null) return;
-    const y = e.touches[0].clientY;
-    const items = document.querySelectorAll('[data-todo-item]');
-    let newOver: number | null = null;
-    items.forEach((el, i) => {
-      const rect = el.getBoundingClientRect();
-      if (y >= rect.top && y <= rect.bottom) newOver = i;
-    });
-    if (newOver !== overIndex) setOverIndex(newOver);
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    const itemEl = target?.closest('[data-todo-item]');
+    
+    if (itemEl) {
+      const elements = Array.from(document.querySelectorAll('[data-todo-item]'));
+      const newOver = elements.indexOf(itemEl);
+      if (newOver !== -1 && newOver !== overIndex) {
+        setOverIndex(newOver);
+        if ('vibrate' in navigator) navigator.vibrate(5);
+      }
+    }
   };
 
   const handleTouchEnd = () => {
@@ -155,7 +159,7 @@ export default function TodoScreen() {
               />
             </div>
 
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+            <div className="edit-field-group" style={{ marginBottom: 0, maxWidth: '100%' }}>
               <label className="edit-field-label">Due Date (Optional)</label>
               <input
                 type="date"
@@ -164,7 +168,8 @@ export default function TodoScreen() {
                 style={{
                   background: 'rgba(255,255,255,0.07)', border: 'none',
                   borderRadius: '10px', padding: '12px 14px', color: '#fff',
-                  fontSize: '16px', colorScheme: 'dark', width: '100%'
+                  fontSize: '16px', colorScheme: 'dark', width: '100%',
+                  boxSizing: 'border-box', maxWidth: '100%', display: 'block'
                 }}
               />
             </div>
@@ -172,7 +177,7 @@ export default function TodoScreen() {
             <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
               <button 
                 onClick={() => setShowAddForm(false)}
-                style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', fontWeight: 600 }}
+                style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontWeight: 600 }}
               >
                 Cancel
               </button>
@@ -180,7 +185,7 @@ export default function TodoScreen() {
                 onClick={handleAdd}
                 disabled={!newTodo.trim()}
                 className="btn-glass-blue"
-                style={{ flex: 2, padding: '14px', borderRadius: '12px', border: 'none', opacity: !newTodo.trim() ? 0.5 : 1 }}
+                style={{ flex: 2, padding: '14px', borderRadius: '14px' }}
               >
                 Save Task
               </button>
@@ -225,6 +230,9 @@ export default function TodoScreen() {
                     border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.05)',
                     transition: 'all 0.15s ease',
                     opacity: isDragging ? 0.4 : 1,
+                    transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
+                    boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : 'none',
+                    zIndex: isDragging ? 2 : 1
                   }}
                 >
                   {/* Grip */}
