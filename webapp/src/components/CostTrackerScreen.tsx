@@ -195,8 +195,23 @@ export default function CostTrackerScreen() {
             />
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: '12px', borderRadius: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}>Cancel</button>
-            <button onClick={handleAdd} className="btn-glass-blue" style={{ flex: 1, padding: '12px', borderRadius: '12px' }}>Save</button>
+            <button 
+              onClick={handleAdd} 
+              className="btn-glass-blue" 
+              style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
+            >
+              Save
+            </button>
+            <button 
+              onClick={() => setShowAdd(false)} 
+              style={{ 
+                flex: 1, padding: '16px', borderRadius: '14px', 
+                background: 'rgba(255,255,255,0.08)', color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+              }}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}

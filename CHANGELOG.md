@@ -2,6 +2,10 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.9.9] - 2026-04-10
+### Changed
+- **Unified Ergonomics**: Swapped "Save" and "Cancel" on Expense form to match Todo form (Primary action on Left).
+
 ## [1.9.8] - 2026-04-10
 ### Added
 - **Visual Unification**: Synchronized Todo and Expense form card styles (Elevated-2 bg + Blue border focus) for consistent transparency and highlighting on iOS.
