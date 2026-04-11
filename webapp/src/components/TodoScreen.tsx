@@ -73,6 +73,7 @@ export default function TodoScreen() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (touchDragIndex.current === null) return;
+    if (e.cancelable) e.preventDefault(); // Prevent scrolling on iOS during drag
     const touch = e.touches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     const itemEl = target?.closest('[data-todo-item]');
@@ -159,35 +160,39 @@ export default function TodoScreen() {
               />
             </div>
 
-            <div className="edit-field-group" style={{ marginBottom: 0, maxWidth: '100%' }}>
+            <div className="edit-field-group" style={{ marginBottom: 0, width: '100%' }}>
               <label className="edit-field-label">Due Date (Optional)</label>
               <input
                 type="date"
                 value={newDueDate}
                 onChange={e => setNewDueDate(e.target.value)}
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px', padding: '14px 16px', color: '#fff',
                   fontSize: '16px', colorScheme: 'dark', width: '100%',
-                  boxSizing: 'border-box', maxWidth: '100%', display: 'block'
+                  boxSizing: 'border-box', display: 'block', margin: 0
                 }}
               />
             </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
               <button 
-                onClick={() => setShowAddForm(false)}
-                style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontWeight: 600 }}
-              >
-                Cancel
-              </button>
-              <button 
                 onClick={handleAdd}
                 disabled={!newTodo.trim()}
                 className="btn-glass-blue"
-                style={{ flex: 2, padding: '14px', borderRadius: '14px' }}
+                style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
               >
                 Save Task
+              </button>
+              <button 
+                onClick={() => setShowAddForm(false)}
+                style={{ 
+                  flex: 1, padding: '16px', borderRadius: '14px', 
+                  background: 'rgba(255,255,255,0.08)', color: '#fff', 
+                  border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+                }}
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -237,7 +242,11 @@ export default function TodoScreen() {
                 >
                   {/* Grip */}
                   <div
-                    style={{ color: 'var(--sys-label-tertiary)', cursor: 'grab', flexShrink: 0, paddingTop: isEditing ? '10px' : 0 }}
+                    style={{ 
+                      color: 'var(--sys-label-tertiary)', cursor: 'grab', flexShrink: 0, 
+                      paddingTop: isEditing ? '10px' : 0,
+                      touchAction: 'none' // Important for iOS dragging
+                    }}
                     onTouchStart={e => handleGripTouchStart(e, index)}
                   >
                     <GripVertical size={18} />

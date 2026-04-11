@@ -184,11 +184,12 @@ stateDiagram-v2
 
 ---
 
-## 📺 Phase 17: UX Hardening & System Transparency (v1.9.6)
-- **Native Reordering Engine**: Successfully implemented `document.elementFromPoint` for bulletproof Todo reordering across all mobile touch devices.
-- **Sidebar Ergonomics**: Reordered utility sections to prioritize Filters and added a collapsible Appearance manager to declutter the UI.
-- **Form Containment**: Fixed responsiveness issues with Date inputs in Todo and Expense forms to prevent layout overflow on small screens.
-- **Enhanced Debug Trace**: Improved System Logs screen with high-contrast raw data visualization for total transparency.
+## 📺 Phase 17: UX Hardening & iOS Compatibility (v1.9.7)
+- **iOS Drag-to-Reorder Fix**: Implemented `e.preventDefault()` and `touch-action: none` to prevent unintended browser scrolling during Todo reordering.
+- **Button Ergonomics**: Swapped "Save Task" and "Cancel" positions and standardized to equal-width premium styling for better single-handed reach.
+- **Robust Date Scaling**: Optimized date input containment for narrow iOS viewports to eliminate horizontal layout overflow.
+- **Native Reordering Engine**: Successfully implemented `document.elementFromPoint` for bulletproof Todo reordering.
+- **Sidebar Ergonomics**: Reordered utility sections and added a collapsible Appearance manager.
 
 ## 📺 Phase 16: UI Polishing & Feature Hardening (v1.9.5)
 - **Inline Trip Renaming**: Added renaming capabilities directly within the Sidebar with real-time Firestore synchronization.
