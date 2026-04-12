@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Menu } from 'lucide-react';
+import { Menu, Map } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
@@ -158,6 +158,50 @@ export default function TimelineScreen() {
 
   const getScrollContainer = () => {
     return document.querySelector('.split-left') || window;
+  };
+
+  const handleOpenMap = (group: DayGroup) => {
+    // 1. Gather all items for this day that have valid lat/lng and are NOT flights.
+    const drivingItems = group.items.filter(item => 
+      item.type !== 'flight' && 
+      item.type !== 'note' && 
+      item.location && 
+      item.location.latitude && 
+      item.location.longitude
+    );
+
+    // 2. Filter consecutive duplicate coordinates to avoid redundant waypoints
+    const uniqueDrivingItems: typeof drivingItems = [];
+    drivingItems.forEach(item => {
+      const prev = uniqueDrivingItems[uniqueDrivingItems.length - 1];
+      if (!prev) {
+        uniqueDrivingItems.push(item);
+      } else if (prev.location.latitude !== item.location.latitude || prev.location.longitude !== item.location.longitude) {
+        uniqueDrivingItems.push(item);
+      }
+    });
+
+    if (uniqueDrivingItems.length === 0) return;
+
+    if (uniqueDrivingItems.length === 1) {
+      const point = uniqueDrivingItems[0];
+      const url = `https://www.google.com/maps/search/?api=1&query=${point.location.latitude},${point.location.longitude}`;
+      window.open(url, '_blank');
+      return;
+    }
+
+    const origin = uniqueDrivingItems[0];
+    const destination = uniqueDrivingItems[uniqueDrivingItems.length - 1];
+    const waypoints = uniqueDrivingItems.slice(1, -1);
+
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${origin.location.latitude},${origin.location.longitude}&destination=${destination.location.latitude},${destination.location.longitude}`;
+    
+    if (waypoints.length > 0) {
+      const waypointsStr = waypoints.map(wp => `${wp.location.latitude},${wp.location.longitude}`).join('|');
+      url += `&waypoints=${waypointsStr}`;
+    }
+
+    window.open(url, '_blank');
   };
 
   // ── Intersection Observer (Scroll Spy) ─────────────────────────────────────
@@ -402,7 +446,18 @@ export default function TimelineScreen() {
           return (
               <div key={group.dateKey}>
                 <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="day-section-label">{group.label}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span className="day-section-label">{group.label}</span>
+                    <button 
+                      onClick={() => handleOpenMap(group)}
+                      className="btn-glass-blue"
+                      style={{ padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', border: '1px solid rgba(10,132,255,0.3)', background: 'rgba(10,132,255,0.1)' }}
+                      title="Open Directions in Google Maps"
+                    >
+                      <Map size={14} />
+                      <span style={{ fontWeight: 700 }}>Map Day</span>
+                    </button>
+                  </div>
                   {high !== null && low !== null && (
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
                       <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
