@@ -187,24 +187,16 @@ export default function MapViewScreen() {
         list.push({ ...item, _renderDate: item.startDate, _isBase: true });
       }
 
-      // ─── Special Logic for Flights: Discover Landing Point ──────────────────
-      if (item.type === 'flight') {
-        // We'll geocode this later in useEffect, but for sorting we need its slot
-        // For now, it stays same as takeoff for sorting, but we'll flag it
-        list[list.length - 1]._isFlightTakeoff = true;
-      }
-
       if (item.endDate && (item.type === 'hotel' || item.type === 'rental-car')) {
         const endKey = getDayKey(item.endDate);
-        // Include checkout/return even if it's the same day, so it appears in the sequence
         if (!hiddenDayFilters.includes(endKey)) {
           list.push({ ...item, _renderDate: item.endDate, _isCheckout: true });
         }
       }
     });
 
-    // Ensure strictly chronological sorting before drawing lines
-    return list.sort((a, b) => {
+    // Ensure strictly chronological sorting
+    const sorted = list.sort((a, b) => {
       if (a._renderDate !== b._renderDate) return a._renderDate.localeCompare(b._renderDate);
       if (a.id === b.id) {
          if (a._isCheckout) return 1;
@@ -212,6 +204,19 @@ export default function MapViewScreen() {
       }
       return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
     });
+
+    // ─── Special Logic for Flights: Discover Landing Point ──────────────────
+    // Only flag if it's the LAST flight in a sequence
+    sorted.forEach((item, idx) => {
+      if (item.type === 'flight') {
+        const next = sorted[idx + 1];
+        if (!next || next.type !== 'flight') {
+          item._isFlightTakeoff = true;
+        }
+      }
+    });
+
+    return sorted;
   }, [items, activeFilters, hiddenDayFilters]);
 
 
@@ -226,6 +231,7 @@ export default function MapViewScreen() {
     if (flights.length === 0) return;
 
     const parseAndGeocode = async () => {
+      const { addDebugLog } = useTripStore.getState();
       const newLandings: Record<string, { lat: number, lng: number, name: string }> = { ...flightLandings };
       let changed = false;
 
@@ -240,7 +246,13 @@ export default function MapViewScreen() {
 
         if (query) {
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " Airport")}&format=json&limit=1&countrycodes=us`);
+            // If it looks like an IATA code (3 upper chars), prioritize that
+            const isIATA = query.length === 3 && query === query.toUpperCase();
+            // Handle common mismatch for Phoenix/PHX by adding "International"
+            const refinedQuery = isIATA ? `${query} Airport` : `${query} International Airport`;
+            
+            addDebugLog('Directions', `Nominatim Query: ${refinedQuery}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(refinedQuery)}&format=json&limit=1&countrycodes=us`);
             const data = await res.json();
             if (data?.[0]) {
               newLandings[f.id] = { 
