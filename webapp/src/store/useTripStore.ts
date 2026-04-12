@@ -67,8 +67,8 @@ interface TripStore {
   saveAiSummary: (summary: string) => Promise<void>;
 
   // Todo Actions
-  addTodo: (text: string, dueDate?: string) => Promise<void>;
-  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null }) => Promise<void>;
+  addTodo: (text: string, dueDate?: string, notes?: string) => Promise<void>;
+  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null; notes?: string | null }) => Promise<void>;
   toggleTodo: (id: string) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
   reorderTodos: (newOrder: import('../core/models').TodoItem[]) => Promise<void>;
@@ -465,7 +465,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     await updateDoc(doc(db, "trips", currentTripId), { aiSummary: summary });
   },
 
-  addTodo: async (text, dueDate) => {
+  addTodo: async (text, dueDate, notes) => {
     const { currentTripId, todos, initialized } = get();
     if (!currentTripId || !initialized) return;
     const newTodo: TodoItem = { 
@@ -473,7 +473,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       text, 
       completed: false, 
       createdAt: Date.now(),
-      dueDate: dueDate || undefined 
+      dueDate: dueDate || undefined,
+      notes: notes || undefined
     };
     const newTodos = [...todos, newTodo];
     set({ todos: newTodos });
@@ -491,11 +492,17 @@ export const useTripStore = create<TripStore>((set, get) => ({
   updateTodo: async (id, updates) => {
     const { currentTripId, todos } = get();
     if (!currentTripId) return;
-    const newTodos = todos.map(t => t.id === id ? { 
-      ...t, 
-      ...updates,
-      dueDate: updates.dueDate === null ? undefined : (updates.dueDate ?? t.dueDate)
-    } : t);
+    const newTodos = todos.map(t => {
+      if (t.id === id) {
+        return { 
+          ...t, 
+          ...updates,
+          dueDate: updates.dueDate === null ? undefined : (updates.dueDate ?? t.dueDate),
+          notes: updates.notes === null ? undefined : (updates.notes ?? t.notes)
+        };
+      }
+      return t;
+    });
     set({ todos: newTodos });
     await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },

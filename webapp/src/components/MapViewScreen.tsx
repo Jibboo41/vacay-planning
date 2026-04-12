@@ -278,8 +278,12 @@ export default function MapViewScreen() {
 
   const allPositions: [number, number][] = useMemo(() => {
     const pos: [number, number][] = mappable.map(i => [i.location.latitude!, i.location.longitude!]);
-    // Add flight landing points to bounds
-    Object.values(flightLandings).forEach(l => pos.push([l.lat, l.lng]));
+    // Add flight landing points to bounds only if the parent flight is visible
+    Object.entries(flightLandings).forEach(([id, l]) => {
+      if (mappable.some(m => m.id === id)) {
+        pos.push([l.lat, l.lng]);
+      }
+    });
     return pos;
   }, [mappable, flightLandings]);
 

@@ -8,9 +8,11 @@ export default function TodoScreen() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
+  const [newNotes, setNewNotes] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   // Drag state
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -22,9 +24,10 @@ export default function TodoScreen() {
 
   const handleAdd = () => {
     if (!newTodo.trim()) return;
-    addTodo(newTodo.trim(), newDueDate || undefined);
+    addTodo(newTodo.trim(), newDueDate || undefined, newNotes.trim() || undefined);
     setNewTodo('');
     setNewDueDate('');
+    setNewNotes('');
     setShowAddForm(false);
   };
 
@@ -32,11 +35,12 @@ export default function TodoScreen() {
     setEditingId(todo.id);
     setEditText(todo.text);
     setEditDueDate(todo.dueDate || '');
+    setEditNotes(todo.notes || '');
   };
 
   const commitEdit = () => {
     if (!editingId || !editText.trim()) { setEditingId(null); return; }
-    updateTodo(editingId, { text: editText.trim(), dueDate: editDueDate || null });
+    updateTodo(editingId, { text: editText.trim(), dueDate: editDueDate || null, notes: editNotes.trim() || null });
     setEditingId(null);
   };
 
@@ -178,6 +182,21 @@ export default function TodoScreen() {
                 />
               </div>
             </div>
+            
+            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+              <label className="edit-field-label">Notes (Optional)</label>
+              <textarea
+                value={newNotes}
+                onChange={e => setNewNotes(e.target.value)}
+                placeholder="Confirmation numbers, packing details, etc."
+                style={{
+                  background: 'rgba(255,255,255,0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  fontSize: '15px', outline: 'none', width: '100%', minHeight: '60px',
+                  resize: 'vertical', display: 'block', boxSizing: 'border-box'
+                }}
+              />
+            </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
               <button 
@@ -302,6 +321,17 @@ export default function TodoScreen() {
                             <button onClick={() => setEditDueDate('')} style={{ fontSize: '11px', color: 'var(--sys-blue)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
                           )}
                         </div>
+                        <textarea
+                          value={editNotes}
+                          onChange={e => setEditNotes(e.target.value)}
+                          placeholder="Add notes..."
+                          style={{
+                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px', padding: '8px 10px', color: '#fff',
+                            fontSize: '14px', outline: 'none', width: '100%', minHeight: '50px',
+                            resize: 'vertical', marginTop: '2px', boxSizing: 'border-box'
+                          }}
+                        />
                       </div>
                     ) : (
                       <>
@@ -315,10 +345,18 @@ export default function TodoScreen() {
                         </span>
                         {todo.dueDate && (
                           <div style={{
-                            fontSize: '11px', marginTop: '2px', fontWeight: 700,
+                            fontSize: '11px', marginTop: '4px', fontWeight: 700,
                             color: isOverdue(todo) ? 'var(--sys-red)' : 'var(--sys-label-secondary)'
                           }}>
                             {isOverdue(todo) ? '⚠ ' : ''}Due: {new Date(todo.dueDate.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
+                        )}
+                        {todo.notes && (
+                          <div style={{
+                            fontSize: '13px', marginTop: '6px', color: 'var(--sys-label-secondary)',
+                            lineHeight: '1.4', whiteSpace: 'pre-wrap'
+                          }}>
+                            {todo.notes}
                           </div>
                         )}
                       </>

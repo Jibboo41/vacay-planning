@@ -67,6 +67,7 @@ export interface TodoItem {
   completed: boolean;
   createdAt: number;
   dueDate?: string;
+  notes?: string;
 }
 
 export interface Expense {
