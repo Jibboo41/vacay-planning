@@ -546,8 +546,10 @@ export default function MapViewScreen() {
         ))}
 
         {/* Flight Landing Markers */}
-        {Object.entries(flightLandings).map(([id, landing]) => {
-          const isTripEnd = mappable.length > 0 && mappable[mappable.length - 1].id === id;
+        {Object.entries(flightLandings)
+          .filter(([id]) => mappable.some(m => m.id === id)) // Only show if parent flight is visible
+          .map(([id, landing]) => {
+            const isTripEnd = mappable.length > 0 && mappable[mappable.length - 1].id === id;
           return (
             <Marker
               key={`landing-${id}`}
