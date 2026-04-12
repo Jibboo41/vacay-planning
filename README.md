@@ -9,6 +9,7 @@
 ### 🔹 Modern Nav Controls
 - **Minimalist Layout**: Icon-only floating menus (Sparkle Menu and View Switcher) for a clean, distraction-free aesthetic.
 - **iOS-Inspired Aesthetics**: 60px glassmorphic buttons with spring-curved transitions and balanced 50/50 desktop split-view.
+- **Pull-to-Refresh**: Native-feeling, elastic pull-down gesture across all primary screens (excluding Map) for manual data synchronization and tactical feedback.
 
 ### 🔹 AI Itinerary Ingestion
 - **Email Parser**: Paste raw booking confirmations and Gemini 2.5 Flash will digest, categorize, and intelligently map them into your timeline.

@@ -88,6 +88,7 @@ interface TripStore {
 
   // Sync
   syncTrips: (trips: Trip[]) => void;
+  refreshAppData: () => Promise<void>;
 }
 
 function getDayKey(dateStr: string) {
@@ -137,9 +138,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
   lastSaveError: null,
   editingItem: null,
   editingExpense: null,
-  activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
+  activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'hiking', 'transit', 'food', 'note'],
   hiddenDayFilters: [],
   debugLogs: [],
+  refreshAppData: async () => {
+    await new Promise(resolve => setTimeout(resolve, 800));
+  },
 
   addDebugLog: (category, message, data) => 
     set((state) => ({ 
