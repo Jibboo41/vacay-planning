@@ -169,8 +169,8 @@ input, textarea {
   color: var(--sys-label-primary);
 }
 
-.day-section-header { padding: 20px 20px 10px; position: relative; }
-.day-section-label { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.day-section-header { padding: 12px 20px 6px; position: relative; }
+.day-section-label { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
 
 .travel-card {
   background: rgba(255, 255, 255, 0.04);
@@ -178,7 +178,7 @@ input, textarea {
   -webkit-backdrop-filter: blur(36px) saturate(1.6);
   border-radius: 16px;
   padding: 18px 16px;
-  margin: 0 16px 14px;
+  margin: 0 16px 12px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
@@ -192,7 +192,7 @@ input, textarea {
   background: rgba(255, 159, 10, 0.06);
   border-radius: 16px;
   padding: 16px 14px;
-  margin: 0 16px 10px;
+  margin: 0 16px 8px;
   border: 0.5px solid rgba(255, 159, 10, 0.22);
   overflow: hidden;
   transition: transform 0.12s ease;

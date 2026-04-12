@@ -211,7 +211,7 @@ export default function TimelineScreen() {
       
       // Calculate target scroll position - adjusted for 'above the title' cushion
       let targetTop = 0;
-      const cushion = 32; // Stable space above the title (prevents cutoff)
+      const cushion = 16; // Tighter space above the title (user request)
       const offset = fullHeaderHeight + cushion;
 
       if (container === window) {
