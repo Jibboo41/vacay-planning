@@ -250,8 +250,9 @@ export default function MapViewScreen() {
           try {
             // If it looks like an IATA code (3 upper chars), prioritize that
             const isIATA = query.length === 3 && query === query.toUpperCase();
-            // Handle common mismatch for Phoenix/PHX by adding "International"
-            const refinedQuery = isIATA ? `${query} Airport` : `${query} International Airport`;
+            // Extract the target city and clean it for query
+            const cityQuery = query.split(',')[0].trim();
+            const refinedQuery = isIATA ? `${query} Airport` : `${query} International Airport ${cityQuery}`;
             
             addDebugLog('Directions', `Nominatim Query: ${refinedQuery}`);
             const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(refinedQuery)}&format=json&limit=1&countrycodes=us`);
@@ -325,7 +326,12 @@ export default function MapViewScreen() {
           const colorIdx = allTripDayKeys.indexOf(key);
           const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
 
-          const cacheKey = stops.map(s => `${s.id}-${s.location.latitude}-${s.location.longitude}`).join('|');
+          const cacheKey = stops.map(s => {
+            const landing = s.type === 'flight' ? flightLandings[s.id] : null;
+            const lKey = landing ? `-${landing.lat.toFixed(4)}-${landing.lng.toFixed(4)}` : '';
+            return `${s.id}-${s.location.latitude?.toFixed(4)}-${s.location.longitude?.toFixed(4)}${lKey}`;
+          }).join('|');
+          
           if (routeCache.current.has(cacheKey)) {
              return { dayKey: key, color, segments: routeCache.current.get(cacheKey)!, distance: 0 };
           }
@@ -378,7 +384,16 @@ export default function MapViewScreen() {
                 // Normal driving segment
                 try {
                   addDebugLog('Directions', `Road Path: ${start.title} -> ${next.title}`);
-                  const drivingCoords = await fetchOSRMRoute([start, next]);
+                  let drivingCoords = await fetchOSRMRoute([start, next]);
+                  
+                  // If OSRM returns an empty or single-point path (too close), force a 2-point line
+                  if (drivingCoords.length < 2) {
+                    drivingCoords = [
+                      [start.location.latitude!, start.location.longitude!],
+                      [next.location.latitude!, next.location.longitude!]
+                    ];
+                  }
+                  
                   segments.push({ type: 'driving', coords: drivingCoords });
                 } catch (e) {
                   segments.push({ type: 'driving', coords: [[start.location.latitude!, start.location.longitude!], [next.location.latitude!, next.location.longitude!]] });
