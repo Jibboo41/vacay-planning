@@ -285,12 +285,24 @@ export default function TimelineScreen() {
       }
       ts.ghost!.style.visibility = 'hidden';
       const elUnder = document.elementFromPoint(t.clientX, t.clientY);
-      ts.ghost!.style.visibility = 'visible';
       const cardUnder = elUnder?.closest('[data-drag-id]');
       const newTarget = cardUnder?.getAttribute('data-drag-id') ?? null;
-      if (newTarget !== ts.dropTargetId) {
-        ts.dropTargetId = newTarget;
-        setDropTargetId(newTarget);
+      
+      // Stickiness logic: if we hit a new target, update it. 
+      // If we hit nothing, keep the old target as long as we're within the scrollable area
+      // this prevents 'flickering' and 'picky' drops.
+      if (newTarget) {
+        if (newTarget !== ts.dropTargetId) {
+          ts.dropTargetId = newTarget;
+          setDropTargetId(newTarget);
+        }
+      } else {
+        // Only clear if we are completely out of any day section
+        const isOverDaySection = !!elUnder?.closest('.day-section-content') || !!elUnder?.closest('.day-section-header');
+        if (!isOverDaySection && ts.dropTargetId) {
+          ts.dropTargetId = null;
+          setDropTargetId(null);
+        }
       }
     };
 
@@ -299,14 +311,19 @@ export default function TimelineScreen() {
       ts.ghost = null;
       if (ts.onMove) document.removeEventListener('touchmove', ts.onMove);
       if (ts.onEnd)  document.removeEventListener('touchend', ts.onEnd);
+      
       const fromId = ts.draggingId;
       const toId   = ts.dropTargetId;
+      
+      // Clear state
       ts.draggingId   = null;
       ts.dropTargetId = null;
       setDraggingId(null);
       setDropTargetId(null);
 
+      // Execute drop if we have source and target
       if (fromId && toId && fromId !== toId) {
+        console.log(`[DND] Executing drop from ${fromId} to ${toId}`);
         if (toId.startsWith('end-of-')) {
           reorderItems(fromId, null, toId.replace('end-of-', ''), true);
         } else if (toId.startsWith('start-of-')) {

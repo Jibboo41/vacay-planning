@@ -195,14 +195,16 @@ export default function MapViewScreen() {
       }
     });
 
-    // Ensure strictly chronological sorting
+    // Synchronize sorting with TimelineScreen: Day -> sortOrder -> Time
     const sorted = list.sort((a, b) => {
-      if (a._renderDate !== b._renderDate) return a._renderDate.localeCompare(b._renderDate);
-      if (a.id === b.id) {
-         if (a._isCheckout) return 1;
-         if (b._isCheckout) return -1;
-      }
-      return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+      const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
+      if (dayA !== dayB) return dayA.localeCompare(dayB);
+      
+      const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
+      const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
+      
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a._renderDate.localeCompare(b._renderDate);
     });
 
     // ─── Special Logic for Flights: Discover Landing Point ──────────────────
@@ -254,7 +256,9 @@ export default function MapViewScreen() {
             addDebugLog('Directions', `Nominatim Query: ${refinedQuery}`);
             const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(refinedQuery)}&format=json&limit=1&countrycodes=us`);
             const data = await res.json();
+            
             if (data?.[0]) {
+              addDebugLog('Directions', `Nominatim Result: ${data[0].display_name}`);
               newLandings[f.id] = { 
                 lat: parseFloat(data[0].lat), 
                 lng: parseFloat(data[0].lon),
@@ -333,12 +337,12 @@ export default function MapViewScreen() {
             addDebugLog('Directions', `Calculating Day: ${key}`, { stops: stops.length });
             
             const segments: RouteSegment[] = [];
-            for (let j = 0; j < stops.length - 1; j++) {
+            // Use <= stops.length - 1 to ensure we check the last item for a terminal flight segment
+            for (let j = 0; j < stops.length; j++) {
               const start = stops[j];
               const next = stops[j+1];
               
               if (start.type === 'flight') {
-                // ANY flight item (intermediate OR terminal) gets an air path segment
                 const startPos: [number, number] = [start.location.latitude!, start.location.longitude!];
                 
                 if (start._isFlightTakeoff && flightLandings[start.id]) {
@@ -348,27 +352,29 @@ export default function MapViewScreen() {
                     type: 'flight',
                     coords: [startPos, [landing.lat, landing.lng]]
                   });
-                  // From virtual landing to next (if exists)
-                  try {
-                    addDebugLog('Directions', `Road Transition: ${landing.name} -> ${next.title}`);
-                    const transitionCoords = await fetchOSRMRoute([
-                      { location: { latitude: landing.lat, longitude: landing.lng } },
-                      next
-                    ]);
-                    segments.push({ type: 'driving', coords: transitionCoords });
-                  } catch (e) {
-                    segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
+                  
+                  // Only if there's a next item, draw a road transition from landing to next
+                  if (next) {
+                    try {
+                      addDebugLog('Directions', `Road Transition: ${landing.name} -> ${next.title}`);
+                      const transitionCoords = await fetchOSRMRoute([
+                        { location: { latitude: landing.lat, longitude: landing.lng } },
+                        next
+                      ]);
+                      segments.push({ type: 'driving', coords: transitionCoords });
+                    } catch (e) {
+                      segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
+                    }
                   }
-                } else {
+                } else if (next) {
                   // Intermediate flight: Dashed line direct to the next stop's location 
-                  // (which is effectively the landing airport in the itinerary)
                   addDebugLog('Directions', `Air Path (Segment): ${start.title} -> ${next.title}`);
                   segments.push({
                     type: 'flight',
                     coords: [startPos, [next.location.latitude!, next.location.longitude!]]
                   });
                 }
-              } else {
+              } else if (next) {
                 // Normal driving segment
                 try {
                   addDebugLog('Directions', `Road Path: ${start.title} -> ${next.title}`);
