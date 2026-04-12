@@ -114,6 +114,13 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
                item.type === 'flight' ? 'TAKEOFF' : 'START'}
               {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+              {(() => {
+                if (item.type === 'hotel' && !isCheckout && item.endDate) {
+                  const nDays = Math.round((new Date(item.endDate).getTime() - new Date(item.startDate).getTime()) / (1000 * 60 * 60 * 24));
+                  if (nDays > 0) return ` (${nDays} ${nDays === 1 ? 'night' : 'nights'})`;
+                }
+                return '';
+              })()}
             </div>
             {!isCheckout && item.endDate && item.endDate.includes('T') &&
               item.type !== 'hotel' && item.type !== 'rental-car' && (
