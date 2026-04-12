@@ -240,7 +240,7 @@ export default function MapViewScreen() {
 
         if (query) {
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " Airport")}&format=json&limit=1`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " Airport")}&format=json&limit=1&countrycodes=us`);
             const data = await res.json();
             if (data?.[0]) {
               newLandings[f.id] = { 
@@ -332,6 +332,7 @@ export default function MapViewScreen() {
               
               if (start._isFlightTakeoff && flightLandings[start.id]) {
                 const landing = flightLandings[start.id];
+                addDebugLog('Directions', `Direct path: ${start.title} -> ${landing.name}`);
                 // Segment 1: Flight (Dashed)
                 segments.push({
                   type: 'flight',
@@ -339,6 +340,7 @@ export default function MapViewScreen() {
                 });
                 // Segment 2: Transition from Landing to Next (Driving)
                 try {
+                  addDebugLog('Directions', `Road path: ${landing.name} -> ${next.title}`);
                   const transitionCoords = await fetchOSRMRoute([
                     { location: { latitude: landing.lat, longitude: landing.lng } },
                     next
@@ -350,6 +352,7 @@ export default function MapViewScreen() {
               } else {
                 // Normal driving segment
                 try {
+                  addDebugLog('Directions', `Road path: ${start.title} -> ${next.title}`);
                   const drivingCoords = await fetchOSRMRoute([start, next]);
                   segments.push({ type: 'driving', coords: drivingCoords });
                 } catch (e) {
@@ -527,7 +530,7 @@ export default function MapViewScreen() {
               <Popup className="custom-popup">
                 <div style={{ padding: '4px 2px' }}>
                   <p style={{ fontWeight: 800, color: isTripEnd ? '#FF3B30' : '#8E8E93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    {isTripEnd ? 'Trip Final Destination' : 'Flight Arrival'}
+                    {isTripEnd ? 'Final Destination' : 'Destination'}
                   </p>
                   <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#111' }}>
                     {landing.name}

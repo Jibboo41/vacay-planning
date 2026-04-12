@@ -399,11 +399,11 @@ export default function TimelineScreen() {
                   onDragEnter={() => handleDragEnter(`start-of-${group.dateKey}`)}
                   onDragOver={e => e.preventDefault()}
                   onDrop={() => handleDrop(`start-of-${group.dateKey}`)}
-                  style={{ height: '8px', marginBottom: '4px', position: 'relative' }}
+                  style={{ height: '24px', marginBottom: '-16px', marginTop: '-4px', position: 'relative', zIndex: 5 }}
                 >
                   {dropTargetId === `start-of-${group.dateKey}` && (
-                    <div className="drop-line-container">
-                      <div className="drop-line" style={{ top: '0px' }} />
+                    <div className="drop-line-container" style={{ top: '8px' }}>
+                      <div className="drop-line" />
                     </div>
                   )}
                 </div>
