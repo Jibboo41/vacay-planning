@@ -120,8 +120,8 @@ input, textarea {
   top: 0; /* Fallback */
   z-index: 999;
   background: rgba(15, 16, 20, 0.35);
-  backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(40px) saturate(200%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px 0;
   margin-top: -1px; /* Overlap header border slightly for seamless look */
@@ -213,8 +213,8 @@ input, textarea {
   align-items: center;
   gap: 16px;
   background: rgba(15, 16, 20, 0.35); /* Increased translucency */
-  backdrop-filter: blur(40px) saturate(200%); /* High saturation for premium feel */
   -webkit-backdrop-filter: blur(40px) saturate(200%);
+  backdrop-filter: blur(40px) saturate(200%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Finer border */
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
