@@ -1,9 +1,13 @@
 - **Phase 39 (Map & Note Refinement)**:
     - **Advanced Map Routing**: Uses `segments: { type: 'driving' | 'flight', coords }[]` and a `routeCache` (segments based) for instant visibility toggling.
+    - **Self-Updating Cache**: `routeCache` keys now append flight coordinates `...-${lat}-${lng}` so resolving an airport automatically busts the stale cache and triggers a redraw of that day (fixes disconnected final paths).
+    - **Clustered OSRM Fallback**: Added a forced 2-point line generation if OSRM returns a path `< 2` coordinates long to prevent disappearing segments over short distances.
     - **Universal Flight Logic**: Every item with `type === 'flight'` renders a dashed air path. Terminal markers (`_isFlightTakeoff`) are only generated for flights not followed by another flight.
-    - **Geocoding Accuracy**: Nominatim searches are restricted to `countrycodes=us` and prioritize `[Code] International Airport` for IATA strings.
+    - **Virtual Marker Visibility**: Flight Landing markers are explicitly filtered by `mappable.some(m => m.id === id)` to ensure they respect the dynamic `hiddenDayFilters` array state.
+    - **Synchronized Map Sorting**: The `mappable` array uses an identical sorting logic snippet as `TimelineScreen`, explicitly evaluating `sortOrder` overrides, ensuring 1:1 timeline-to-map sequential rendering.
+    - **Geocoding Accuracy**: Nominatim searches are restricted to `countrycodes=us`, prioritize `[Code] International Airport`, and strictly append the destination city to banish major-hub hijacking (e.g. JFK).
     - **Standardized Notes**: Grey themes, no time display, simplified edit modals.
-    - **DND Polish**: Tripled `start-day-drop-zone` height to `24px` for reliable prepending.
+    - **Sticky DND Polish**: Timeline `onMove` drop targets now persist unless dragging entirely out of day limits, guaranteeing easy release. Tripled `start-day-drop-zone` height to `24px`.
 - **Phase 22 (Branding & Detail Refinement)**:
     - **Branding**: Deployed custom PNG logo to `public/logo.png`. Updated `index.html` with `apple-touch-icon`.
     - **Refundable System**: Added `FlightDetails` to the model. Normalized `refundableCutoffDate` across Hotels, Flights, and Rentals.

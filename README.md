@@ -183,63 +183,41 @@ stateDiagram-v2
 
 ---
 
-### Phase 39 (v1.13.0): Map Overhaul & Note Standardization
-- **Standardized Note Management**: Neutral grey-scale, timeless Note rendering across all screens. Simplified Edit screen for Notes (Title/Description only).
-- **Intelligent Map Pathing**: Specialized segment engine that distinguishes between 'driving' (OSRM) and 'flight' (direct dashed lines).
-- **Automated Final Destinations**: AI-compatible parser extracts landing airports (e.g., "to JFK") from flight items and renders virtual arrival markers (🛬) and 'Trip End' indicators (🏁).
-- **Timeline DND Prepending**: Implemented 'start-day-drop-zone' to allow reliable item reordering to the first position of any day.
-- **Improved Overflow Handling**: Added scrollable description areas in Timeline and Note cards to ensure action buttons are always visible and accessible.
-- **Header Spacing Fix**: Resolved excessive top-padding issues in edit modals for a tighter, more native experience.
+### Phase 39 (v1.13.0): High-Performance Map & Standardized Notes
+- **Advanced Map Routing**:
+  - **Universal Air Paths**: All flight segments correctly draw dashed lines. Connected the terminal leg to land perfectly on the destination marker.
+  - **Self-Updating Cache**: Introduced `routeCache` tied to resolved geocoordinates. This provides instant visibility toggling while automatically invalidating stale paths when airports are found.
+  - **Clustered Path Connectivity**: Added a mandatory 2-point fallback to ensure tightness between clustered items (e.g., airport rental drop-offs) always draw a visual line instead of failing OSRM.
+  - **Synchronized Map Ordering**: Map explicitly respects manual drag-and-drop `sortOrder` overrides from the Timeline, prioritizing it over chronological timestamps.
+- **Precision Geocoding Engine**:
+  - Automatically queries Nominatim for missing destination airports on terminal flights.
+  - Restricted to `countrycodes=us` and prioritizes specific IATA string formatting + explicit destination city names to stop major hub hijacking (e.g., JFK).
+  - Virtual Arrival markers (`🛬` and `🏁`) perfectly respect day visibility filtering.
+- **Note System Standardization**:
+  - Uniform neutral-grey, timeless notes. Simplified editing pane removing dates and times for pure note functionality.
+- **UX & DND Polish**:
+  - Implemented 'sticky' `handleDrop` zones in Timeline ensuring if the blue target line is active, the touch drop will perfectly execute, acting less 'picky'.
+  - Tripled the 'top-of-day' drop zone height (`24px`) to guarantee easy prepending of items to the start of a day.
+  - Handled horizontal overflow description text ensuring action buttons remain visible.
 
 ### Phase 38 (v1.12.0): Financial Overhaul & Glass UI Maturity
 - **Unified Expense Categories**: Replaced the fragmented "itinerary vs manual" categorization with a specific, unified system (Flights, Dining, Lodging, etc.).
 - **Live Category Summary**: Implemented a collapsible financial dashboard at the top of the Expenses screen showing Total/Paid/Remaining per category.
 - **Glass-Morphism Unification**: Extended the premium glass aesthetics to all items in the Trip Expenses and ToDo views, ensuring full visual consistency.
-- **Note Redesign**: Updated timeline Notes to be time-independent and grey-scaled with glass backgrounds for a more professional, subtle appearance.
-- **Modal Category Alignment**: Synchronized all editing modals to use the new category system.
-- **Production Build Hardening**: Configured Vite and Browserslist to preserve modern CSS features like `backdrop-filter` during production deployment.
 
 ### Phase 21 (v1.11.6): Stability & Premium Polish
-- **Independent Event Reordering**: Introduced a decoupled sorting system for multi-day items (Hotels/Rentals). Check-in and check-out events now have independent sort orders, preventing "ghost movement" where reordering one event affected the other.
-- **Enhanced Action Branding**: Color-coded the "My Trips" selector actions (White for Rename/Duplicate, Red for Delete) for faster recognition and semantic clarity.
+- **Independent Event Reordering**: Introduced a decoupled sorting system for multi-day items (Hotels/Rentals).
 - **Map Layout Recalibration**: Fixed split-screen centering by adding a `ResizeHandler` to trigger Leaflet's `invalidateSize()` during layout transitions.
-- **Glass-Morphism Unification**:
-  - Upgraded "My Trips" cards with high-blur, semi-transparent backgrounds and subtle highlights.
-  - Standardized all primary "Add Trip" buttons (Sidebar & Selector) to the consistent blue glass style.
 - **Robust Date Parsing**: Resolved cross-browser "Invalid Date" issues by implementing a safer string-reconciliation helper for ISO dates.
-- **Rental Car Coloring**: Synchronized the Summary screen with the Timeline's purple theme for car segments.
-
+- Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
+- **Sidebar Ergonomics**: Reordered utility sections and added a collapsible Appearance manager.
 
 ### Phase 20 (v1.11.3): Trip Management & UI Polish
 - **Centralized Admin**: Shifted Rename/Copy options to the Trip Selector and streamlined the Sidebar for purely navigation tasks.
-- **Smart Itinerary Metadata**: Trip cards now feature automatic date-range calculation ("MMM D - MMM D, YYYY") for instant journey recognition.
-- **Premium Styling Fixes**: Restored full transparency to the desktop split-view and perfected vertical alignment for iOS date inputs.
 
 ## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.11.0)
-- **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic, resolving the "Infinite Calculation" hang.
+- **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic.
 - **Desktop Scroll Fix**: Restored `overflow-y: auto` to the right-hand split-view panel for independent desktop scrolling.
-### Phase 39 (v1.12.0): High-Performance Map & Standardized Notes
-- **Advanced Map Engine**:
-    - **Universal Dashed Flight Paths**: Every flight segment is now correctly visualized as a direct air path.
-    - **Instant Day Toggling**: Implemented a segment-level `routeCache` that reuses calculated paths, making visibility toggles instantaneous and reducing OSRM API load.
-    - **US-Accurate Geocoding**: Restricted airport discovery to the US (`countrycodes=us`) and implemented IATA-aware queries (e.g., PHX) to avoid international mismatches.
-    - **Terminal Landing Markers**: Intelligent logic to only show landing pins for the final destination of a flight sequence, reducing clutter in connecting legs.
-- **Note System Standardization**:
-    - **Uniform UI**: Neutral grey, time-neutral notes across Timeline, Summary, and Map views.
-    - **Simplified Editing**: Tailored `EditItineraryModal` for notes (Title + Description only).
-- **UX & DND Polish**:
-    - **Prepending Items**: Increased the "top-of-day" drop zone from `8px` to `24px` for significantly better prepending reliability.
-    - **Overflow Protection**: Added adaptive scrolling to `TimelineItem` and `NoteCard` to ensure action buttons remain visible with long descriptions.
-
-### Phase 21 (v1.11.6): Stability & Premium Polish
- Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
-- **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching to emoji-compatible text spans.
-- **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms for consistent "Primary Action on Left" pattern.
-- **Visual Unification**: Synchronized the Todo and Expense form cards with high-contrast elevated backgrounds and blue border highlights.
-- **Definitive Date Scaling**: Applied robust overflow containment to all date inputs, resolving persistent iOS width overflow issues.
-- **iOS Drag-to-Reorder Fix**: Implemented `e.preventDefault()` and `touch-action: none` for smooth Todo reordering.
-- **Native Reordering Engine**: Successfully implemented `document.elementFromPoint` for bulletproof detection.
-- **Sidebar Ergonomics**: Reordered utility sections and added a collapsible Appearance manager.
 
 ## 📺 Phase 16: UI Polishing & Feature Hardening (v1.9.5)
 - **Inline Trip Renaming**: Added renaming capabilities directly within the Sidebar with real-time Firestore synchronization.

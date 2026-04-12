@@ -51,8 +51,17 @@ Ensure your `webapp/.env` contains the correct `VITE_API_URL` pointing to your d
 - **Backend (API)**: `https://us-central1-vacay-planning.cloudfunctions.net/api`
   *(Note: Ensure your `VITE_API_URL` in `.env` matches your deployed function URL.)*
 
-## 🌩 Weather API
-The Weather module uses the **Open-Meteo API**, which is free and requires no API key. However, for high-frequency use, ensure the backend respects rate limits (currently handled via frontend caching in `useTripStore`).
+## 🗺️ External APIs & Integrations
+
+The Vacay Planner relies on several free, open-source APIs that do not require authentication keys. When troubleshooting data loading issues on the deployed site:
+
+### Map Routing (OSRM) & Geocoding (Nominatim)
+- **Nominatim (OpenStreetMap)**: Used for resolving destination coordinates (e.g. converting "Phoenix Sky Harbor" to lat/lng). Requests are restricted to `countrycodes=us` and are rate-limited.
+- **OSRM (Open Source Routing Machine)**: Used to generate the driving paths (red splines) between destinations.
+- **Route Caching**: The application utilizes a robust `routeCache` mechanism stored in memory. It tracks coordinate fingerprints. If a path seems "stuck" or incomplete, the cache may be holding stale data. Toggling the "Day Visibility" filters on/off forces a cache invalidation and triggers a fresh OSRM recalculation.
+
+### Weather API (Open-Meteo)
+The Weather module uses the **Open-Meteo API**. It pulls both a 7-day live forecast and a massive 5-year historical average to calculate precise rainfall/snowfall expectations. For high-frequency use, ensure the backend respects rate limits (currently handled via frontend caching in `useTripStore`).
 
 ## ⚠️ Troubleshooting
 
