@@ -61,6 +61,13 @@ export interface ItineraryItem {
   groupId?: string;
 }
 
+export interface TripNote {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: number;
+}
+
 export interface TodoItem {
   id: string;
   text: string;

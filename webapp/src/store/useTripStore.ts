@@ -19,6 +19,7 @@ interface Trip {
   todos?: TodoItem[];
   expenses?: Expense[];
   weather?: WeatherCache;
+  generalNotes?: import('../core/models').TripNote[];
 }
 
 interface TripStore {
@@ -29,6 +30,7 @@ interface TripStore {
   todos: TodoItem[];
   expenses: Expense[];
   weather: WeatherCache | null;
+  generalNotes: import('../core/models').TripNote[];
   userId: string | null;
   loading: boolean;
   isSidebarOpen: boolean;
@@ -65,6 +67,11 @@ interface TripStore {
   addNote: (dayKey: string, title: string, content: string) => Promise<void>;
   reorderItems: (activeId: string, overId: string | null, newDayKey: string, atBottom?: boolean) => Promise<void>;
   saveAiSummary: (summary: string) => Promise<void>;
+
+  // General Notes Actions
+  addGeneralNote: (title: string, content: string) => Promise<void>;
+  updateGeneralNote: (id: string, updates: Partial<import('../core/models').TripNote>) => Promise<void>;
+  deleteGeneralNote: (id: string) => Promise<void>;
 
   // Todo Actions
   addTodo: (text: string, dueDate?: string, notes?: string) => Promise<void>;
@@ -127,6 +134,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   todos: [],
   expenses: [],
   weather: null,
+  generalNotes: [],
   userId: null,
   loading: true,
   isSidebarOpen: false,
@@ -181,6 +189,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         todos: [],
         expenses: [],
         weather: null,
+        generalNotes: [],
         currentTripAiSummary: null,
         initialized: true 
       });
@@ -228,6 +237,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       todos: currentTrip?.todos || [],
       expenses: currentTrip?.expenses || [],
       weather: currentTrip?.weather || null,
+      generalNotes: currentTrip?.generalNotes || [],
       currentTripAiSummary: currentTrip?.aiSummary || null,
       initialized: true
     });
@@ -243,6 +253,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       todos: trip?.todos || [],
       expenses: trip?.expenses || [],
       weather: trip?.weather || null,
+      generalNotes: trip?.generalNotes || [],
       currentTripAiSummary: trip?.aiSummary || null
     });
     if (tripId) localStorage.setItem('vacay_current_trip_id', tripId);
@@ -257,7 +268,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!userId) throw new Error("User not authenticated.");
     const newTrip = { title, userId, items: [], createdAt: Date.now() };
     const docRef = await addDoc(collection(db, "trips"), newTrip);
-    set({ currentTripId: docRef.id, items: [], todos: [], expenses: [], weather: null });
+    set({ currentTripId: docRef.id, items: [], todos: [], expenses: [], weather: null, generalNotes: [] });
     localStorage.setItem('vacay_current_trip_id', docRef.id);
     return docRef.id;
   },
@@ -557,5 +568,35 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     set({ weather });
     await updateDoc(doc(db, "trips", currentTripId), { weather: scrubData(weather) });
+  },
+
+  addGeneralNote: async (title, content) => {
+    const { currentTripId, generalNotes, initialized } = get();
+    if (!currentTripId || !initialized) return;
+    const newNote = {
+      id: `note-${Date.now()}`,
+      title,
+      content,
+      createdAt: Date.now()
+    };
+    const newNotes = [...generalNotes, newNote];
+    set({ generalNotes: newNotes });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
+  },
+
+  updateGeneralNote: async (id, updates) => {
+    const { currentTripId, generalNotes } = get();
+    if (!currentTripId) return;
+    const newNotes = generalNotes.map(n => n.id === id ? { ...n, ...updates } : n);
+    set({ generalNotes: newNotes });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
+  },
+
+  deleteGeneralNote: async (id) => {
+    const { currentTripId, generalNotes } = get();
+    if (!currentTripId) return;
+    const newNotes = generalNotes.filter(n => n.id !== id);
+    set({ generalNotes: newNotes });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
   }
 }));
