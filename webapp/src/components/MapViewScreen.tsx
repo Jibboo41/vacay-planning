@@ -222,7 +222,7 @@ export default function MapViewScreen() {
 
   const [dayRoutes, setDayRoutes] = useState<DayRoute[]>([]);
   const [routeStatus, setRouteStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const routeCache = useRef<Map<string, [number, number][]>>(new Map());
+  const routeCache = useRef<Map<string, RouteSegment[]>>(new Map());
   const [flightLandings, setFlightLandings] = useState<Record<string, { lat: number, lng: number, name: string }>>({});
 
   // ─── Geocode Landing Airports ─────────────────────────────────────────────
@@ -321,50 +321,57 @@ export default function MapViewScreen() {
           const colorIdx = allTripDayKeys.indexOf(key);
           const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
 
-          if (stops.length < 1) {
-             return { dayKey: key, color, segments: [], distance: 0 };
-          }
-
           const cacheKey = stops.map(s => `${s.id}-${s.location.latitude}-${s.location.longitude}`).join('|');
           if (routeCache.current.has(cacheKey)) {
-             // We'll just re-fetch for now to avoid complex segment caching logic
-             // Or we could cache the segments array
+             return { dayKey: key, color, segments: routeCache.current.get(cacheKey)!, distance: 0 };
           }
 
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-            addDebugLog('Directions', `Segmenting Day: ${key}`, { stops: stops.length });
+            addDebugLog('Directions', `Calculating Day: ${key}`, { stops: stops.length });
             
             const segments: RouteSegment[] = [];
             for (let j = 0; j < stops.length - 1; j++) {
               const start = stops[j];
               const next = stops[j+1];
               
-              if (start._isFlightTakeoff && flightLandings[start.id]) {
-                const landing = flightLandings[start.id];
-                addDebugLog('Directions', `Direct path: ${start.title} -> ${landing.name}`);
-                // Segment 1: Flight (Dashed)
-                segments.push({
-                  type: 'flight',
-                  coords: [[start.location.latitude!, start.location.longitude!], [landing.lat, landing.lng]]
-                });
-                // Segment 2: Transition from Landing to Next (Driving)
-                try {
-                  addDebugLog('Directions', `Road path: ${landing.name} -> ${next.title}`);
-                  const transitionCoords = await fetchOSRMRoute([
-                    { location: { latitude: landing.lat, longitude: landing.lng } },
-                    next
-                  ]);
-                  segments.push({ type: 'driving', coords: transitionCoords });
-                } catch (e) {
-                  segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
+              if (start.type === 'flight') {
+                // ANY flight item (intermediate OR terminal) gets an air path segment
+                const startPos: [number, number] = [start.location.latitude!, start.location.longitude!];
+                
+                if (start._isFlightTakeoff && flightLandings[start.id]) {
+                  const landing = flightLandings[start.id];
+                  addDebugLog('Directions', `Air Path (Final): ${start.title} -> ${landing.name}`);
+                  segments.push({
+                    type: 'flight',
+                    coords: [startPos, [landing.lat, landing.lng]]
+                  });
+                  // From virtual landing to next (if exists)
+                  try {
+                    addDebugLog('Directions', `Road Transition: ${landing.name} -> ${next.title}`);
+                    const transitionCoords = await fetchOSRMRoute([
+                      { location: { latitude: landing.lat, longitude: landing.lng } },
+                      next
+                    ]);
+                    segments.push({ type: 'driving', coords: transitionCoords });
+                  } catch (e) {
+                    segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
+                  }
+                } else {
+                  // Intermediate flight: Dashed line direct to the next stop's location 
+                  // (which is effectively the landing airport in the itinerary)
+                  addDebugLog('Directions', `Air Path (Segment): ${start.title} -> ${next.title}`);
+                  segments.push({
+                    type: 'flight',
+                    coords: [startPos, [next.location.latitude!, next.location.longitude!]]
+                  });
                 }
               } else {
                 // Normal driving segment
                 try {
-                  addDebugLog('Directions', `Road path: ${start.title} -> ${next.title}`);
+                  addDebugLog('Directions', `Road Path: ${start.title} -> ${next.title}`);
                   const drivingCoords = await fetchOSRMRoute([start, next]);
                   segments.push({ type: 'driving', coords: drivingCoords });
                 } catch (e) {
@@ -374,6 +381,7 @@ export default function MapViewScreen() {
             }
             
             clearTimeout(timeoutId);
+            routeCache.current.set(cacheKey, segments);
             return { dayKey: key, color, segments, distance: 0 };
           } catch (err: any) {
             addDebugLog('Directions', `Day ${key} failed: ${err.message}`);
