@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, BarChart3 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, BarChart3 } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import { fetchWeather } from '../data/weatherApi';
-import PullToRefresh from './PullToRefresh';
-import type { WeatherDay, WeatherCache } from '../core/models';
+import type { WeatherDay } from '../core/models';
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -16,22 +15,19 @@ function getDayKey(dateString: string) {
   return `${year}-${month}-${day}`;
 }
 
-function getDayLabel(dateString: string) {
-  if (!dateString) return 'Date TBD';
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return 'Date TBD';
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-}
-
 export default function WeatherScreen() {
-  const { weather, items, updateWeather, setSidebarOpen, refreshAppData } = useTripStore();
+  const { weather, items, updateWeather, setSidebarOpen } = useTripStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 1. Determine the best location for every single day of the trip
   const getDailyLocations = () => {
     if (!items.length) return [];
+    
+    // Sort items by time
     const sorted = [...items].sort((a, b) => a.startDate.localeCompare(b.startDate));
+    
+    // Find absolute start and end
     const startStr = sorted[0].startDate.split('T')[0];
     let endStr = sorted[sorted.length - 1].startDate.split('T')[0];
     sorted.forEach(i => {
@@ -40,11 +36,15 @@ export default function WeatherScreen() {
 
     const startDate = new Date(startStr.replace(/-/g, '/'));
     const endDate = new Date(endStr.replace(/-/g, '/'));
+    
     const dayLocations: { date: string; lat: number; lon: number; name: string }[] = [];
     
+    // Iterate through every day in the trip range
     const curr = new Date(startDate);
     while (curr <= endDate) {
        const dateKey = curr.toISOString().split('T')[0];
+       
+       // Priority 1: Items on this day with coords
        const dayItems = items.filter(i => getDayKey(i.startDate) === dateKey);
        const specificItem = dayItems.find(i => i.location.latitude !== null && i.location.longitude !== null);
        
@@ -56,6 +56,7 @@ export default function WeatherScreen() {
             name: specificItem.location.name || 'Current Stop'
           });
        } else {
+          // Priority 2: Active hotel stay spanning this day
           const activeHotel = items.find(i => 
              i.type === 'hotel' && 
              i.location.latitude !== null && 
@@ -65,12 +66,13 @@ export default function WeatherScreen() {
           
           if (activeHotel) {
              dayLocations.push({ 
-                date: dateKey, 
-                lat: activeHotel.location.latitude!, 
-                lon: activeHotel.location.longitude!, 
-                name: activeHotel.location.name || 'Hotel Location'
+               date: dateKey, 
+               lat: activeHotel.location.latitude!, 
+               lon: activeHotel.location.longitude!, 
+               name: activeHotel.location.name || 'Hotel Location'
              });
           } else {
+             // Priority 3: Last known location
              const prevItems = sorted.filter(i => getDayKey(i.startDate) < dateKey && i.location.latitude !== null);
              if (prevItems.length > 0) {
                 const lastItem = prevItems[prevItems.length - 1];
@@ -81,6 +83,7 @@ export default function WeatherScreen() {
                   name: lastItem.location.name || 'Last Known Location'
                 });
              } else {
+                // Priority 4: Next known location
                 const nextItems = sorted.filter(i => getDayKey(i.startDate) > dateKey && i.location.latitude !== null);
                 if (nextItems.length > 0) {
                    const firstNext = nextItems[0];
@@ -94,8 +97,10 @@ export default function WeatherScreen() {
              }
           }
        }
+       
        curr.setDate(curr.getDate() + 1);
     }
+    
     return dayLocations;
   };
 
@@ -107,8 +112,10 @@ export default function WeatherScreen() {
       return;
     }
     setLoading(true);
-    setError(null);
+    const { addDebugLog } = useTripStore.getState();
     try {
+      addDebugLog('Weather', `Fetching for ${dailyLocations.length} days...`);
+      // To optimize, group days by location so we don't call the API for the same город many times
       const locationGroups: Record<string, string[]> = {};
       const coordMap: Record<string, { lat: number; lon: number; name: string }> = {};
       
@@ -122,112 +129,174 @@ export default function WeatherScreen() {
       });
 
       const allForecasts: WeatherDay[] = [];
-      for (const key of Object.keys(locationGroups)) {
-        const { lat, lon } = coordMap[key];
-        const dates = locationGroups[key].sort();
-        const start = dates[0];
-        const end = dates[dates.length - 1];
-        
-        // Fetch weather for the range covering this location's dates
-        const data = await fetchWeather(lat, lon, start, end);
-        
-        locationGroups[key].forEach(dateStr => {
-           const dayData = data.find(d => d.date === dateStr);
-           if (dayData) {
-              allForecasts.push(dayData);
-           }
-        });
-      }
       
-      const newCache: WeatherCache = {
+      // Fetch each location's range
+      for (const key of Object.keys(locationGroups)) {
+         const dates = locationGroups[key].sort();
+         const start = dates[0];
+         const end = dates[dates.length - 1];
+         const { lat, lon } = coordMap[key];
+         
+         const results = await fetchWeather(lat, lon, start, end);
+         addDebugLog('Weather', `API Success for ${coordMap[key].name}`, { dates: results.length });
+         // Filter to only the specific dates we mapped to this location
+         results.forEach(r => {
+            if (dates.includes(r.date)) {
+               allForecasts.push(r);
+            }
+         });
+      }
+
+      // Sort by date
+      allForecasts.sort((a, b) => a.date.localeCompare(b.date));
+
+      if (allForecasts.length === 0) {
+        addDebugLog('Weather', 'No results returned');
+        setError("Weather forecast not available for these dates (likely too far in the future).");
+        return;
+      }
+
+      await updateWeather({
         lastUpdated: Date.now(),
         forecast: allForecasts
-      };
-      
-      await updateWeather(newCache);
+      });
+      addDebugLog('Weather', 'Store updated successfully', { count: allForecasts.length });
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch weather');
+      addDebugLog('Weather', `Fetch FAILED: ${err.message}`);
+      setError("Failed to fetch weather data. Check your connection.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Initial fetch if none exists
+  useEffect(() => {
+    if (!weather && dailyLocations.length > 0) {
+      handleUpdate();
+    }
+  }, [items.length]); // Re-calculates if items change significantly
+
+
   return (
-    <PullToRefresh onRefresh={refreshAppData}>
-      <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
-        <header className="screen-header" style={{ paddingTop: 'calc(6px + env(safe-area-inset-top))' }}>
-          <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
-            <Menu size={24} />
-          </button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 className="page-title" style={{ margin: 0 }}>Weather</h1>
-            <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>TRIP FORECAST</div>
+    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
+      {/* Header */}
+      <header className="screen-header">
+        <button 
+          className="header-icon-btn"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu size={24} />
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
+            Local Weather
+          </h1>
+          <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
+            {weather?.forecast.length ? `${weather.forecast.length} Day Forecast` : 'No data'}
+          </p>
+        </div>
+        <button 
+          className="header-icon-btn btn-glass-blue"
+          style={{ borderRadius: '14px', marginLeft: 'auto' }}
+          onClick={handleUpdate}
+          disabled={loading}
+        >
+          <RefreshCw size={20} className={loading ? 'spinning' : ''} />
+        </button>
+      </header>
+
+      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+        {dailyLocations.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <AlertCircle size={48} opacity={0.2} />
+            <p style={{ fontSize: '15px' }}>Add a location with coordinates to see the weather forecast.</p>
           </div>
-          <button onClick={handleUpdate} disabled={loading} className="header-icon-btn" style={{ color: loading ? 'var(--sys-label-tertiary)' : 'var(--sys-blue)' }}>
-            <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
-          </button>
-        </header>
-
-        <main style={{ padding: '0 24px 120px 24px' }}>
-          {error && (
-            <div className="glass-effect" style={{ marginBottom: '24px', padding: '16px', borderRadius: '16px', background: 'rgba(255, 69, 58, 0.1)', border: '1px solid rgba(255, 69, 58, 0.2)', display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <AlertCircle size={20} color="var(--sys-red)" />
-              <p style={{ margin: 0, fontSize: '13px', color: '#FFF' }}>{error}</p>
-            </div>
-          )}
-
-          {dailyLocations.length === 0 && !error && (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-tertiary)' }}>
-              <AlertCircle size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
-              <p>Add locations with coordinates to your timeline to see weather forecasts.</p>
-            </div>
-          )}
-
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {dailyLocations.map((dl) => {
-              const forecast = weather?.forecast?.find(w => w.date === dl.date);
+            
+            {error && (
+               <div style={{ padding: '16px', background: 'rgba(255, 69, 58, 0.1)', borderRadius: '16px', border: '1px solid rgba(255, 69, 58, 0.2)', display: 'flex', gap: '12px', alignItems: 'center', color: '#FF453A' }}>
+                  <AlertCircle size={20} />
+                  <span style={{ fontSize: '14px' }}>{error}</span>
+               </div>
+            )}
+
+            {weather?.forecast.map(day => {
+              const loc = dailyLocations.find(dl => dl.date === day.date);
               return (
-                <div key={dl.date} className="glass-effect" style={{ padding: '20px', borderRadius: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700 }}>{getDayLabel(dl.date)}</h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', color: 'var(--sys-label-secondary)' }}>
-                        <MapPin size={12} />
-                        <span style={{ fontSize: '12px', fontWeight: 600 }}>{dl.name}</span>
+                <div 
+                  key={day.date}
+                  className="glass-effect"
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '20px', 
+                    padding: '24px', borderRadius: '28px', 
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    backdropFilter: 'blur(40px)',
+                    WebkitBackdropFilter: 'blur(40px)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#FFF', letterSpacing: '-0.3px' }}>
+                      {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </h4>
+                    {loc && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: 'var(--sys-blue)', opacity: 0.9 }}>
+                         <MapPin size={12} />
+                         <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                           {loc.name}
+                         </span>
                       </div>
+                    )}
+                    <div style={{ margin: '14px 0 0 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 700, color: '#FFF', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '10px' }}>
+                        <Thermometer size={14} color="var(--sys-blue)" /> {day.tempHigh}°
+                      </div>
+                      <span style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>/ {day.tempLow}°</span>
                     </div>
-                    {forecast && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '32px', fontWeight: 800 }}>{Math.round(forecast.tempHigh)}°</div>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--sys-label-secondary)' }}>Low {Math.round(forecast.tempLow)}°</div>
+                  </div>
+                  
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      {day.isHistorical ? (
+                        <BarChart3 size={36} style={{ color: 'rgba(255,255,255,0.4)', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} />
+                      ) : (
+                        <span style={{ fontSize: '40px', filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.2))' }}>{day.icon}</span>
+                      )}
+                    </div>
+                    <p style={{ margin: 0, fontSize: '11px', fontWeight: 900, color: day.isHistorical ? 'var(--sys-label-tertiary)' : 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      {day.isHistorical ? 'Historical Avg' : day.condition}
+                    </p>
+                    {day.isHistorical && (
+                      <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                        {(day.rainfall || 0) > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#0EA5E9', fontSize: '11px', fontWeight: 700 }}>
+                            <Droplets size={12} /> {day.rainfall?.toFixed(2)}"
+                          </div>
+                        )}
+                        {(day.snowfall || 0) > 0 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#94A3B8', fontSize: '11px', fontWeight: 700 }}>
+                            <Snowflake size={12} /> {day.snowfall?.toFixed(2)}"
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-
-                  {forecast ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <BarChart3 size={14} color="var(--sys-blue)" />
-                          <span style={{ fontSize: '13px', fontWeight: 700 }}>Condition</span>
-                        </div>
-                        <div style={{ fontSize: '15px', color: 'var(--sys-label-secondary)', textTransform: 'capitalize' }}>{forecast.condition || 'Clear'}</div>
-                      </div>
-                      <div style={{ width: '48px', height: '48px', background: 'var(--sys-blue)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                        <Thermometer size={24} color="#FFF" />
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ padding: '12px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--sys-label-tertiary)' }}>No forecast data. Tap refresh to fetch.</p>
-                    </div>
-                  )}
                 </div>
               );
             })}
+
+            {(!weather || loading) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {[1,2,3].map(i => (
+                  <div key={i} className="skeleton-line" style={{ height: '100px', borderRadius: '24px', opacity: 0.1 }} />
+                ))}
+              </div>
+            )}
           </div>
-        </main>
+        )}
       </div>
-    </PullToRefresh>
+    </div>
   );
 }

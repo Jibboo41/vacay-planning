@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, BarChart3, Car } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
-import PullToRefresh from './PullToRefresh';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
 
@@ -144,7 +143,7 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
 }
 
 export default function SummaryScreen() {
-  const { items, refreshAppData, setSidebarOpen, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
+  const { items, setSidebarOpen, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
   const [isGenerating, setIsGenerating] = useState(false);
   
   const dayGroups = useMemo(() => {
@@ -224,95 +223,93 @@ export default function SummaryScreen() {
   };
 
   return (
-    <PullToRefresh onRefresh={refreshAppData}>
-      <div style={{ minHeight: '100vh' }}>
-        <header className="screen-header">
-          <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
-            <Menu size={24} />
-          </button>
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <h1 className="page-title" style={{ margin: 0 }}>Trip Outline</h1>
-            <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>READ-ONLY SUMMARY</div>
+    <div style={{ minHeight: '100vh' }}>
+      <header className="screen-header">
+        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
+          <Menu size={24} />
+        </button>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>Trip Outline</h1>
+          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>READ-ONLY SUMMARY</div>
+        </div>
+        <div style={{ width: 44 }} /> {/* Balance header */}
+      </header>
+
+      <main style={{ padding: '0 20px 100px 20px', position: 'relative' }}>
+        {dayGroups.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)' }}>
+            <p style={{ margin: 0, fontSize: '15px' }}>No items in your itinerary yet.</p>
           </div>
-          <div style={{ width: 44 }} /> {/* Balance header */}
-        </header>
-
-        <main style={{ padding: '0 20px 120px', position: 'relative' }}>
-          {dayGroups.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)' }}>
-              <p style={{ margin: 0, fontSize: '15px' }}>No items in your itinerary yet.</p>
-            </div>
-          ) : (
-            <div style={{ position: 'relative', marginTop: '20px' }}>
-              
-              {/* The AI Summary Block */}
-              <div style={{ background: 'rgba(10, 132, 255, 0.1)', border: '1px solid rgba(10, 132, 255, 0.2)', padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                  <Sparkles size={20} color="#0A84FF" />
-                  <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0A84FF', margin: 0 }}>AI Trip Synopsis</h2>
-                </div>
-                
-                {currentTripAiSummary ? (
-                  <>
-                    <div style={{ color: 'var(--sys-label-primary)', fontSize: '15px', lineHeight: '1.6' }}>
-                      <Linkified text={currentTripAiSummary} />
-                    </div>
-                    <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn-glass-blue" style={{ marginTop: '16px', fontSize: '13px', padding: '6px 14px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      {isGenerating ? 'Regenerating...' : 'Regenerate'}
-                    </button>
-                  </>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                    <p style={{ color: 'var(--sys-label-secondary)', fontSize: '14px', marginBottom: '16px' }}>Generate a magical summary of this trip outline using AI.</p>
-                    <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn-glass-blue" style={{ fontSize: '14px', padding: '10px 20px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                      {isGenerating ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={16} />}
-                      {isGenerating ? 'Synthesizing...' : 'Generate Summary'}
-                    </button>
-                  </div>
-                )}
+        ) : (
+          <div style={{ position: 'relative', marginTop: '20px' }}>
+            
+            {/* The AI Summary Block */}
+            <div style={{ background: 'rgba(10, 132, 255, 0.1)', border: '1px solid rgba(10, 132, 255, 0.2)', padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
+                <Sparkles size={20} color="#0A84FF" />
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0A84FF', margin: 0 }}>AI Trip Synopsis</h2>
               </div>
-
-              {dayGroups.map((group, groupIdx) => {
-                const dayWeather = weather?.forecast?.find(w => w.date === group.dateKey);
-                return (
-                  <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
-                        {groupIdx + 1}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0, marginLeft: '12px' }}>
-                        <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {group.label}
-                        </h2>
-                      </div>
-                      {dayWeather && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                          {dayWeather.isHistorical ? (
-                             <BarChart3 size={20} style={{ color: 'rgba(255,255,255,0.4)', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} />
-                          ) : (
-                            <span style={{ fontSize: '24px', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} title={dayWeather.condition}>
-                              {dayWeather.icon}
-                            </span>
-                          )}
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-                            <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{Math.round(dayWeather.tempHigh)}°</span>
-                            <span style={{ fontSize: '10px', color: 'var(--sys-label-secondary)', fontWeight: 700 }}>{Math.round(dayWeather.tempLow)}°</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ marginLeft: '4px' }}>
-                      {group.items.map((item, idx) => (
-                        <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />
-                      ))}
-                    </div>
+              
+              {currentTripAiSummary ? (
+                <>
+                  <div style={{ color: 'var(--sys-label-primary)', fontSize: '15px', lineHeight: '1.6' }}>
+                    <Linkified text={currentTripAiSummary} />
                   </div>
-                );
-              })}
+                  <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn-glass-blue" style={{ marginTop: '16px', fontSize: '13px', padding: '6px 14px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    {isGenerating ? 'Regenerating...' : 'Regenerate'}
+                  </button>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                  <p style={{ color: 'var(--sys-label-secondary)', fontSize: '14px', marginBottom: '16px' }}>Generate a magical summary of this trip outline using AI.</p>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn-glass-blue" style={{ fontSize: '14px', padding: '10px 20px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    {isGenerating ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={16} />}
+                    {isGenerating ? 'Synthesizing...' : 'Generate Summary'}
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </main>
-      </div>
-    </PullToRefresh>
+
+            {dayGroups.map((group, groupIdx) => {
+              const dayWeather = weather?.forecast?.find(w => w.date === group.dateKey);
+              return (
+                <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
+                      {groupIdx + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0, marginLeft: '12px' }}>
+                      <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {group.label}
+                      </h2>
+                    </div>
+                    {dayWeather && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                        {dayWeather.isHistorical ? (
+                           <BarChart3 size={20} style={{ color: 'rgba(255,255,255,0.4)', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} />
+                        ) : (
+                          <span style={{ fontSize: '24px', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} title={dayWeather.condition}>
+                            {dayWeather.icon}
+                          </span>
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
+                          <span style={{ fontSize: '13px', fontWeight: 800, color: '#fff' }}>{Math.round(dayWeather.tempHigh)}°</span>
+                          <span style={{ fontSize: '10px', color: 'var(--sys-label-secondary)', fontWeight: 700 }}>{Math.round(dayWeather.tempLow)}°</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ marginLeft: '4px' }}>
+                    {group.items.map((item, idx) => (
+                      <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

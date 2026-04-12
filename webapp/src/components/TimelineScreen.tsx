@@ -5,8 +5,6 @@ import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import type { ItineraryItem } from '../core/models';
 
-import PullToRefresh from './PullToRefresh';
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 interface DayGroup {
@@ -100,7 +98,7 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, refreshAppData } = useTripStore();
+  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters } = useTripStore();
   const currentTrip = trips.find(t => t.id === currentTripId);
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
@@ -337,7 +335,7 @@ export default function TimelineScreen() {
   };
 
   return (
-    <PullToRefresh onRefresh={refreshAppData}>
+    <>
       <header ref={headerRef} className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
           <button 
@@ -439,6 +437,6 @@ export default function TimelineScreen() {
           );
         })}
       </main>
-    </PullToRefresh>
+    </>
   );
 }

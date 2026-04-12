@@ -1,17 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Plus, PieChart, Wallet, CreditCard, ShoppingBag, Utensils, Plane, Car, Menu, Mountain, Bed, Activity, FileText, ChevronRight } from 'lucide-react';
+import { Plus, PieChart, Wallet, CreditCard, ShoppingBag, Utensils, Plane, Car, Menu, Mountain, Bed, Activity, FileText, AlertCircle, ChevronRight } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
-import type { Expense } from '../core/models';
-import PullToRefresh from './PullToRefresh';
+import type { Expense, ItineraryItem } from '../core/models';
 
 export default function CostTrackerScreen() {
-  const { expenses, items, addExpense, setEditingItem, setEditingExpense, setSidebarOpen, refreshAppData } = useTripStore();
+  const { expenses, items, addExpense, setEditingItem, setEditingExpense, setSidebarOpen } = useTripStore();
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newAmount, setNewAmount] = useState('');
   const [newDate, setNewDate] = useState('');
   const [newCategory, setNewCategory] = useState<Expense['category']>('manual');
 
+  // Calculate itinerary costs (items with a .cost field)
   const itineraryExpenses = useMemo(() => {
     return items.filter(i => (i.cost || 0) > 0).map(i => ({
       id: `itinerary-${i.id}`,
@@ -63,7 +63,7 @@ export default function CostTrackerScreen() {
   };
 
   const CATEGORY_ICONS: Record<string, any> = {
-    itinerary: <Plane size={18} />, 
+    itinerary: <Plane size={18} />, // Fallback
     manual: <Wallet size={18} />,
     food: <Utensils size={18} />,
     transport: <Car size={18} />,
@@ -79,170 +79,220 @@ export default function CostTrackerScreen() {
   };
 
   return (
-    <PullToRefresh onRefresh={refreshAppData}>
-      <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
-        <header className="screen-header" style={{ paddingTop: 'calc(6px + env(safe-area-inset-top))' }}>
-          <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
-            <Menu size={24} />
-          </button>
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-            <h1 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
-              Trip Financials
-            </h1>
-            
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-              <span style={{ fontSize: '42px', fontWeight: 900, letterSpacing: '-1.5px', color: '#FFF' }}>
-                ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
+      <header className="screen-header">
+        <button 
+          className="header-icon-btn"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <Menu size={24} />
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+          <h1 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+            Trip Financials
+          </h1>
+          
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+            <span style={{ fontSize: '42px', fontWeight: 900, letterSpacing: '-1.5px', color: '#FFF' }}>
+              ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </span>
+            <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sys-label-secondary)', marginBottom: '6px' }}>
+              total
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '24px', marginTop: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '10px', color: 'var(--sys-label-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Paid</span>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-green)' }}>
+                ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </span>
-              <span style={{ fontSize: '18px', fontWeight: 600, color: 'var(--sys-label-secondary)', marginBottom: '6px' }}>total</span>
             </div>
-
-            <div style={{ display: 'flex', gap: '24px', marginTop: '12px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '10px', color: 'var(--sys-label-tertiary)', fontWeight: 700, textTransform: 'uppercase' }}>Paid</span>
-                <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-green)' }}>
-                  ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                </span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 700, textTransform: 'uppercase' }}>Remaining</span>
-                <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-blue)' }}>
-                  ${remainingCost.toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                </span>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 700, textTransform: 'uppercase' }}>Remaining</span>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-blue)' }}>
+                ${remainingCost.toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              </span>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main style={{ padding: '0 20px 120px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px', marginTop: '24px' }}>
-            <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ color: 'var(--sys-blue)', marginBottom: '12px' }}><PieChart size={24} /></div>
-              <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Itinerary</p>
-              <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
-                ${itineraryExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0).toLocaleString()}
-              </h3>
-            </div>
-            <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ color: 'var(--sys-green)', marginBottom: '12px' }}><CreditCard size={24} /></div>
-              <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Manual</p>
-              <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
-                ${expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
-              </h3>
-            </div>
-          </div>
-
-          {!showAdd ? (
-            <button 
-              onClick={() => setShowAdd(true)}
-              style={{ width: '100%', padding: '16px', borderRadius: '18px', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#FFF', fontWeight: 700, fontSize: '15px', marginBottom: '32px' }}
-            >
-              <Plus size={18} /> Add Manual Expense
-            </button>
-          ) : (
-            <div style={{ background: 'var(--sys-bg-elevated)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(10, 132, 255, 0.2)', marginBottom: '32px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '17px', fontWeight: 800 }}>New Expense</h3>
-                <button onClick={() => setShowAdd(false)} style={{ color: 'var(--sys-label-tertiary)', background: 'none', border: 'none' }}>Cancel</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                  {['manual', 'food', 'transport', 'other'].map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setNewCategory(cat as any)}
-                      style={{ 
-                        flexShrink: 0, padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
-                        background: newCategory === cat ? CATEGORY_COLORS[cat] : 'rgba(255,255,255,0.05)',
-                        color: newCategory === cat ? '#FFF' : 'var(--sys-label-secondary)',
-                        border: 'none'
-                      }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                <input 
-                  type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)}
-                  placeholder="Expense title" 
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '14px', color: '#FFF' }} 
-                />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <input 
-                    type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)}
-                    placeholder="Amount $" 
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '14px', color: '#FFF' }} 
-                  />
-                  <input 
-                    type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '14px', color: '#FFF' }} 
-                  />
-                </div>
-                <button 
-                  onClick={handleAdd}
-                  disabled={!newTitle || !newAmount}
-                  style={{ background: 'var(--sys-blue)', color: '#FFF', padding: '18px', borderRadius: '18px', fontWeight: 800, border: 'none', opacity: (!newTitle || !newAmount) ? 0.5 : 1 }}
-                >
-                  SAVE EXPENSE
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
-              Transactions
-            </h2>
-            {allExpenses.map((expense) => (
-              <div 
-                key={expense.id}
-                onClick={() => {
-                  if (expense.category === 'itinerary' && expense.linkedItemId) {
-                    const item = items.find(i => i.id === expense.linkedItemId);
-                    if (item) setEditingItem(item);
-                  } else {
-                    setEditingExpense(expense);
-                  }
-                }}
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '14px', padding: '14px', borderRadius: '20px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)'
-                }}
-              >
-                <div style={{ 
-                  width: '42px', height: '42px', borderRadius: '14px', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: CATEGORY_COLORS[expense.category] + '15',
-                  color: CATEGORY_COLORS[expense.category]
-                }}>
-                  {expense.category === 'itinerary' && expense.linkedItemId 
-                    ? getItineraryIcon(items.find(i => i.id === expense.linkedItemId)?.type || 'activity')
-                    : CATEGORY_ICONS[expense.category]
-                  }
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#FFF', margin: '0 0 2px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {expense.title}
-                  </h4>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--sys-label-tertiary)' }}>
-                      {expense.date ? new Date(expense.date.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : 'No date'}
-                    </span>
-                    {expense.paid && (
-                      <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-green)', padding: '2px 6px', borderRadius: '4px', background: 'rgba(48, 209, 88, 0.1)' }}>PAID</span>
-                    )}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#FFF' }}>
-                    ${expense.amount.toLocaleString(undefined, { minimumFractionDigits: 0 })}
-                  </div>
-                </div>
-                <ChevronRight size={14} style={{ opacity: 0.2 }} />
-              </div>
-            ))}
-          </div>
-        </main>
+      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+        {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+        <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+          <div style={{ color: 'var(--sys-blue)', marginBottom: '12px' }}><PieChart size={24} /></div>
+          <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Itinerary</p>
+          <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
+            ${itineraryExpenses.reduce((sum: number, e: Expense) => sum + e.amount, 0).toLocaleString()}
+          </h3>
+        </div>
+        <div style={{ background: 'var(--sys-bg-elevated)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+          <div style={{ color: 'var(--sys-green)', marginBottom: '12px' }}><CreditCard size={24} /></div>
+          <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', margin: '0 0 4px 0' }}>Manual</p>
+          <h3 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>
+            ${expenses.reduce((sum, e) => sum + e.amount, 0).toLocaleString()}
+          </h3>
+        </div>
       </div>
-    </PullToRefresh>
+
+      {/* Add Button / Form */}
+      {!showAdd ? (
+        <button 
+          onClick={() => setShowAdd(true)}
+          className="btn-glass-blue"
+          style={{ 
+            width: '100%', padding: '16px', borderRadius: '16px', 
+            fontSize: '16px', display: 'flex', alignItems: 'center', 
+            justifyContent: 'center', gap: '8px', marginBottom: '32px',
+          }}
+        >
+          <Plus size={20} /> Add Expense
+        </button>
+      ) : (
+        <div style={{ 
+          background: 'var(--sys-bg-elevated-2)', padding: '24px', borderRadius: '24px', 
+          marginBottom: '32px', border: '1px solid var(--sys-blue)'
+        }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px 0' }}>New Expense</h3>
+          <input 
+            type="text" placeholder="What was it for?" value={newTitle} onChange={e => setNewTitle(e.target.value)}
+            style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', marginBottom: '12px' }}
+          />
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ 
+              display: 'flex', alignItems: 'center', flex: 1,
+              background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
+              borderRadius: '12px', padding: '0 12px'
+            }}>
+              <span style={{ color: 'var(--sys-label-tertiary)', fontSize: '16px', marginRight: '4px' }}>$</span>
+              <input 
+                type="number" placeholder="0.00" value={newAmount} onChange={e => setNewAmount(e.target.value)}
+                style={{ flex: 1, padding: '12px 0', background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
+              />
+            </div>
+            <select 
+              value={newCategory} onChange={e => setNewCategory(e.target.value as any)}
+              style={{ 
+                padding: '0 32px 0 16px', background: 'rgba(255,255,255,0.08)', 
+                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '14px', 
+                color: '#fff', fontSize: '15px', fontWeight: 600,
+                appearance: 'none', backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpath d=\'m6 9 6 6 6-6\'/%3E%3C/svg%3E")',
+                backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '16px'
+              }}
+            >
+              <option value="manual">Manual</option>
+              <option value="food">Food</option>
+              <option value="transport">Transit</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%', marginBottom: '20px' }}>
+            <input 
+              type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+              style={{ 
+                width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.05)', 
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff', 
+                boxSizing: 'border-box', colorScheme: 'dark',
+                fontSize: '16px', display: 'block', margin: 0
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              onClick={handleAdd} 
+              className="btn-glass-blue" 
+              style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
+            >
+              Save
+            </button>
+            <button 
+              onClick={() => setShowAdd(false)} 
+              style={{ 
+                flex: 1, padding: '16px', borderRadius: '14px', 
+                background: 'rgba(255,255,255,0.08)', color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Expense List */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {allExpenses.map((exp: Expense) => {
+          const linkedItem = exp.linkedItemId ? items.find((i: ItineraryItem) => i.id === exp.linkedItemId) : null;
+          const icon = linkedItem ? getItineraryIcon(linkedItem.type) : CATEGORY_ICONS[exp.category];
+          
+          return (
+            <div 
+              key={exp.id}
+              onClick={() => {
+                if (exp.linkedItemId) {
+                  const item = items.find(i => i.id === exp.linkedItemId);
+                  if (item) setEditingItem(item);
+                } else {
+                  setEditingExpense(exp);
+                }
+              }}
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '16px', 
+                background: 'var(--sys-bg-elevated)', padding: '16px', 
+                borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)',
+                transition: 'all 0.2s ease',
+                cursor: 'pointer'
+              }}
+            >
+              <div style={{ 
+                width: '40px', height: '40px', borderRadius: '12px', 
+                background: `${CATEGORY_COLORS[exp.category]}20`, 
+                color: CATEGORY_COLORS[exp.category],
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {icon}
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>{exp.title}</h4>
+                <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--sys-label-tertiary)' }}>
+                  {exp.date || ''} {exp.category === 'itinerary' && '· Itinerary'}
+                </p>
+              </div>
+
+              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <p style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#fff' }}>
+                    ${exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
+                  
+                  {exp.paidAmount > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                       {exp.paidAmount > exp.amount && <AlertCircle size={10} color="#FF453A" />}
+                       <span style={{ fontSize: '11px', fontWeight: 700, color: exp.paidAmount > exp.amount ? '#FF453A' : 'var(--sys-green)' }}>
+                         PAID ${exp.paidAmount.toLocaleString()}
+                       </span>
+                    </div>
+                  )}
+
+                  {!exp.paid && exp.amount > exp.paidAmount && (
+                    <span style={{ fontSize: '10px', color: 'var(--sys-label-tertiary)', fontWeight: 600 }}>
+                      DUE ${ (exp.amount - exp.paidAmount).toLocaleString() }
+                    </span>
+                  )}
+                </div>
+                
+                <div style={{ color: 'var(--sys-label-quaternary)' }}>
+                  <ChevronRight size={18} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      </div>
+    </div>
   );
 }
