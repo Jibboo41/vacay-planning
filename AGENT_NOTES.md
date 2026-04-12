@@ -1,9 +1,9 @@
 - **Phase 39 (Map & Note Refinement)**:
-    - **Note UI**: Standardized grey-scale, timeless Note rendering. Simplified EditItineraryModal for notes to show only Title/Description.
-    - **DND**: Added `start-day-drop-zone` in `TimelineScreen.tsx` to support prepending. Updated `reorderItems` in `useTripStore.ts` with `atBottom` flag.
-    - **Map Engine**: Segmented `DayRoute` into `segments: { type: 'driving' | 'flight', coords }[]`. Flights rendered as direct dashed lines.
-    - **Destination Parser**: `useEffect` in `MapViewScreen.tsx` uses regex/Nominatim to discover flight landings. Added virtual markers for landings and Trip End.
-    - **UI Scaling**: Fixed `TimelineItem` and `NoteCard` to ensure buttons remain visible even with 10k+ character descriptions (max-height + overflow).
+    - **Advanced Map Routing**: Uses `segments: { type: 'driving' | 'flight', coords }[]` and a `routeCache` (segments based) for instant visibility toggling.
+    - **Universal Flight Logic**: Every item with `type === 'flight'` renders a dashed air path. Terminal markers (`_isFlightTakeoff`) are only generated for flights not followed by another flight.
+    - **Geocoding Accuracy**: Nominatim searches are restricted to `countrycodes=us` and prioritize `[Code] International Airport` for IATA strings.
+    - **Standardized Notes**: Grey themes, no time display, simplified edit modals.
+    - **DND Polish**: Tripled `start-day-drop-zone` height to `24px` for reliable prepending.
 - **Phase 22 (Branding & Detail Refinement)**:
     - **Branding**: Deployed custom PNG logo to `public/logo.png`. Updated `index.html` with `apple-touch-icon`.
     - **Refundable System**: Added `FlightDetails` to the model. Normalized `refundableCutoffDate` across Hotels, Flights, and Rentals.

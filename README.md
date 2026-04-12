@@ -218,13 +218,20 @@ stateDiagram-v2
 ## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.11.0)
 - **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic, resolving the "Infinite Calculation" hang.
 - **Desktop Scroll Fix**: Restored `overflow-y: auto` to the right-hand split-view panel for independent desktop scrolling.
-- **Phase 39 (Map & Note Refinement)**:
-    - **Note UI**: Standardized grey-scale, timeless Note rendering. Simplified EditItineraryModal for notes to show only Title/Description.
-    - **DND**: Added `start-day-drop-zone` in `TimelineScreen.tsx` to support prepending. Updated `reorderItems` in `useTripStore.ts` with `atBottom` flag.
-    - **Map Engine**: Segmented `DayRoute` into `segments: { type: 'driving' | 'flight', coords }[]`. Flights rendered as direct dashed lines.
-    - **Destination Parser**: `useEffect` in `MapViewScreen.tsx` uses regex/Nominatim to discover flight landings. Added virtual markers for landings and Trip End.
-    - **UI Scaling**: Fixed `TimelineItem` and `NoteCard` to ensure buttons remain visible even with 10k+ character descriptions (max-height + overflow).
-- **Phase 22 (Branding & Detail Refinement)**:
+### Phase 39 (v1.12.0): High-Performance Map & Standardized Notes
+- **Advanced Map Engine**:
+    - **Universal Dashed Flight Paths**: Every flight segment is now correctly visualized as a direct air path.
+    - **Instant Day Toggling**: Implemented a segment-level `routeCache` that reuses calculated paths, making visibility toggles instantaneous and reducing OSRM API load.
+    - **US-Accurate Geocoding**: Restricted airport discovery to the US (`countrycodes=us`) and implemented IATA-aware queries (e.g., PHX) to avoid international mismatches.
+    - **Terminal Landing Markers**: Intelligent logic to only show landing pins for the final destination of a flight sequence, reducing clutter in connecting legs.
+- **Note System Standardization**:
+    - **Uniform UI**: Neutral grey, time-neutral notes across Timeline, Summary, and Map views.
+    - **Simplified Editing**: Tailored `EditItineraryModal` for notes (Title + Description only).
+- **UX & DND Polish**:
+    - **Prepending Items**: Increased the "top-of-day" drop zone from `8px` to `24px` for significantly better prepending reliability.
+    - **Overflow Protection**: Added adaptive scrolling to `TimelineItem` and `NoteCard` to ensure action buttons remain visible with long descriptions.
+
+### Phase 21 (v1.11.6): Stability & Premium Polish
  Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
 - **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching to emoji-compatible text spans.
 - **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms for consistent "Primary Action on Left" pattern.

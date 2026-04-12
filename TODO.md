@@ -10,8 +10,8 @@
 - [x] **Productivity Suite**: Overdue task tracking and ergonomic reordering logic with premium glass styling.
 - [x] **UI Infrastructure**: Collapsible units, refined button diagnostics, glass-morphism unification, and iOS viewport scaling.
 - [x] **Note Standardization**: Neutral grey-scale, timeless Note rendering with simplified Title/Description editing and standard management parity.
-- [x] **Map Logic**: Segmented flight/driving path engine with automated destination parsing, virtual landing markers, and 'Trip End' detection.
-- [x] **DND Prepending**: Resolved day-start dragging issues with dedicated top-of-day drop zones and reordering logic.
+- [x] **Map Logic**: Segmented flight/driving paths with universal dashed air lines, automated destination parsing, high-performance segment caching, and US-restricted airport discovery.
+- [x] **DND Prepending**: Resolved day-start dragging issues with tripled-height top-of-day drop zones and refined reordering logic.
 - [ ] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
 - [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
 - [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.
