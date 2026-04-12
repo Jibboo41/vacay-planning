@@ -193,8 +193,11 @@ stateDiagram-v2
   - Automatically queries Nominatim for missing destination airports on terminal flights.
   - Restricted to `countrycodes=us` and prioritizes specific IATA string formatting + explicit destination city names to stop major hub hijacking (e.g., JFK).
   - Virtual Arrival markers (`🛬` and `🏁`) perfectly respect day visibility filtering.
-- **Note System Standardization**:
-  - Uniform neutral-grey, timeless notes. Simplified editing pane removing dates and times for pure note functionality.
+- **Dynamic Map Bounding**:
+  - The programmatic `FitBounds` logic explicitly excludes coordinates of virtual landing markers if their parent day is hidden, maintaining perfect zoom framing.
+- **Note & Todo System Standardization**:
+  - Uniform neutral-grey, timeless itinerary notes. Simplified editing pane removing dates and times for pure note functionality.
+  - Added optional multi-line `notes` functionality directly to Checklist tasks (Todos) with expandable inline-edit forms.
 - **UX & DND Polish**:
   - Implemented 'sticky' `handleDrop` zones in Timeline ensuring if the blue target line is active, the touch drop will perfectly execute, acting less 'picky'.
   - Tripled the 'top-of-day' drop zone height (`24px`) to guarantee easy prepending of items to the start of a day.

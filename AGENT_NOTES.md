@@ -4,9 +4,10 @@
     - **Clustered OSRM Fallback**: Added a forced 2-point line generation if OSRM returns a path `< 2` coordinates long to prevent disappearing segments over short distances.
     - **Universal Flight Logic**: Every item with `type === 'flight'` renders a dashed air path. Terminal markers (`_isFlightTakeoff`) are only generated for flights not followed by another flight.
     - **Virtual Marker Visibility**: Flight Landing markers are explicitly filtered by `mappable.some(m => m.id === id)` to ensure they respect the dynamic `hiddenDayFilters` array state.
+    - **Map Bounds Filtering**: Leaflet's `allPositions` bounding box strictly ignores coordinates from `flightLandings` if their corresponding parent flight is hidden from the `mappable` array.
     - **Synchronized Map Sorting**: The `mappable` array uses an identical sorting logic snippet as `TimelineScreen`, explicitly evaluating `sortOrder` overrides, ensuring 1:1 timeline-to-map sequential rendering.
     - **Geocoding Accuracy**: Nominatim searches are restricted to `countrycodes=us`, prioritize `[Code] International Airport`, and strictly append the destination city to banish major-hub hijacking (e.g. JFK).
-    - **Standardized Notes**: Grey themes, no time display, simplified edit modals.
+    - **Standardized Notes**: Grey themes, no time display, simplified edit modals. `TodoItem` model extended to support optional `notes` with expandable textarea UI in `TodoScreen`.
     - **Sticky DND Polish**: Timeline `onMove` drop targets now persist unless dragging entirely out of day limits, guaranteeing easy release. Tripled `start-day-drop-zone` height to `24px`.
 - **Phase 22 (Branding & Detail Refinement)**:
     - **Branding**: Deployed custom PNG logo to `public/logo.png`. Updated `index.html` with `apple-touch-icon`.
