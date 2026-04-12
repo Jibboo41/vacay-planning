@@ -239,7 +239,10 @@ export default function TimelineScreen() {
     if (!draggingId) return;
     if (overId.startsWith('end-of-')) {
       const targetDayKey = overId.replace('end-of-', '');
-      reorderItems(draggingId, null, targetDayKey);
+      reorderItems(draggingId, null, targetDayKey, true); // true for bottom
+    } else if (overId.startsWith('start-of-')) {
+      const targetDayKey = overId.replace('start-of-', '');
+      reorderItems(draggingId, null, targetDayKey, false); // false for top
     } else if (draggingId !== overId) {
       const isOverCheckout = overId.endsWith('-checkout') || overId.endsWith('-return');
       const rawOverId = overId.replace('-checkout', '').replace('-return', '');
@@ -305,7 +308,9 @@ export default function TimelineScreen() {
 
       if (fromId && toId && fromId !== toId) {
         if (toId.startsWith('end-of-')) {
-          reorderItems(fromId, null, toId.replace('end-of-', ''));
+          reorderItems(fromId, null, toId.replace('end-of-', ''), true);
+        } else if (toId.startsWith('start-of-')) {
+          reorderItems(fromId, null, toId.replace('start-of-',''), false);
         } else {
           const isOverCheckout = toId.endsWith('-checkout') || toId.endsWith('-return');
           const rawToId = toId.replace('-checkout', '').replace('-return', '');
@@ -378,15 +383,30 @@ export default function TimelineScreen() {
           }
 
           return (
-            <div key={group.dateKey}>
-              <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="day-section-label">{group.label}</span>
-                {high !== null && low !== null && (
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
-                    <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
-                  </span>
-                )}
-              </div>
+              <div key={group.dateKey}>
+                <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="day-section-label">{group.label}</span>
+                  {high !== null && low !== null && (
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
+                      <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
+                    </span>
+                  )}
+                </div>
+
+                <div
+                  className="start-day-drop-zone"
+                  data-drag-id={`start-of-${group.dateKey}`}
+                  onDragEnter={() => handleDragEnter(`start-of-${group.dateKey}`)}
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={() => handleDrop(`start-of-${group.dateKey}`)}
+                  style={{ height: '8px', marginBottom: '4px', position: 'relative' }}
+                >
+                  {dropTargetId === `start-of-${group.dateKey}` && (
+                    <div className="drop-line-container">
+                      <div className="drop-line" style={{ top: '0px' }} />
+                    </div>
+                  )}
+                </div>
 
               {group.items.map((item, idx) => {
                 const dragId = item.id + ((item as any)._isCheckout ? '-checkout' : '');

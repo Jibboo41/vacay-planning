@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StickyNote, GripVertical, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { StickyNote, GripVertical, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
 
@@ -22,7 +23,7 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
         borderLeft: '4px solid var(--sys-label-tertiary)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
-        maxHeight: isExpanded ? '500px' : '120px',
+        maxHeight: isExpanded ? '800px' : '120px',
         padding: '16px',
         borderRadius: '16px',
         margin: '0 16px 12px',
@@ -74,22 +75,45 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
           {item.description && (
             <div style={{
               fontSize: '14px', color: 'var(--sys-label-secondary)',
-              lineHeight: '1.5', margin: '0 0 20px 0'
+              lineHeight: '1.5', margin: '0 0 20px 0',
+              maxHeight: '300px', overflowY: 'auto', paddingRight: '4px'
             }}>
               <Linkified text={item.description} />
             </div>
           )}
 
-          <button 
-            onClick={(e) => { e.stopPropagation(); onPress(); }}
-            style={{
-              width: '100%', padding: '12px', borderRadius: '12px', background: '#3a3a3c', color: '#fff',
-              border: 'none', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-            }}
-          >
-            <Info size={16} />
-            Edit Note
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); onPress(); }}
+              className="details-btn btn-glass-blue"
+              style={{
+                flex: 1, padding: '12px', borderRadius: '12px',
+                fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              }}
+            >
+              Edit Note
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Delete "${item.title}"?`)) {
+                  useTripStore.getState().deleteItem(item.id);
+                }
+              }}
+              style={{ 
+                width: '46px', height: '46px', borderRadius: '12px',
+                color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s ease', border: '1px solid rgba(255, 69, 58, 0.2)',
+                cursor: 'pointer', flexShrink: 0
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
+              aria-label="Delete"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
         </div>
       )}
     </div>

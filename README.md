@@ -183,6 +183,14 @@ stateDiagram-v2
 
 ---
 
+### Phase 39 (v1.13.0): Map Overhaul & Note Standardization
+- **Standardized Note Management**: Neutral grey-scale, timeless Note rendering across all screens. Simplified Edit screen for Notes (Title/Description only).
+- **Intelligent Map Pathing**: Specialized segment engine that distinguishes between 'driving' (OSRM) and 'flight' (direct dashed lines).
+- **Automated Final Destinations**: AI-compatible parser extracts landing airports (e.g., "to JFK") from flight items and renders virtual arrival markers (🛬) and 'Trip End' indicators (🏁).
+- **Timeline DND Prepending**: Implemented 'start-day-drop-zone' to allow reliable item reordering to the first position of any day.
+- **Improved Overflow Handling**: Added scrollable description areas in Timeline and Note cards to ensure action buttons are always visible and accessible.
+- **Header Spacing Fix**: Resolved excessive top-padding issues in edit modals for a tighter, more native experience.
+
 ### Phase 38 (v1.12.0): Financial Overhaul & Glass UI Maturity
 - **Unified Expense Categories**: Replaced the fragmented "itinerary vs manual" categorization with a specific, unified system (Flights, Dining, Lodging, etc.).
 - **Live Category Summary**: Implemented a collapsible financial dashboard at the top of the Expenses screen showing Total/Paid/Remaining per category.
@@ -210,7 +218,14 @@ stateDiagram-v2
 ## 📺 Phase 17: UX Hardening & Visual Synchronization (v1.11.0)
 - **Parallel Routing Engine**: Overhauled Map path calculation to use parallel OSRM fetches with 6s timeouts and cancellation logic, resolving the "Infinite Calculation" hang.
 - **Desktop Scroll Fix**: Restored `overflow-y: auto` to the right-hand split-view panel for independent desktop scrolling.
-- **Aesthetic Icon Refinement**: Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
+- **Phase 39 (Map & Note Refinement)**:
+    - **Note UI**: Standardized grey-scale, timeless Note rendering. Simplified EditItineraryModal for notes to show only Title/Description.
+    - **DND**: Added `start-day-drop-zone` in `TimelineScreen.tsx` to support prepending. Updated `reorderItems` in `useTripStore.ts` with `atBottom` flag.
+    - **Map Engine**: Segmented `DayRoute` into `segments: { type: 'driving' | 'flight', coords }[]`. Flights rendered as direct dashed lines.
+    - **Destination Parser**: `useEffect` in `MapViewScreen.tsx` uses regex/Nominatim to discover flight landings. Added virtual markers for landings and Trip End.
+    - **UI Scaling**: Fixed `TimelineItem` and `NoteCard` to ensure buttons remain visible even with 10k+ character descriptions (max-height + overflow).
+- **Phase 22 (Branding & Detail Refinement)**:
+ Replaced the emoji-based historical weather bargraph on the Summary page with the premium `BarChart3` icon.
 - **Broken Icon Fix**: Resolved weather [?] question marks on the Summary outline by switching to emoji-compatible text spans.
 - **Unified Button Ergonomics**: Swapped "Save" and "Cancel" on both Todo and Expense forms for consistent "Primary Action on Left" pattern.
 - **Visual Unification**: Synchronized the Todo and Expense form cards with high-contrast elevated backgrounds and blue border highlights.

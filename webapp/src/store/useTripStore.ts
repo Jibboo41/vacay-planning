@@ -63,7 +63,7 @@ interface TripStore {
   toggleDayFilter: (dateKey: string) => void;
   duplicateTrip: (tripId: string) => Promise<string>;
   addNote: (dayKey: string, title: string, content: string) => Promise<void>;
-  reorderItems: (activeId: string, overId: string | null, newDayKey: string) => Promise<void>;
+  reorderItems: (activeId: string, overId: string | null, newDayKey: string, atBottom?: boolean) => Promise<void>;
   saveAiSummary: (summary: string) => Promise<void>;
 
   // Todo Actions
@@ -370,7 +370,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
   },
 
-    reorderItems: async (activeId, overId, newDayKey) => {
+    reorderItems: async (activeId, overId, newDayKey, atBottom = true) => {
       const { currentTripId, items } = get();
       if (!currentTripId) return;
 
@@ -417,7 +417,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       };
 
       const targetDayWrappers = getDayEventWrappers(newDayKey);
-      const overIdx = overId ? targetDayWrappers.findIndex(w => w.id === overId) : targetDayWrappers.length;
+      let overIdx = overId ? targetDayWrappers.findIndex(w => w.id === overId) : (atBottom ? targetDayWrappers.length : 0);
       
       // Insert moved item wrapper for calculation
       targetDayWrappers.splice(overIdx === -1 ? targetDayWrappers.length : overIdx, 0, { 

@@ -271,7 +271,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           )}
 
           {item.description && (
-            <div style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', lineHeight: '1.5', margin: '0 0 20px 0' }}>
+            <div style={{ 
+              fontSize: '14px', color: 'var(--sys-label-secondary)', 
+              lineHeight: '1.5', margin: '0 0 20px 0',
+              maxHeight: '260px', overflowY: 'auto', paddingRight: '4px'
+            }}>
               <Linkified text={item.description} />
             </div>
           )}

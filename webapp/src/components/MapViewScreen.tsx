@@ -64,10 +64,15 @@ function mapsUrl(lat: number, lng: number, name: string) {
 
 function getDayKey(dateStr: string) { return dateStr.split('T')[0]; }
 
+interface RouteSegment {
+  type: 'driving' | 'flight';
+  coords: [number, number][];
+}
+
 interface DayRoute {
   dayKey: string;
   color: string;
-  coords: [number, number][];
+  segments: RouteSegment[];
   distance: number; 
 }
 
@@ -86,9 +91,6 @@ async function fetchOSRMRoute(stops: any[]): Promise<[number, number][]> {
   );
 }
 
-function straightLine(stops: any[]): [number, number][] {
-  return stops.map(s => [s.location.latitude!, s.location.longitude!]);
-}
 
 function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
@@ -185,6 +187,13 @@ export default function MapViewScreen() {
         list.push({ ...item, _renderDate: item.startDate, _isBase: true });
       }
 
+      // ─── Special Logic for Flights: Discover Landing Point ──────────────────
+      if (item.type === 'flight') {
+        // We'll geocode this later in useEffect, but for sorting we need its slot
+        // For now, it stays same as takeoff for sorting, but we'll flag it
+        list[list.length - 1]._isFlightTakeoff = true;
+      }
+
       if (item.endDate && (item.type === 'hotel' || item.type === 'rental-car')) {
         const endKey = getDayKey(item.endDate);
         // Include checkout/return even if it's the same day, so it appears in the sequence
@@ -205,15 +214,59 @@ export default function MapViewScreen() {
     });
   }, [items, activeFilters, hiddenDayFilters]);
 
-  const allPositions: [number, number][] = mappable.map(
-    i => [i.location.latitude!, i.location.longitude!]
-  );
-
-  const center: [number, number] = allPositions[0] ?? [48.7596, -113.787];
 
   const [dayRoutes, setDayRoutes] = useState<DayRoute[]>([]);
   const [routeStatus, setRouteStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const routeCache = useRef<Map<string, [number, number][]>>(new Map());
+  const [flightLandings, setFlightLandings] = useState<Record<string, { lat: number, lng: number, name: string }>>({});
+
+  // ─── Geocode Landing Airports ─────────────────────────────────────────────
+  useEffect(() => {
+    const flights = items.filter(i => i.type === 'flight' && i.location.latitude);
+    if (flights.length === 0) return;
+
+    const parseAndGeocode = async () => {
+      const newLandings: Record<string, { lat: number, lng: number, name: string }> = { ...flightLandings };
+      let changed = false;
+
+      for (const f of flights) {
+        if (newLandings[f.id]) continue;
+
+        // Simple regex for IATA codes or "to [City]"
+        const title = f.title + " " + (f.description || "");
+        // Match "to JFK", "to London", "to San Francisco", etc.
+        const match = title.match(/to\s+([A-Z]{3}|[A-Za-z\s]+)/i);
+        const query = match ? match[1].trim() : null;
+
+        if (query) {
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " Airport")}&format=json&limit=1`);
+            const data = await res.json();
+            if (data?.[0]) {
+              newLandings[f.id] = { 
+                lat: parseFloat(data[0].lat), 
+                lng: parseFloat(data[0].lon),
+                name: data[0].display_name.split(',')[0]
+              };
+              changed = true;
+            }
+          } catch (e) {}
+        }
+      }
+      if (changed) setFlightLandings(newLandings);
+    };
+
+    parseAndGeocode();
+  }, [items]);
+
+  const allPositions: [number, number][] = useMemo(() => {
+    const pos: [number, number][] = mappable.map(i => [i.location.latitude!, i.location.longitude!]);
+    // Add flight landing points to bounds
+    Object.values(flightLandings).forEach(l => pos.push([l.lat, l.lng]));
+    return pos;
+  }, [mappable, flightLandings]);
+
+  const center: [number, number] = allPositions[0] ?? [48.7596, -113.787];
 
   const byDayMap = useMemo(() => {
     const map = new Map<string, any[]>();
@@ -256,40 +309,69 @@ export default function MapViewScreen() {
           const colorIdx = allTripDayKeys.indexOf(key);
           const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
 
-          if (stops.length < 2) {
-            return { dayKey: key, color, coords: straightLine(stops), distance: 0 };
+          if (stops.length < 1) {
+             return { dayKey: key, color, segments: [], distance: 0 };
           }
 
           const cacheKey = stops.map(s => `${s.id}-${s.location.latitude}-${s.location.longitude}`).join('|');
           if (routeCache.current.has(cacheKey)) {
-            return { dayKey: key, color, coords: routeCache.current.get(cacheKey)!, distance: 0 };
+             // We'll just re-fetch for now to avoid complex segment caching logic
+             // Or we could cache the segments array
           }
 
           try {
-            // Add a timeout to the fetch to prevent hanging forever
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-            addDebugLog('Directions', `Fetching OSRM for Day: ${key}`, { stops: stops.length });
-            const coords = await fetchOSRMRoute(stops);
-            clearTimeout(timeoutId);
+            addDebugLog('Directions', `Segmenting Day: ${key}`, { stops: stops.length });
             
-            routeCache.current.set(cacheKey, coords);
-            return { dayKey: key, color, coords, distance: 0 };
+            const segments: RouteSegment[] = [];
+            for (let j = 0; j < stops.length - 1; j++) {
+              const start = stops[j];
+              const next = stops[j+1];
+              
+              if (start._isFlightTakeoff && flightLandings[start.id]) {
+                const landing = flightLandings[start.id];
+                // Segment 1: Flight (Dashed)
+                segments.push({
+                  type: 'flight',
+                  coords: [[start.location.latitude!, start.location.longitude!], [landing.lat, landing.lng]]
+                });
+                // Segment 2: Transition from Landing to Next (Driving)
+                try {
+                  const transitionCoords = await fetchOSRMRoute([
+                    { location: { latitude: landing.lat, longitude: landing.lng } },
+                    next
+                  ]);
+                  segments.push({ type: 'driving', coords: transitionCoords });
+                } catch (e) {
+                  segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
+                }
+              } else {
+                // Normal driving segment
+                try {
+                  const drivingCoords = await fetchOSRMRoute([start, next]);
+                  segments.push({ type: 'driving', coords: drivingCoords });
+                } catch (e) {
+                  segments.push({ type: 'driving', coords: [[start.location.latitude!, start.location.longitude!], [next.location.latitude!, next.location.longitude!]] });
+                }
+              }
+            }
+            
+            clearTimeout(timeoutId);
+            return { dayKey: key, color, segments, distance: 0 };
           } catch (err: any) {
-            addDebugLog('Directions', `OSRM Failed or Mocked for ${key}: ${err.name === 'AbortError' ? 'Timeout' : err.message}`);
-            return { dayKey: key, color, coords: straightLine(stops), distance: 0 };
+            addDebugLog('Directions', `Day ${key} failed: ${err.message}`);
+            return { dayKey: key, color, segments: [], distance: 0 };
           }
         });
 
         const results = await Promise.all(routePromises);
-        
         if (isMounted) {
           setDayRoutes(results);
           setRouteStatus('done');
         }
       } catch (err: any) {
-        addDebugLog('Directions', `Critical Route Failure: ${err.message}`);
         if (isMounted) setRouteStatus('error');
       }
     };
@@ -352,19 +434,20 @@ export default function MapViewScreen() {
         <ResizeHandler />
 
         {dayRoutes.map(route =>
-          route.coords.length >= 2 && (
+          route.segments.map((seg, sIdx) => (
             <Polyline
-              key={route.dayKey}
-              positions={route.coords}
+              key={`${route.dayKey}-${sIdx}`}
+              positions={seg.coords}
               pathOptions={{
                 color:   route.color,
                 weight:  6,
-                opacity: 0.9,
+                opacity: seg.type === 'flight' ? 0.7 : 0.9,
+                dashArray: seg.type === 'flight' ? '12, 12' : undefined,
                 lineCap: 'round',
                 lineJoin: 'round',
               }}
             />
-          )
+          ))
         )}
 
         {crossDayLines.map((line, i) => (
@@ -417,6 +500,56 @@ export default function MapViewScreen() {
             </Popup>
           </Marker>
         ))}
+
+        {/* Flight Landing Markers */}
+        {Object.entries(flightLandings).map(([id, landing]) => {
+          const isTripEnd = mappable.length > 0 && mappable[mappable.length - 1].id === id;
+          return (
+            <Marker
+              key={`landing-${id}`}
+              position={[landing.lat, landing.lng]}
+              icon={L.divIcon({
+                className: '',
+                html: `
+                  <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                    <div style="
+                      position:absolute;width:32px;height:32px;
+                      background:${isTripEnd ? '#FF3B30' : '#8E8E93'};border-radius:50%;
+                      border:2.5px solid #fff;
+                      box-shadow:0 4px 14px rgba(0,0,0,0.35);"></div>
+                    <span style="position:relative;z-index:1;font-size:14px;line-height:1;margin-top:0px;">${isTripEnd ? '🏁' : '🛬'}</span>
+                  </div>`,
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20],
+              })}
+            >
+              <Popup className="custom-popup">
+                <div style={{ padding: '4px 2px' }}>
+                  <p style={{ fontWeight: 800, color: isTripEnd ? '#FF3B30' : '#8E8E93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    {isTripEnd ? 'Trip Final Destination' : 'Flight Arrival'}
+                  </p>
+                  <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#111' }}>
+                    {landing.name}
+                  </p>
+                  <a
+                    href={mapsUrl(landing.lat, landing.lng, landing.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-block', padding: '6px 14px',
+                      background: isTripEnd ? '#FF3B30' : '#8E8E93', color: '#fff',
+                      borderRadius: '8px', fontSize: '12px', fontWeight: 600,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Open in Maps
+                  </a>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
 
       {routeStatus === 'loading' && (

@@ -44,7 +44,7 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
       case 'hiking':     return { icon: <MountainSnow size={20} />, color: '#34C759', bg: 'rgba(52, 199, 89, 0.1)' };
       case 'transit':    return { icon: <TrainFront size={20} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
       case 'food':       return { icon: <Utensils size={20} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
-      case 'note':       return { icon: <StickyNote size={20} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+      case 'note':       return { icon: <StickyNote size={20} />, color: 'var(--sys-label-tertiary)', bg: 'rgba(255, 255, 255, 0.05)' };
       default:           return { icon: <CalendarClock size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };
@@ -110,6 +110,17 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
           <div style={{ display: 'flex', alignItems: 'flex-start', color: 'var(--sys-label-tertiary)', fontSize: '13px', marginBottom: '4px' }}>
             <MapPin size={12} style={{ marginTop: '2px', marginRight: '4px', flexShrink: 0 }} />
             <span style={{ lineHeight: '1.4' }}>{item.location.name}</span>
+          </div>
+        )}
+
+        {/* Note Description (Specific to Summary) */}
+        {item.type === 'note' && item.description && (
+          <div style={{
+            fontSize: '13px', color: 'var(--sys-label-secondary)',
+            lineHeight: '1.5', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)',
+            paddingTop: '6px'
+          }}>
+            <Linkified text={item.description} />
           </div>
         )}
 
