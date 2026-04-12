@@ -9,7 +9,7 @@ export default function EditManualExpenseModal() {
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [paidAmount, setPaidAmount] = useState('');
-  const [category, setCategory] = useState<Expense['category']>('manual');
+  const [category, setCategory] = useState<Expense['category']>('Other');
   const [date, setDate] = useState('');
 
   useEffect(() => {
@@ -90,10 +90,13 @@ export default function EditManualExpenseModal() {
                 className="edit-field-input"
                 value={category} onChange={e => setCategory(e.target.value as any)}
               >
-                <option value="manual">Wallet / General</option>
-                <option value="food">Food & Dining</option>
-                <option value="transport">Transit</option>
-                <option value="other">Other</option>
+                <option value="Car Rental">Car Rental</option>
+                <option value="Flights">Flights</option>
+                <option value="Gas">Gas</option>
+                <option value="Dining">Dining</option>
+                <option value="Lodging">Lodging</option>
+                <option value="Souvenirs">Souvenirs</option>
+                <option value="Other">Other</option>
               </select>
             </div>
             <div className="edit-field-group" style={{ flex: 1 }}>

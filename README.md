@@ -33,9 +33,10 @@
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
 
 ### 🔹 Financial Management
+- **Unified Category System**: Car Rental, Flights, Gas, Dining, Lodging, Souvenirs, and Other.
 - **Settlement Engine**: `paidAmount` field on itinerary items and manual expenses with over-budget detection (highlighted in red).
 - **Deep Linking**: Clickable expense rows trigger itinerary editing directly from the Costs screen.
-- **Prominent Summary**: Trip Financials header shows large total cost with Paid and Remaining breakdowns.
+- **Category Summary Table**: A live breakdown of costs (Total, Paid, Remaining) per category for granular budget tracking.
 - **Global Orchestration**: Centralized modal management for consistent, cross-screen editing.
 
 ### 🔹 Climatic Intelligence
@@ -181,6 +182,14 @@ stateDiagram-v2
 *(Note: Production rollouts leverage `firebase deploy` across hosting, functions, and firestore triggers.)*
 
 ---
+
+### Phase 38 (v1.12.0): Financial Overhaul & Glass UI Maturity
+- **Unified Expense Categories**: Replaced the fragmented "itinerary vs manual" categorization with a specific, unified system (Flights, Dining, Lodging, etc.).
+- **Live Category Summary**: Implemented a collapsible financial dashboard at the top of the Expenses screen showing Total/Paid/Remaining per category.
+- **Glass-Morphism Unification**: Extended the premium glass aesthetics to all items in the Trip Expenses and ToDo views, ensuring full visual consistency.
+- **Note Redesign**: Updated timeline Notes to be time-independent and grey-scaled with glass backgrounds for a more professional, subtle appearance.
+- **Modal Category Alignment**: Synchronized all editing modals to use the new category system.
+- **Production Build Hardening**: Configured Vite and Browserslist to preserve modern CSS features like `backdrop-filter` during production deployment.
 
 ### Phase 21 (v1.11.6): Stability & Premium Polish
 - **Independent Event Reordering**: Introduced a decoupled sorting system for multi-day items (Hotels/Rentals). Check-in and check-out events now have independent sort orders, preventing "ghost movement" where reordering one event affected the other.

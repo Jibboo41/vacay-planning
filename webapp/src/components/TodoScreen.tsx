@@ -231,16 +231,17 @@ export default function TodoScreen() {
                   onDragEnter={() => handleDragEnter(index)}
                   onDragEnd={handleDragEnd}
                   onDragOver={e => e.preventDefault()}
+                  className="glass-card"
                   style={{
                     display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
-                    background: isOver ? 'rgba(10,132,255,0.1)' : 'var(--sys-bg-elevated)',
                     padding: '14px 12px',
                     borderRadius: '16px',
-                    border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.05)',
+                    background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
+                    border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
                     transition: 'all 0.15s ease',
                     opacity: isDragging ? 0.4 : 1,
                     transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
-                    boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : 'none',
+                    boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : undefined,
                     zIndex: isDragging ? 2 : 1
                   }}
                 >

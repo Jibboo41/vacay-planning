@@ -74,7 +74,7 @@ export interface Expense {
   title: string;
   amount: number;       // Estimated cost
   paidAmount: number;   // Actually paid
-  category: 'itinerary' | 'manual' | 'food' | 'transport' | 'other';
+  category: 'Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other';
   date?: string;
   paid: boolean;        // Settlement status
   linkedItemId?: string; // Links to an ItineraryItem.id 

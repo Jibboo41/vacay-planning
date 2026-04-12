@@ -12,48 +12,44 @@ interface NoteCardProps {
 export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const getTimeLabel = (dateString: string) => {
-    if (!dateString.includes('T')) return '';
-    return new Date(dateString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  };
-
   return (
     <div
-      className={`note-card fade-in ${isExpanded ? 'expanded' : ''}`}
+      className={`glass-card fade-in ${isExpanded ? 'expanded' : ''}`}
       onClick={() => setIsExpanded(!isExpanded)}
       role="button"
       tabIndex={0}
       style={{
-        borderLeft: '4px solid #FF9F0A',
-        background: isExpanded ? 'linear-gradient(180deg, rgba(25, 25, 28, 0.9) 0%, rgba(255, 159, 10, 0.05) 100%)' : 'rgba(25, 25, 28, 0.8)',
+        borderLeft: '4px solid var(--sys-label-tertiary)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
         maxHeight: isExpanded ? '500px' : '120px',
         padding: '16px',
         borderRadius: '16px',
-        marginBottom: '12px'
+        margin: '0 16px 12px',
+        position: 'relative',
+        background: isExpanded ? 'rgba(255, 255, 255, 0.05)' : undefined
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 800, color: '#FF9F0A', letterSpacing: '0.05em' }}>
-          NOTE{getTimeLabel(item.startDate) ? ` • ${getTimeLabel(item.startDate).toUpperCase()}` : ''}
+        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em' }}>
+          NOTE
         </span>
         <div 
           className="drag-handle"
           onClick={(e: any) => e.stopPropagation()}
           onTouchStart={onGripTouchStart}
         >
-          <GripVertical size={16} color="#444" />
+          <GripVertical size={16} color="var(--sys-label-tertiary)" />
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
         <div style={{
           width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0,
-          background: 'rgba(255, 159, 10, 0.15)',
+          background: 'rgba(255, 255, 255, 0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <StickyNote size={20} color="#FF9F0A" />
+          <StickyNote size={20} color="var(--sys-label-secondary)" />
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>
