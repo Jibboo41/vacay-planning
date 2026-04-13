@@ -19,6 +19,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const setFocusedLocation = useTripStore(s => s.setFocusedLocation);
+  const tintedBackgrounds = useTripStore(s => s.tintedBackgrounds);
 
     const getTheme = () => {
       // Resilience: If hikeDetails exist, force it to be a hike theme regardless of type string
@@ -87,6 +88,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       tabIndex={0}
       style={{
         borderLeft: `4px solid ${theme.color}`,
+        backgroundColor: tintedBackgrounds ? theme.bg : undefined,
         overflow: 'hidden',
         maxHeight: isExpanded ? '1000px' : '200px',
         marginTop: (groupPosition === 'middle' || groupPosition === 'end') ? '-12px' : '0px',

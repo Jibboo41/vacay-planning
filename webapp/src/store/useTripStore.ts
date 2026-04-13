@@ -43,6 +43,7 @@ interface TripStore {
   editingExpense: Expense | null;
   activeFilters: string[];
   hiddenDayFilters: string[];
+  tintedBackgrounds: boolean;
   
   // Actions
   setUserId: (userId: string | null) => void;
@@ -50,6 +51,7 @@ interface TripStore {
   setSidebarOpen: (open: boolean) => void;
   setFocusedLocation: (loc: { lat: number, lng: number } | null) => void;
   setTheme: (theme: string) => void;
+  setTintedBackgrounds: (enabled: boolean) => void;
   setCurrentTrip: (tripId: string | null) => void;
   setEditingItem: (item: ItineraryItem | null) => void;
   setEditingExpense: (exp: Expense | null) => void;
@@ -148,6 +150,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   editingExpense: null,
   activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
   hiddenDayFilters: [],
+  tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') === 'true',
   debugLogs: [],
 
   addDebugLog: (category, message, data) => 
@@ -177,6 +180,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
   setTheme: (theme) => {
     localStorage.setItem('vacay_theme', theme);
     set({ theme });
+  },
+
+  setTintedBackgrounds: (tintedBackgrounds) => {
+    localStorage.setItem('vacay_tinted_backgrounds', String(tintedBackgrounds));
+    set({ tintedBackgrounds });
   },
 
   syncTrips: (trips) => {

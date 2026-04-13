@@ -1,3 +1,7 @@
+- **Phase 43 (Tinted Backgrounds)**:
+    - **Global Settings Entry**: Added `tintedBackgrounds` to `TripStore` with `localStorage` persistence (`vacay_tinted_backgrounds`).
+    - **Conditional Styling**: `TimelineItem.tsx` now dynamically toggles between standard glass background and category-specific `theme.bg` color based on the store's `tintedBackgrounds` flag.
+    - **UI Interaction**: Implemented a custom glass-style toggle switch in the `Sidebar` appearance menu for immediate visual feedback.
 - **Phase 42 (Palette Refresh)**:
     - **Color Logic Shift**: Re-defined semantic coloring across `TimelineItem`, `SummaryScreen`, `MapViewScreen`, and `CostTrackerScreen`.
     - **Palette Mapping**: `Hotel` -> Orange (`#FF9F0A`), `Hike` -> iOS Green (`#30D158`), `Activity` -> Grey (`#EBEBF5`).

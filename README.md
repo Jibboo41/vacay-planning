@@ -183,6 +183,12 @@ stateDiagram-v2
 
 ---
 
+### Phase 43 (v1.17.0): Appearance Personalization - Tinted Backgrounds
+- **Dynamic Background Logic**:
+  - Introduced a global `tintedBackgrounds` setting accessible via the Appearance menu in the sidebar.
+  - When enabled, itinerary item cards in the timeline dynamically adopt their category-specific theme color as a subtle background tint (e.g., green for hikes, orange for hotels).
+  - Maintains full glassmorphism compatibility using translucent alpha-channel overlays.
+
 ### Phase 42 (v1.16.0): Look & Feel Refresh - Updated Palette
 - **Itinerary Semantic Coloring**:
   - Re-mapped `Hotel` items to **Orange** (`#FF9F0A`) for improved visual distinctness against standard activities.

@@ -17,7 +17,8 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { 
     trips, currentTripId, setCurrentTrip, addTrip,
-    theme, setTheme, activeFilters, toggleFilter
+    theme, setTheme, activeFilters, toggleFilter,
+    tintedBackgrounds, setTintedBackgrounds
   } = useTripStore();
   
   const [newTripTitle, setNewTripTitle] = useState('');
@@ -196,6 +197,40 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     )}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {appearanceExpanded && (
+              <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div 
+                  onClick={() => setTintedBackgrounds(!tintedBackgrounds)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                    cursor: 'pointer', padding: '4px 0' 
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ 
+                      width: '32px', height: '32px', borderRadius: '8px', 
+                      background: 'rgba(255,255,255,0.05)', display: 'flex', 
+                      alignItems: 'center', justifyContent: 'center', color: tintedBackgrounds ? 'var(--sys-blue)' : 'var(--sys-label-secondary)'
+                    }}>
+                      <Sparkles size={18} />
+                    </div>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: tintedBackgrounds ? '#fff' : 'var(--sys-label-secondary)' }}>Tinted backgrounds</span>
+                  </div>
+                  <div style={{ 
+                    width: '44px', height: '24px', borderRadius: '12px', 
+                    background: tintedBackgrounds ? 'var(--sys-blue)' : 'rgba(255,255,255,0.1)',
+                    position: 'relative', transition: 'all 0.2s ease'
+                  }}>
+                    <div style={{ 
+                      position: 'absolute', top: '2px', left: tintedBackgrounds ? '22px' : '2px',
+                      width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)', transition: 'all 0.2s cubic-bezier(0.23, 1, 0.32, 1)'
+                    }} />
+                  </div>
+                </div>
               </div>
             )}
           </div>
