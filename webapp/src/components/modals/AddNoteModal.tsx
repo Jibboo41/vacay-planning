@@ -72,9 +72,11 @@ export default function AddNoteModal({ activeDayKey, onClose, onAdd }: AddNoteMo
             disabled={!content.trim() && !title.trim()}
             style={{
               width: '100%', padding: '16px', borderRadius: '14px',
-              background: (content.trim() || title.trim()) ? '#FF9F0A' : 'var(--sys-bg-elevated-2)',
-              color: '#FFF', fontSize: '16px', fontWeight: 700,
-              transition: 'background 0.2s',
+              background: (content.trim() || title.trim()) ? '#fff' : 'rgba(255,255,255,0.05)',
+              color: (content.trim() || title.trim()) ? '#000' : 'rgba(255,255,255,0.3)',
+              fontSize: '16px', fontWeight: 700,
+              transition: 'all 0.2s',
+              opacity: (content.trim() || title.trim()) ? 1 : 0.6
             }}
           >
             Add Note
