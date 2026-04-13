@@ -30,7 +30,7 @@ export async function parseItinerary(emailText: string, tripTitle: string = ''):
   }
 }
 
-export async function parseAllTrailsUrl(url: string): Promise<{ title: string; difficulty: string; length: string; distance: string }> {
+export async function parseAllTrailsUrl(url: string): Promise<{ title: string; difficulty: string; duration: string; distance: string; elevation: string }> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/parse-hike`, {
       method: 'POST',

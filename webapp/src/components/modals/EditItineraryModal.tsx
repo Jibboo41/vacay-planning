@@ -147,7 +147,9 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       if (hikeData.title && (!title || title === 'New Activity' || title === 'Hike')) setTitle(hikeData.title);
       if (hikeData.difficulty) setHikeDiff(hikeData.difficulty as any);
       if (hikeData.distance) setHikeDist(hikeData.distance);
-      if (hikeData.length) setHikeElev(hikeData.length);
+      if (hikeData.elevation) setHikeElev(hikeData.elevation);
+      if (hikeData.duration) setHikeDur(hikeData.duration);
+      setHikeLink(allTrailsUrl.trim());
       setAllTrailsUrl('');
     } catch(err) {
       console.error(err);
@@ -508,8 +510,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                       <input className="edit-field-input" type="text" value={hikeDur} onChange={e => setHikeDur(e.target.value)} placeholder="e.g. 3.5 hrs" />
                     </div>
                     <div className="edit-field-group" style={{ flex: '1 1 90px', minWidth: 0, marginBottom: 0 }}>
-                      <label className="edit-field-label">Time / Elev</label>
-                      <input className="edit-field-input" type="text" value={hikeElev} onChange={e => setHikeElev(e.target.value)} placeholder="e.g. 2.5 hrs" />
+                      <label className="edit-field-label">Elevation</label>
+                      <input className="edit-field-input" type="text" value={hikeElev} onChange={e => setHikeElev(e.target.value)} placeholder="e.g. 1,500 ft" />
                     </div>
                     <div className="edit-field-group" style={{ flex: '1 1 100%', minWidth: 0, marginBottom: 0, marginTop: '8px' }}>
                       <label className="edit-field-label">AllTrails Link</label>

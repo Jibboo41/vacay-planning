@@ -15,8 +15,9 @@ Schema:
 {
   "title": "Name of the trail (e.g., Vernal and Nevada Falls via the Mist Trail)",
   "difficulty": "Must be exactly one of: Easy, Moderate, Hard, Expert",
-  "length": "The estimated time it takes to complete (e.g., '2h 30m', '4.5 hours'). Leave as empty string if unknown.",
-  "distance": "The total distance including the unit (e.g., '5.2 mi', '8 km')"
+  "duration": "The estimated time it takes to complete (e.g., '2h 30m', '4.5 hours'). Leave as empty string if unknown.",
+  "distance": "The total distance including the unit (e.g., '5.2 mi', '8 km')",
+  "elevation": "The elevation gain including the unit (e.g., '1,500 ft', '400 m')"
 }
 
 AllTrails URL: ${url}
