@@ -112,9 +112,10 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
               {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') :
-               item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
-               item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
-               item.type === 'flight' ? 'TAKEOFF' : 'START'}
+                item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
+                item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
+                item.type === 'flight' ? 'TAKEOFF' : 
+                item.type === 'note' ? item.title.toUpperCase() : 'START'}
               {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
               {(() => {
                 if (item.type === 'hotel' && !isCheckout && item.endDate) {
@@ -165,9 +166,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
         {/* Title + location — flex:1, full width */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {item.title}
-          </h3>
+          {item.type !== 'note' && (
+            <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {item.title}
+            </h3>
+          )}
           <div
             style={{
               display: 'flex', alignItems: 'flex-start',
@@ -204,17 +207,29 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           </div>
         </div>
 
-        {/* Chevron */}
-        <div
-          style={{ padding: '8px', paddingLeft: '6px', opacity: 0.4, cursor: 'pointer', zIndex: 10, flexShrink: 0 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded(!isExpanded);
-          }}
-        >
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
+        {/* Chevron (Hide for notes if they don't have confirmation/cost/paid info) */}
+        {!(item.type === 'note' && !item.confirmationNumber && item.cost === undefined && item.paidAmount === undefined) && (
+          <div
+            style={{ padding: '8px', paddingLeft: '6px', opacity: 0.4, cursor: 'pointer', zIndex: 10, flexShrink: 0 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+          >
+            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
+        )}
       </div>
+
+      {item.type === 'note' && item.description && (
+        <div style={{ 
+          fontSize: '14px', color: 'var(--sys-label-secondary)', 
+          lineHeight: '1.5', margin: '4px 0 8px 56px',
+          maxHeight: '120px', overflowY: 'auto'
+        }}>
+          <Linkified text={item.description} />
+        </div>
+      )}
 
       {isExpanded && (
         <div className="expand-content" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
@@ -279,7 +294,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </div>
           )}
 
-          {item.description && (
+          {item.type !== 'note' && item.description && (
             <div style={{ 
               fontSize: '14px', color: 'var(--sys-label-secondary)', 
               lineHeight: '1.5', margin: '0 0 20px 0',

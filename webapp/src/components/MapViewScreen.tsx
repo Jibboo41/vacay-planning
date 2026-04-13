@@ -3,7 +3,7 @@ import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Menu } from 'lucide-react';
+import { Menu, Loader, X } from 'lucide-react';
 
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
@@ -76,14 +76,14 @@ interface DayRoute {
   distance: number; 
 }
 
-async function fetchOSRMRoute(stops: any[]): Promise<[number, number][]> {
+async function fetchOSRMRoute(stops: any[], signal?: AbortSignal): Promise<[number, number][]> {
   const waypoints = stops
     .map(s => `${s.location.longitude!},${s.location.latitude!}`)
     .join(';');
   const url =
     `https://router.project-osrm.org/route/v1/driving/${waypoints}` +
     `?overview=full&geometries=geojson&continue_straight=false`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal });
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes?.[0]) throw new Error('OSRM no route');
   return (data.routes[0].geometry.coordinates as [number, number][]).map(
@@ -370,7 +370,7 @@ export default function MapViewScreen() {
                       const transitionCoords = await fetchOSRMRoute([
                         { location: { latitude: landing.lat, longitude: landing.lng } },
                         next
-                      ]);
+                      ], controller.signal);
                       segments.push({ type: 'driving', coords: transitionCoords });
                     } catch (e) {
                       segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
@@ -388,7 +388,7 @@ export default function MapViewScreen() {
                 // Normal driving segment
                 try {
                   addDebugLog('Directions', `Road Path: ${start.title} -> ${next.title}`);
-                  let drivingCoords = await fetchOSRMRoute([start, next]);
+                  let drivingCoords = await fetchOSRMRoute([start, next], controller.signal);
                   
                   // If OSRM returns an empty or single-point path (too close), force a 2-point line
                   if (drivingCoords.length < 2) {
@@ -606,13 +606,35 @@ export default function MapViewScreen() {
         <div style={{
           position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
           transform: 'translateX(-50%)',
-          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(12px)',
+          background: 'rgba(10, 132, 255, 0.2)', backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           color: '#fff', fontSize: '13px', fontWeight: 700,
-          padding: '10px 22px', borderRadius: '24px',
+          padding: '12px 24px', borderRadius: '24px',
           zIndex: 2000, whiteSpace: 'nowrap',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+          boxShadow: '0 8px 32px rgba(10, 132, 255, 0.25)',
+          border: '1.5px solid rgba(10, 132, 255, 0.4)',
+          display: 'flex', alignItems: 'center', gap: '10px'
         }}>
-          🗺️ Calculating routes…
+          <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} />
+          <span>Syncing regional routes…</span>
+        </div>
+      )}
+
+      {routeStatus === 'error' && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(255, 59, 48, 0.2)', backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          color: '#fff', fontSize: '13px', fontWeight: 700,
+          padding: '12px 24px', borderRadius: '24px',
+          zIndex: 2000, whiteSpace: 'nowrap',
+          boxShadow: '0 8px 32px rgba(255, 59, 48, 0.25)',
+          border: '1.5px solid rgba(255, 59, 48, 0.4)',
+          display: 'flex', alignItems: 'center', gap: '10px'
+        }}>
+          <X size={18} onClick={() => setRouteStatus('done')} style={{ cursor: 'pointer' }} />
+          <span>Route calculation failed. Check logs.</span>
         </div>
       )}
 

@@ -75,6 +75,8 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
     } else {
       timeText = `PICKUP${item.startDate.includes('T') ? ` • ${getTimeLabel(item.startDate)}` : ''}`;
     }
+  } else if (item.type === 'note') {
+    timeText = ''; // Notes don't need "START" or times on summary
   } else {
     // Normal activity
     if (item.startDate.includes('T')) {
@@ -211,6 +213,8 @@ export default function SummaryScreen() {
   }, [items]);
 
   const handleGenerateSummary = async () => {
+    const { addDebugLog } = useTripStore.getState();
+    addDebugLog('AI Summary', 'Starting generation...');
     setIsGenerating(true);
     try {
       const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : `http://${window.location.hostname}:3003`);
@@ -222,12 +226,17 @@ export default function SummaryScreen() {
       if (res.ok) {
          const data = await res.json();
          if (data.summary) {
+           addDebugLog('AI Summary', 'Success!', { length: data.summary.length });
            await saveAiSummary(data.summary);
+         } else {
+           addDebugLog('AI Summary', 'Error: No summary in response', data);
          }
       } else {
+         addDebugLog('AI Summary', 'Failed: ' + res.statusText);
          console.error('Failed to generate summary');
       }
-    } catch (e) {
+    } catch (e: any) {
+      addDebugLog('AI Summary', 'Exception: ' + e.message);
       console.error(e);
     }
     setIsGenerating(false);

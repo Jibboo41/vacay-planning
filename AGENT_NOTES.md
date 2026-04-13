@@ -1,3 +1,7 @@
+- **Phase 45 (Refinement & Portability)**:
+    - **Note Rendering**: Specialized `TimelineItem.tsx` logic to elevate note titles to badges and auto-expand descriptions. Removed redundant titles in card body.
+    - **Routing Robustness**: Added signal-based cancellation and 10s timeouts to `fetchOSRMRoute` in `MapViewScreen.tsx`. Refined UI with glassy loading/error indicators.
+    - **Export Logic**: Introduced `exportUtils.ts` for CSV generation of itinerary items and expenses. Added Export button to `Sidebar.tsx`.
 - **Phase 44 (Action UI Refinement)**:
     - **FAB Collision Fix**: Shifted `.fab-group.left` to `16px` from edge to avoid exact overlap with the `44px` travel-card leading icon column on mobile.
     - **Visual Contrast**: Applied a `2px` white border and deepened shadows to global FABs to prevent blending into tinted item backgrounds.

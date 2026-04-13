@@ -183,7 +183,19 @@ stateDiagram-v2
 
 ---
 
-### Phase 44 (v1.18.0): Action UI Refinement & Accessibility
+### Phase 45 (v1.19.0): Itinerary Refinement & Data Portability
+- **Note Item Evolution**:
+  - **Timeline UI**: Notes now display their `title` in the category badge and unconditionally show the `description` in the card body. The expanded view is streamlined to show only action buttons.
+  - **Summary UI**: Suppressed "START" time labels for notes in the trip outline for a cleaner reading experience.
+- **Route Engine Hardening**:
+  - Implemented `AbortController` timeouts (10s) and robust error handling for OSRM routing.
+### Phase 45 (Refinement & Portability):
+- **Note Rendering**: Specialized `TimelineItem.tsx` logic to elevate note titles to badges and auto-expand descriptions.
+- **Routing Robustness**: Added signal-based cancellation and 10s timeouts to `fetchOSRMRoute` in `MapViewScreen.tsx`.
+- **Export Logic**: Introduced `exportUtils.ts` using a specialized CSV blobs/download approach for cross-platform compatibility.
+- **AI Diagnostics**: Added background debug logging for the AI Summary generator to track synthesis success rates.
+
+### Phase 44 (Action UI Refinement & Accessibility)
 - **FAB Contrast & Visibility**:
   - Repositioned the Left Action FAB on narrow screens (from `24px` to `16px` offset) to prevent overlap with itinerary card icons.
   - Enhanced FAB visibility with a 2px white-ring border and high-opacity drop shadows to ensure they stand out against tinted backgrounds.

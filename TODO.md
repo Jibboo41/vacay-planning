@@ -12,6 +12,8 @@
 - [x] **Note Standardization**: Neutral grey-scale, timeless Note rendering with simplified Title/Description editing and standard management parity.
 - [x] **Map Logic**: Segmented flight/driving paths with universal dashed air lines, automated destination parsing, high-performance segment caching, and US-restricted airport discovery.
 - [x] **DND Prepending**: Resolved day-start dragging issues with tripled-height top-of-day drop zones and refined reordering logic.
+- [x] **Data Portability**: Google Sheets-compatible CSV export for itinerary items and expenses in the sidebar.
+- [x] **Itinerary Refinement**: Note item specialization with title-badges, auto-description display, and premium map routing stability with glassy loading indicators.
 - [ ] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
 - [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
 - [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.
