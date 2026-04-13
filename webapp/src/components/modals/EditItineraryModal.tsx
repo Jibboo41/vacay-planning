@@ -144,7 +144,12 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
     setIsParsingAllTrails(true);
     try {
       const hikeData = await parseAllTrailsUrl(allTrailsUrl.trim());
-      if (hikeData.title && (!title || title === 'New Activity' || title === 'Hike')) setTitle(hikeData.title);
+      if (hikeData.title) {
+        setLocationName(hikeData.title);
+        if (!title || title === 'New Activity' || title === 'Hike') {
+          setTitle(`Hike at ${hikeData.title}`);
+        }
+      }
       if (hikeData.difficulty) setHikeDiff(hikeData.difficulty as any);
       if (hikeData.distance) setHikeDist(hikeData.distance);
       if (hikeData.elevation) setHikeElev(hikeData.elevation);
