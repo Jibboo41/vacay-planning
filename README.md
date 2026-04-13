@@ -188,7 +188,8 @@ stateDiagram-v2
   - Repositioned the Left Action FAB on narrow screens (from `24px` to `16px` offset) to prevent overlap with itinerary card icons.
   - Enhanced FAB visibility with a 2px white-ring border and high-opacity drop shadows to ensure they stand out against tinted backgrounds.
 - **Modal UI Harmonization**:
-  - Standardized the "Add Note" modal action button to use the application's primary white-on-black theme, removing the legacy bright orange background for better visual consistency.
+  - Restyled the "Add Note" modal action button with the signature `btn-glass-blue` aesthetic, ensuring consistent visual language across all interactive modals.
+  - Standardized disabled states with reduced opacity and subtle borders for better accessibility.
 - **Icon Standardization**:
   - Replaced the legacy emoji icon in the "Add Note" button with a sleek Lucide `StickyNote` SVG, unifying the menu's professional aesthetic.
 

@@ -67,16 +67,17 @@ export default function AddNoteModal({ activeDayKey, onClose, onAdd }: AddNoteMo
 
         {/* Save */}
         <div style={{ flexShrink: 0, paddingTop: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
-          <button
+            <button
             onClick={handleSave}
             disabled={!content.trim() && !title.trim()}
+            className={(content.trim() || title.trim()) ? "btn-glass-blue" : ""}
             style={{
               width: '100%', padding: '16px', borderRadius: '14px',
-              background: (content.trim() || title.trim()) ? '#fff' : 'rgba(255,255,255,0.05)',
-              color: (content.trim() || title.trim()) ? '#000' : 'rgba(255,255,255,0.3)',
               fontSize: '16px', fontWeight: 700,
               transition: 'all 0.2s',
-              opacity: (content.trim() || title.trim()) ? 1 : 0.6
+              opacity: (content.trim() || title.trim()) ? 1 : 0.4,
+              border: !(content.trim() || title.trim()) ? '1px solid rgba(255,255,255,0.08)' : undefined,
+              background: !(content.trim() || title.trim()) ? 'rgba(255,255,255,0.05)' : undefined,
             }}
           >
             Add Note
