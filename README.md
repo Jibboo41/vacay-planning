@@ -183,6 +183,17 @@ stateDiagram-v2
 
 ---
 
+### Phase 40 (v1.14.0): General Trip Notes & External Map Routing
+- **General Notes Ecosystem**: 
+  - Created a dedicated `TripNote` data module for overarching Trip Notes (packing lists, links, contacts) unattached to specific dates.
+  - Developed the `NotesScreen` with native drag-and-drop reordering, interactive `.glass-card` styling, inline edit flows, and inner-scroll bounds for lengthy notes.
+  - Implemented `<Linkified>` URL interception forcing standard URLs out to new tabs.
+  - Embedded navigation tab access deep into the `GlobalControls` unified Nav menu.
+- **Dynamic External Routing**: 
+  - Integrated `handleOpenMap` directly into the `Timeline` header bars to map out individual days.
+  - Scans and distills items down to viable driving coordinates (stripping logic anomalies like `flights` and consecutive duplicates).
+  - Yields high-precision `google.com/maps/dir/` universal link requests equipped with sequential `waypoints`, resolving natively on iOS and web correctly.
+
 ### Phase 39 (v1.13.0): High-Performance Map & Standardized Notes
 - **Advanced Map Routing**:
   - **Universal Air Paths**: All flight segments correctly draw dashed lines. Connected the terminal leg to land perfectly on the destination marker.

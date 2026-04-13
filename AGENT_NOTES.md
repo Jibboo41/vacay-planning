@@ -1,3 +1,6 @@
+- **Phase 40 (General Trip Notes & Map Day Routing)**:
+    - **General Trip Notes**: `TripNote` interface modeled unattached to timeline dates. Supported by DND mechanics and `reorderGeneralNotes` bound to native touch events just like `TodoScreen`. `<Linkified>` dynamically casts all text URL instances out of simple strings to blank tabs.
+    - **Day Map Routing**: Generated via `handleOpenMap` dynamically in `Timeline` header. Yields robust cross-platform URL mapping via `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints.join('|')}` filtering out flights to prevent global driving paths between continents.
 - **Phase 39 (Map & Note Refinement)**:
     - **Advanced Map Routing**: Uses `segments: { type: 'driving' | 'flight', coords }[]` and a `routeCache` (segments based) for instant visibility toggling.
     - **Self-Updating Cache**: `routeCache` keys now append flight coordinates `...-${lat}-${lng}` so resolving an airport automatically busts the stale cache and triggers a redraw of that day (fixes disconnected final paths).
