@@ -32,8 +32,8 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em' }}>
-          NOTE
+        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: '6px', letterSpacing: '0.05em' }}>
+          {item.title.toUpperCase()}
         </span>
         <div 
           className="drag-handle"
@@ -53,16 +53,17 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
           <StickyNote size={20} color="var(--sys-label-secondary)" />
         </div>
 
+        {/* Title hidden as requested since it's in the badge */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{
-            fontSize: '17px', fontWeight: 700, color: '#FFF',
-            marginBottom: '4px',
-            whiteSpace: isExpanded ? 'normal' : 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}>
-            {item.title}
-          </h3>
+          {item.description && (
+            <div style={{
+              fontSize: '14px', color: 'var(--sys-label-secondary)',
+              lineHeight: '1.5', margin: '4px 0 0 0',
+              maxHeight: '100px', overflowY: 'auto'
+            }}>
+              <Linkified text={item.description} />
+            </div>
+          )}
         </div>
 
         <div style={{ padding: '4px', opacity: 0.4 }}>
@@ -72,15 +73,6 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
 
       {isExpanded && (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          {item.description && (
-            <div style={{
-              fontSize: '14px', color: 'var(--sys-label-secondary)',
-              lineHeight: '1.5', margin: '0 0 20px 0',
-              maxHeight: '300px', overflowY: 'auto', paddingRight: '4px'
-            }}>
-              <Linkified text={item.description} />
-            </div>
-          )}
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 
