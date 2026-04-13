@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Menu, Plus, Trash2, Pencil, StickyNote } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Menu, Plus, Trash2, Pencil, StickyNote, GripVertical } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { TripNote } from '../core/models';
 import Linkified from './Linkified';
@@ -13,6 +13,14 @@ export default function NotesScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+
+  // Drag state
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+  const touchStartY = useRef<number>(0);
+  const touchDragIndex = useRef<number | null>(null);
 
   const handleAdd = () => {
     if (!newTitle.trim() && !newContent.trim()) return;
@@ -39,6 +47,67 @@ export default function NotesScreen() {
     setEditingId(null);
   };
 
+  // Mouse drag handlers
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    dragItem.current = index;
+    setDraggingIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragEnter = (index: number) => {
+    dragOverItem.current = index;
+    setOverIndex(index);
+  };
+  const handleDragEnd = () => {
+    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
+      const ordered = [...generalNotes];
+      const [dragged] = ordered.splice(dragItem.current, 1);
+      ordered.splice(dragOverItem.current, 0, dragged);
+      // Ensure reorderGeneralNotes is destructured and called here
+      useTripStore.getState().reorderGeneralNotes(ordered);
+    }
+    dragItem.current = null;
+    dragOverItem.current = null;
+    setDraggingIndex(null);
+    setOverIndex(null);
+  };
+
+  // Touch drag handlers
+  const handleGripTouchStart = (e: React.TouchEvent, index: number) => {
+    e.stopPropagation();
+    touchDragIndex.current = index;
+    touchStartY.current = e.touches[0].clientY;
+    setDraggingIndex(index);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchDragIndex.current === null) return;
+    if (e.cancelable) e.preventDefault(); // Prevent scrolling on iOS during drag
+    const touch = e.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY);
+    const itemEl = target?.closest('[data-note-item]');
+    
+    if (itemEl) {
+      const elements = Array.from(document.querySelectorAll('[data-note-item]'));
+      const newOver = elements.indexOf(itemEl);
+      if (newOver !== -1 && newOver !== overIndex) {
+        setOverIndex(newOver);
+        if ('vibrate' in navigator) navigator.vibrate(5);
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (touchDragIndex.current !== null && overIndex !== null && overIndex !== touchDragIndex.current) {
+      const ordered = [...generalNotes];
+      const [dragged] = ordered.splice(touchDragIndex.current, 1);
+      ordered.splice(overIndex, 0, dragged);
+      useTripStore.getState().reorderGeneralNotes(ordered);
+    }
+    touchDragIndex.current = null;
+    setDraggingIndex(null);
+    setOverIndex(null);
+  };
+
   return (
     <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
       {/* Header */}
@@ -59,7 +128,11 @@ export default function NotesScreen() {
           </p>
       </div>
 
-      <div style={{ padding: '0 24px 120px 24px' }}>
+      <div 
+        style={{ padding: '0 24px 120px 24px', touchAction: draggingIndex !== null ? 'none' : 'auto' }}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* New Note Area */}
         {!showAddForm ? (
           <button 
@@ -146,18 +219,30 @@ export default function NotesScreen() {
               <p style={{ fontSize: '15px' }}>No general notes. Jot down ideas, lists, and contacts here!</p>
              </div>
           ) : (
-            [...generalNotes].sort((a,b) => b.createdAt - a.createdAt).map((note) => {
+            generalNotes.map((note, index) => {
               const isEditing = editingId === note.id;
+              const isDragging = draggingIndex === index;
+              const isOver = overIndex === index;
 
               return (
                 <div
                   key={note.id}
+                  data-note-item
+                  draggable={!isEditing}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnter={() => handleDragEnter(index)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragEnd={handleDragEnd}
                   className="glass-card"
                   style={{
                     display: 'flex', flexDirection: 'column', gap: '12px',
                     padding: '20px', borderRadius: '20px',
-                    border: isEditing ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                    transition: 'all 0.15s ease'
+                    border: isEditing ? '1px solid rgba(10,132,255,0.4)' : (isOver ? '1px solid var(--sys-blue)' : '1px solid rgba(255,255,255,0.08)'),
+                    opacity: isDragging ? 0.4 : 1,
+                    transform: isOver ? (draggingIndex !== null && draggingIndex > index ? 'translateY(-4px)' : 'translateY(4px)') : 'none',
+                    transition: 'all 0.15s ease',
+                    boxShadow: isOver ? '0 8px 24px rgba(10,132,255,0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
+                    position: 'relative'
                   }}
                 >
                   {isEditing ? (
@@ -208,13 +293,24 @@ export default function NotesScreen() {
                           <button onClick={() => deleteGeneralNote(note.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '8px', borderRadius: '10px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
                             <Trash2 size={16} />
                           </button>
+                          <div 
+                            className="drag-handle" 
+                            style={{ 
+                              background: 'transparent', border: 'none', padding: '8px 4px', color: 'var(--sys-label-tertiary)', 
+                              cursor: 'grab', display: 'flex', alignItems: 'center', marginLeft: '-4px'
+                            }}
+                            onTouchStart={(e) => handleGripTouchStart(e, index)}
+                          >
+                            <GripVertical size={18} />
+                          </div>
                         </div>
                       </div>
                       
                       {note.content && (
                         <div style={{
                           fontSize: '15px', color: 'var(--sys-label-primary)', lineHeight: '1.5',
-                          whiteSpace: 'pre-wrap', marginTop: '4px'
+                          whiteSpace: 'pre-wrap', marginTop: '4px',
+                          maxHeight: '300px', overflowY: 'auto', paddingRight: '8px'
                         }}>
                           <Linkified text={note.content} />
                         </div>

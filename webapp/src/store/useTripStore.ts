@@ -72,6 +72,7 @@ interface TripStore {
   addGeneralNote: (title: string, content: string) => Promise<void>;
   updateGeneralNote: (id: string, updates: Partial<import('../core/models').TripNote>) => Promise<void>;
   deleteGeneralNote: (id: string) => Promise<void>;
+  reorderGeneralNotes: (newOrder: import('../core/models').TripNote[]) => Promise<void>;
 
   // Todo Actions
   addTodo: (text: string, dueDate?: string, notes?: string) => Promise<void>;
@@ -598,5 +599,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const newNotes = generalNotes.filter(n => n.id !== id);
     set({ generalNotes: newNotes });
     await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
+  },
+
+  reorderGeneralNotes: async (newOrder) => {
+    const { currentTripId } = get();
+    if (!currentTripId) return;
+    set({ generalNotes: newOrder });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newOrder) });
   }
 }));
