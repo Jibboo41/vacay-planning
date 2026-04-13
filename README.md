@@ -183,6 +183,14 @@ stateDiagram-v2
 
 ---
 
+### Phase 41 (v1.15.0): AllTrails AI Intelligence & Map Integration
+- **Google Search Grounding**:
+  - Leveraged `@google/genai` with Native Search capability to dynamically bypass AllTrails bot blocking (403 limits).
+  - Explicit prompt instructions forcefully compute trail `duration` based on Naismith's relative flat math.
+  - Automatically fetches the explicit Start Address string and trailing Geocoordinates (Latitude / Longitude) directly into the Itinerary object.
+- **Hiking Context Autofill**:
+  - Quick-Paste box instantly populates the Activity Title, Location Box, Map Coordinates, Elevation, Distance, and Duration parameters for a pristine experience.
+
 ### Phase 40 (v1.14.0): General Trip Notes & External Map Routing
 - **General Notes Ecosystem**: 
   - Created a dedicated `TripNote` data module for overarching Trip Notes (packing lists, links, contacts) unattached to specific dates.

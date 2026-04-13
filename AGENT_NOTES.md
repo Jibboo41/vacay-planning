@@ -1,3 +1,6 @@
+- **Phase 41 (AllTrails AI Extraction)**:
+    - **Google Search Grounding**: AllTrails heavily limits standard headless bots (403 limits). Uses `@google/genai` with `tools: [{ googleSearch: {} }]` natively in the cloud function `/api/parse-hike` to tap the Google Search index. Avoid headless puppeteer scripts as they break on deploy.
+    - **Trail Map Extraction**: Parses Title, Difficulty, Elevation, Distance, Duration, and precisely extracts the starting trailhead `startAddress`, `startLat`, and `startLng` to seamlessly populate the standard location fields, ensuring the Google Maps Map View routes appropriately to the mountain and not a generic town.
 - **Phase 40 (General Trip Notes & Map Day Routing)**:
     - **General Trip Notes**: `TripNote` interface modeled unattached to timeline dates. Supported by DND mechanics and `reorderGeneralNotes` bound to native touch events just like `TodoScreen`. `<Linkified>` dynamically casts all text URL instances out of simple strings to blank tabs.
     - **Day Map Routing**: Generated via `handleOpenMap` dynamically in `Timeline` header. Yields robust cross-platform URL mapping via `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints.join('|')}` filtering out flights to prevent global driving paths between continents.
