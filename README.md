@@ -183,6 +183,13 @@ stateDiagram-v2
 
 ---
 
+### Phase 44 (v1.18.0): Action UI Refinement & Accessibility
+- **FAB Contrast & Visibility**:
+  - Repositioned the Left Action FAB on narrow screens (from `24px` to `16px` offset) to prevent overlap with itinerary card icons.
+  - Enhanced FAB visibility with a 2px white-ring border and high-opacity drop shadows to ensure they stand out against tinted backgrounds.
+- **Icon Standardization**:
+  - Replaced the legacy emoji icon in the "Add Note" button with a sleek Lucide `StickyNote` SVG, unifying the menu's professional aesthetic.
+
 ### Phase 43 (v1.17.0): Appearance Personalization - Tinted Backgrounds
 - **Dynamic Background Logic**:
   - Introduced a global `tintedBackgrounds` setting accessible via the Appearance menu in the sidebar.

@@ -1,3 +1,7 @@
+- **Phase 44 (Action UI Refinement)**:
+    - **FAB Collision Fix**: Shifted `.fab-group.left` to `16px` from edge to avoid exact overlap with the `44px` travel-card leading icon column on mobile.
+    - **Visual Contrast**: Applied a `2px` white border and deepened shadows to global FABs to prevent blending into tinted item backgrounds.
+    - **Icon Harmonization**: Migrated action icons from emojis to matching Lucide SVG counterparts in `GlobalControls.tsx`.
 - **Phase 43 (Tinted Backgrounds)**:
     - **Global Settings Entry**: Added `tintedBackgrounds` to `TripStore` with `localStorage` persistence (`vacay_tinted_backgrounds`).
     - **Conditional Styling**: `TimelineItem.tsx` now dynamically toggles between standard glass background and category-specific `theme.bg` color based on the store's `tintedBackgrounds` flag.

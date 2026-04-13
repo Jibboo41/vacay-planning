@@ -292,7 +292,7 @@ input, textarea {
   pointer-events: none;
 }
 .fab-group.right { right: 24px; }
-.fab-group.left { left: 24px; }
+.fab-group.left { left: 16px; }
 
 /* ── Glass Blue Button ── */
 .btn-glass-blue {
@@ -327,7 +327,8 @@ input, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  border: 2px solid rgba(255, 255, 255, 0.4); /* Thicker white ring for visibility */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: auto;
 }

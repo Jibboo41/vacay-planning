@@ -63,7 +63,7 @@ export default function GlobalControls() {
             onClick={() => { setAddNoteVisible(true); setIsSparkleOpen(false); }}
             aria-label="Add note"
           >
-            <span style={{ fontSize: '18px' }}>📝</span>
+            <StickyNote size={18} color="#fff" />
           </button>
 
           <button 
