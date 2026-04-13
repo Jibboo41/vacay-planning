@@ -9,9 +9,9 @@ import { Menu } from 'lucide-react';
 
 const TYPE_COLORS: Record<string, string> = {
   flight:   '#0A84FF',
-  hotel:    '#30D158',
-  activity: '#FF9F0A',
-  hiking:   '#34C759',
+  hotel:    '#FF9F0A',
+  activity: '#EBEBF5',
+  hiking:   '#30D158',
   transit:  '#5E5CE6',
   food:     '#FF2D55',
   note:     '#FFD60A',

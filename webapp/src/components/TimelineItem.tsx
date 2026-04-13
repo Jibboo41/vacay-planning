@@ -23,7 +23,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
     const getTheme = () => {
       // Resilience: If hikeDetails exist, force it to be a hike theme regardless of type string
       if (item.hikeDetails) {
-        return { icon: <MountainSnow size={24} />, color: '#1E8449', bg: 'rgba(30, 132, 73, 0.1)' };
+        return { icon: <MountainSnow size={24} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
       }
 
       switch (item.type) {
@@ -35,8 +35,8 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
             </div>
           ), 
-          color: isCheckout ? '#FF3B30' : '#30D158', 
-          bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(48, 209, 88, 0.1)' 
+          color: isCheckout ? '#FF3B30' : '#FF9F0A', 
+          bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 159, 10, 0.1)' 
         };
         case 'rental-car': return { 
           icon: (
@@ -48,9 +48,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           color: '#AF52DE', 
           bg: 'rgba(175, 82, 222, 0.1)' 
         };
-        case 'activity': return { icon: <Navigation size={24} />, color: '#FF9F0A', bg: 'rgba(255, 159, 10, 0.1)' };
+        case 'activity': return { icon: <Navigation size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
         case 'hike':
-        case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#1E8449', bg: 'rgba(30, 132, 73, 0.1)' };
+        case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
         case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
         case 'food':     return { icon: <Utensils size={24} />, color: '#FF7000', bg: 'rgba(255, 112, 0, 0.1)' };
         case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
@@ -218,7 +218,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         <div className="expand-content" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           {isCheckout ? (
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#30D158', background: 'rgba(48,209,88,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: '#FF9F0A', background: 'rgba(255,159,10,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
                 {item.type === 'hotel' ? 'CHECK-IN' : 'PICKUP'} {getTimeLabel(item.startDate)}
                 {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
               </div>
@@ -235,7 +235,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
           {(item.type === 'hiking' || item.type === 'hike') && item.hikeDetails && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800 }}>
+              <div style={{ background: 'rgba(48, 209, 88, 0.15)', color: '#30D158', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800 }}>
                 {item.hikeDetails.difficulty === 'Expert' ? '⬛ EXPERT' : item.hikeDetails.difficulty === 'Hard' ? '🟥 HARD' : item.hikeDetails.difficulty === 'Moderate' ? '🟦 MODERATE' : '🟩 EASY'}
               </div>
               {item.hikeDetails.distance && (
@@ -264,10 +264,10 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                     win.open(item.hikeDetails!.allTrailsLink, '_blank', 'noopener,noreferrer');
                   }}
                   style={{ 
-                    background: 'rgba(52, 199, 89, 0.25)', color: '#34C759', padding: '4px 12px', 
+                    background: 'rgba(48, 209, 88, 0.25)', color: '#30D158', padding: '4px 12px', 
                     borderRadius: '8px', fontSize: '12px', fontWeight: 900, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: '4px',
-                    border: '1px solid rgba(52, 199, 89, 0.3)',
+                    border: '1px solid rgba(48, 209, 88, 0.3)',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                   }}
                 >
@@ -299,10 +299,10 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
               {(item.hotelDetails?.refundable || item.rentalDetails?.refundable || item.flightDetails?.refundable) && (
                 <div style={{ 
-                  background: item.type === 'hotel' ? 'rgba(48, 209, 88, 0.15)' : 
+                  background: item.type === 'hotel' ? 'rgba(255, 159, 10, 0.15)' : 
                              item.type === 'rental-car' ? 'rgba(175, 82, 222, 0.15)' :
                              'rgba(10, 132, 255, 0.15)', 
-                  color: item.type === 'hotel' ? '#30D158' : 
+                  color: item.type === 'hotel' ? '#FF9F0A' : 
                          item.type === 'rental-car' ? '#AF52DE' :
                          '#0A84FF', 
                   padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 

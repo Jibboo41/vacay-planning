@@ -21,8 +21,8 @@ const CATEGORY_COLORS: Record<Expense['category'], string> = {
   'Car Rental': '#AF52DE',
   'Flights': '#0A84FF',
   'Gas': '#FFD60A',
-  'Dining': '#FF9F0A',
-  'Lodging': '#30D158',
+  'Dining': '#FF7000',
+  'Lodging': '#FF9F0A',
   'Souvenirs': '#FF2D55',
   'Other': 'var(--sys-label-secondary)',
 };

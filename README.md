@@ -183,6 +183,14 @@ stateDiagram-v2
 
 ---
 
+### Phase 42 (v1.16.0): Look & Feel Refresh - Updated Palette
+- **Itinerary Semantic Coloring**:
+  - Re-mapped `Hotel` items to **Orange** (`#FF9F0A`) for improved visual distinctness against standard activities.
+  - Re-mapped `Hike` items to **iOS Green** (`#30D158`), adopting the energetic tone previously used for check-ins.
+  - Transformed `Generic Activities` to a **Whitish-Grey** (`#EBEBF5 / rgba(255,255,255,0.05)`), creating a more refined and hierarchical timeline.
+- **Cross-Component Consistency**:
+  - Synchronized the new color schema across the **Timeline**, **Summary View**, **Interactive Map Markers**, and **Cost Tracker** categories.
+
 ### Phase 41 (v1.15.0): AllTrails AI Intelligence & Map Integration
 - **Google Search Grounding**:
   - Leveraged `@google/genai` with Native Search capability to dynamically bypass AllTrails bot blocking (403 limits).

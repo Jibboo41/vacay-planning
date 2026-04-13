@@ -1,3 +1,7 @@
+- **Phase 42 (Palette Refresh)**:
+    - **Color Logic Shift**: Re-defined semantic coloring across `TimelineItem`, `SummaryScreen`, `MapViewScreen`, and `CostTrackerScreen`.
+    - **Palette Mapping**: `Hotel` -> Orange (`#FF9F0A`), `Hike` -> iOS Green (`#30D158`), `Activity` -> Grey (`#EBEBF5`).
+    - **Maintenance Note**: Ensure all hardcoded hex strings in inline styles (e.g., expanded view badges) are updated alongside the `getTheme` switches to prevent visual regressions.
 - **Phase 41 (AllTrails AI Extraction)**:
     - **Google Search Grounding**: AllTrails heavily limits standard headless bots (403 limits). Uses `@google/genai` with `tools: [{ googleSearch: {} }]` natively in the cloud function `/api/parse-hike` to tap the Google Search index. Avoid headless puppeteer scripts as they break on deploy.
     - **Trail Map Extraction**: Parses Title, Difficulty, Elevation, Distance, Duration, and precisely extracts the starting trailhead `startAddress`, `startLat`, and `startLng` to seamlessly populate the standard location fields, ensuring the Google Maps Map View routes appropriately to the mountain and not a generic town.
