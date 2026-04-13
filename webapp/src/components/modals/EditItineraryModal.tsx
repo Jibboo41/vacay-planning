@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Save, Sparkles, Loader } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
 import { parseAllTrailsUrl } from '../../data/api';
+import { useTripStore } from '../../store/useTripStore';
 
 interface EditItineraryModalProps {
   item: ItineraryItem;
@@ -143,7 +144,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
     if (!allTrailsUrl.trim()) return;
     setIsParsingAllTrails(true);
     try {
-      const hikeData = await parseAllTrailsUrl(allTrailsUrl.trim());
+      const currentTripId = useTripStore.getState().currentTripId;
+      const tripTitleRaw = useTripStore.getState().trips.find(t => t.id === currentTripId)?.title || '';
+      
+      const hikeData = await parseAllTrailsUrl(allTrailsUrl.trim(), tripTitleRaw);
       if (hikeData.title) {
         setLocationName(hikeData.title);
         if (!title || title === 'New Activity' || title === 'Hike') {
@@ -154,6 +158,9 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       if (hikeData.distance) setHikeDist(hikeData.distance);
       if (hikeData.elevation) setHikeElev(hikeData.elevation);
       if (hikeData.duration) setHikeDur(hikeData.duration);
+      if (hikeData.startAddress) setAddress(hikeData.startAddress);
+      if (hikeData.startLat) setLat(hikeData.startLat);
+      if (hikeData.startLng) setLng(hikeData.startLng);
       setHikeLink(allTrailsUrl.trim());
       setAllTrailsUrl('');
     } catch(err) {

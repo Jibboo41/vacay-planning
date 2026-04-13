@@ -9,9 +9,12 @@ export interface HikeDetails {
   duration: string;
   distance: string;
   elevation: string;
+  startAddress?: string;
+  startLat?: number | null;
+  startLng?: number | null;
 }
 
-export async function parseAllTrailsLink(url: string): Promise<HikeDetails> {
+export async function parseAllTrailsLink(url: string, tripTitle: string = ''): Promise<HikeDetails> {
   const prompt = `
 You are a highly capable travel planning assistant. I am providing you with a link to a trail on AllTrails. 
 Use your Google Search capability to find the details of this specific trail.
@@ -24,8 +27,13 @@ Schema:
   "difficulty": "Must be exactly one of: Easy, Moderate, Hard, Expert",
   "duration": "The estimated time it takes to complete (e.g., '2h 30m', '4.5 hours'). Leave as empty string if unknown.",
   "distance": "The total distance including the unit (e.g., '5.2 mi', '8 km')",
-  "elevation": "The elevation gain including the unit (e.g., '1,500 ft', '400 m')"
+  "elevation": "The elevation gain including the unit (e.g., '1,500 ft', '400 m')",
+  "startAddress": "The human readable trailhead address, park name, or city/state where the hike starts.",
+  "startLat": "Float number representing the exact latitude coordinate of the trailhead.",
+  "startLng": "Float number representing the exact longitude coordinate of the trailhead."
 }
+
+Contextual Trip Broad Area (if helpful): ${tripTitle}
 
 AllTrails URL: ${url}
 `;

@@ -45,13 +45,13 @@ app.post('/api/summarize-trip', async (req, res) => {
     }
 });
 app.post('/api/parse-hike', async (req, res) => {
-    const { url } = req.body;
+    const { url, tripTitle } = req.body;
     if (!url) {
         return res.status(400).json({ error: 'url is required in the request body.' });
     }
     try {
         console.log("Parsing AllTrails URL with AI Search Grounding...");
-        const hikeDetails = await (0, hikeParser_1.parseAllTrailsLink)(url);
+        const hikeDetails = await (0, hikeParser_1.parseAllTrailsLink)(url, tripTitle);
         console.log(`Successfully extracted details for: ${hikeDetails.title}`);
         res.json(hikeDetails);
     }
