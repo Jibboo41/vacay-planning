@@ -2,6 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import express from 'express';
 import cors from 'cors';
 import { parseEmailToItinerary, generateTripSummary } from '../use-cases/emailParser';
+import { parseAllTrailsLink } from '../use-cases/hikeParser';
 
 const app = express();
 
@@ -39,6 +40,23 @@ app.post('/api/summarize-trip', async (req: express.Request, res: express.Respon
     res.json({ summary });
   } catch (error: any) {
     console.error("Failed to summarize trip:", error);
+    res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
+  }
+});
+
+app.post('/api/parse-hike', async (req: express.Request, res: express.Response) => {
+  const { url } = req.body;
+  if (!url) {
+    return res.status(400).json({ error: 'url is required in the request body.' });
+  }
+
+  try {
+    console.log("Parsing AllTrails URL with AI Search Grounding...");
+    const hikeDetails = await parseAllTrailsLink(url);
+    console.log(`Successfully extracted details for: ${hikeDetails.title}`);
+    res.json(hikeDetails);
+  } catch (error: any) {
+    console.error("Failed to parse AllTrails link:", error);
     res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
   }
 });

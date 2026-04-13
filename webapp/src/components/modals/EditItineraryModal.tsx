@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, Sparkles, Loader } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
+import { parseAllTrailsUrl } from '../../data/api';
 
 interface EditItineraryModalProps {
   item: ItineraryItem;
@@ -17,6 +18,12 @@ function splitDateTime(dateStr: string): [string, string] {
 export default function EditItineraryModal({ item, onClose, onSave }: EditItineraryModalProps) {
   const [initDate, initTime] = splitDateTime(item.startDate);
   const [initEndDate, initEndTime] = item.endDate ? splitDateTime(item.endDate) : ['', ''];
+
+  const [groupId] = useState(item.groupId || '');
+  const [sortOrder] = useState<number | undefined>(item.sortOrder);
+
+  const [allTrailsUrl, setAllTrailsUrl] = useState('');
+  const [isParsingAllTrails, setIsParsingAllTrails] = useState(false);
 
   const [title, setTitle]           = useState(item.title);
   const [type, setType]             = useState((item.type as string) === 'hike' ? 'hiking' : item.type);
@@ -125,9 +132,29 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         bookingSource: bookingSource || undefined
       } : undefined,
       cost: cost ? parseFloat(cost) : undefined,
-      paidAmount: paidAmount ? parseFloat(paidAmount) : undefined
+      paidAmount: paidAmount ? parseFloat(paidAmount) : undefined,
+      groupId,
+      sortOrder
     });
     onClose();
+  };
+
+  const handleParseAllTrails = async () => {
+    if (!allTrailsUrl.trim()) return;
+    setIsParsingAllTrails(true);
+    try {
+      const hikeData = await parseAllTrailsUrl(allTrailsUrl.trim());
+      if (hikeData.title && (!title || title === 'New Activity' || title === 'Hike')) setTitle(hikeData.title);
+      if (hikeData.difficulty) setHikeDiff(hikeData.difficulty as any);
+      if (hikeData.distance) setHikeDist(hikeData.distance);
+      if (hikeData.length) setHikeElev(hikeData.length);
+      setAllTrailsUrl('');
+    } catch(err) {
+      console.error(err);
+      alert('Failed to parse AllTrails link. Ensure the URL is valid.');
+    } finally {
+      setIsParsingAllTrails(false);
+    }
   };
 
   return (
@@ -428,9 +455,37 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               {/* Conditional Hike Details */}
               {(type === 'hiking' || type === 'hike') && (
                 <div style={{ background: 'rgba(52, 199, 89, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                    <span style={{ fontSize: '18px' }}>🥾</span>
-                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#34C759' }}>TRAIL STATS</span>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '18px' }}>🥾</span>
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#34C759' }}>TRAIL STATS</span>
+                    </div>
+                  </div>
+
+                  <div className="edit-field-group" style={{ position: 'relative' }}>
+                    <label className="edit-field-label" style={{ color: '#34C759', fontWeight: 700 }}>AllTrails Quick Import</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        className="edit-field-input" 
+                        type="text" 
+                        value={allTrailsUrl} 
+                        onChange={e => setAllTrailsUrl(e.target.value)} 
+                        placeholder="Paste AllTrails URL..." 
+                        style={{ background: 'rgba(52, 199, 89, 0.05)', borderColor: 'rgba(52, 199, 89, 0.3)' }}
+                      />
+                      <button 
+                        type="button"
+                        onClick={handleParseAllTrails}
+                        disabled={isParsingAllTrails || !allTrailsUrl.trim()}
+                        style={{
+                          background: '#34C759', color: '#000', border: 'none', borderRadius: '10px',
+                          padding: '0 16px', fontWeight: 700, cursor: isParsingAllTrails ? 'default' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!allTrailsUrl.trim() || isParsingAllTrails) ? 0.6 : 1
+                        }}
+                      >
+                        {isParsingAllTrails ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={18} />}
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="edit-field-group">
@@ -453,8 +508,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                       <input className="edit-field-input" type="text" value={hikeDur} onChange={e => setHikeDur(e.target.value)} placeholder="e.g. 3.5 hrs" />
                     </div>
                     <div className="edit-field-group" style={{ flex: '1 1 90px', minWidth: 0, marginBottom: 0 }}>
-                      <label className="edit-field-label">Elevation</label>
-                      <input className="edit-field-input" type="text" value={hikeElev} onChange={e => setHikeElev(e.target.value)} placeholder="e.g. 1,400 ft" />
+                      <label className="edit-field-label">Time / Elev</label>
+                      <input className="edit-field-input" type="text" value={hikeElev} onChange={e => setHikeElev(e.target.value)} placeholder="e.g. 2.5 hrs" />
                     </div>
                     <div className="edit-field-group" style={{ flex: '1 1 100%', minWidth: 0, marginBottom: 0, marginTop: '8px' }}>
                       <label className="edit-field-label">AllTrails Link</label>

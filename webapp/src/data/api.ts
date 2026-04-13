@@ -29,3 +29,26 @@ export async function parseItinerary(emailText: string, tripTitle: string = ''):
     throw error;
   }
 }
+
+export async function parseAllTrailsUrl(url: string): Promise<{ title: string; difficulty: string; length: string; distance: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/parse-hike`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }), // Send the URL payload
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Parsing failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to call parse-hike on backend:", error);
+    throw error;
+  }
+}

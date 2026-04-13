@@ -8,6 +8,7 @@ const https_1 = require("firebase-functions/v2/https");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const emailParser_1 = require("../use-cases/emailParser");
+const hikeParser_1 = require("../use-cases/hikeParser");
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({ origin: true }));
 app.use(express_1.default.json());
@@ -40,6 +41,22 @@ app.post('/api/summarize-trip', async (req, res) => {
     }
     catch (error) {
         console.error("Failed to summarize trip:", error);
+        res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
+    }
+});
+app.post('/api/parse-hike', async (req, res) => {
+    const { url } = req.body;
+    if (!url) {
+        return res.status(400).json({ error: 'url is required in the request body.' });
+    }
+    try {
+        console.log("Parsing AllTrails URL with AI Search Grounding...");
+        const hikeDetails = await (0, hikeParser_1.parseAllTrailsLink)(url);
+        console.log(`Successfully extracted details for: ${hikeDetails.title}`);
+        res.json(hikeDetails);
+    }
+    catch (error) {
+        console.error("Failed to parse AllTrails link:", error);
         res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
     }
 });
