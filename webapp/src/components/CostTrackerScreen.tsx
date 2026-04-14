@@ -115,7 +115,7 @@ export default function CostTrackerScreen() {
           
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
             <span style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-1.5px', color: '#FFF' }}>
-              ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
@@ -123,13 +123,13 @@ export default function CostTrackerScreen() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--sys-green)' }} />
               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--sys-label-secondary)' }}>
-                ${totalPaid.toLocaleString()} paid
+                ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} paid
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--sys-blue)' }} />
               <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--sys-label-secondary)' }}>
-                ${remainingCost.toLocaleString()} left
+                ${remainingCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} left
               </span>
             </div>
           </div>
@@ -177,10 +177,10 @@ export default function CostTrackerScreen() {
                       <span style={{ color: CATEGORY_COLORS[cat.category] }}>{CATEGORY_ICONS[cat.category]}</span>
                       <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat.category}</span>
                     </div>
-                    <span style={{ textAlign: 'right', fontWeight: 600 }}>${cat.total.toLocaleString()}</span>
-                    <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--sys-green)' }}>${cat.paid.toLocaleString()}</span>
+                    <span style={{ textAlign: 'right', fontWeight: 600 }}>${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--sys-green)' }}>${cat.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span style={{ textAlign: 'right', fontWeight: 800, color: cat.remaining > 0 ? 'var(--sys-blue)' : 'var(--sys-label-tertiary)' }}>
-                      ${cat.remaining.toLocaleString()}
+                      ${cat.remaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                 ))}
@@ -307,18 +307,18 @@ export default function CostTrackerScreen() {
                 <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                     <p style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>
-                      ${exp.amount.toLocaleString()}
+                      ${exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     
                     {exp.paidAmount > 0 && (
                       <span style={{ fontSize: '10px', fontWeight: 800, color: exp.paidAmount > exp.amount ? 'var(--sys-red)' : 'var(--sys-green)', textTransform: 'uppercase' }}>
-                        Paid ${exp.paidAmount.toLocaleString()}
+                        Paid ${exp.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     )}
 
                     {!exp.paid && exp.amount > exp.paidAmount && (
                       <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 800, textTransform: 'uppercase' }}>
-                        Due ${(exp.amount - exp.paidAmount).toLocaleString()}
+                        Due ${(exp.amount - exp.paidAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     )}
                   </div>

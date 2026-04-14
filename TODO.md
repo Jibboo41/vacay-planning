@@ -1,6 +1,8 @@
-# Project Backlog & Future Road
+# Project Backlog & Future Roadmap
 
 - [x] **UI/UX Architecture**: iOS-inspired glassmorphic design system with dual-FAB navigation.
+- [x] **Weather Automation**: Last updated status, trigger update on drag/move.
+- [x] **Currency Consistency**: Ensure 2-digit cents $4.50 instead of $4.5.
 - [x] **User Authentication**: Secure Google Auth and session persistence.
 - [x] **Production Security**: Deployed owner-only Firestore security rules.
 - [x] **Data Integrity**: Implemented sync barriers, `updateDoc` migration, and `undefined` scrubbing.
@@ -16,6 +18,9 @@
 - [x] **Itinerary Refinement**: Note item specialization with title-badges, auto-description display, and premium map routing stability with glassy loading indicators.
 - [x] **Data Portability**: Enhance Google Sheets export with premium visual formatting, structured report styling, and professional itinerary layouts.
 - [x] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
+- [x] **AllTrails Robustness**: Sanitize mobile share links and strip tracking parameters.
+
+## 🚀 Deployment
 - [ ] **Maps:** Implement Hotel-Origin Routing (ensure routes start from the last accommodation across multi-day stays).
 - [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
 - [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.

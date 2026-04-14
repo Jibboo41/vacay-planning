@@ -2,6 +2,19 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.23.0] - 2026-04-14
+### Added
+- **Centralized Weather Engine**: Migrated weather fetching to the global store for multi-screen access and background sync.
+- **Last Updated Status**: Weather view now displays a human-readable "Last updated" timestamp.
+- **Currency Standardization**: Enforced strict two-decimal formatting ($0.00) across all financial views (Timeline, Cost Tracker).
+
+### Changed
+- **Automated Refreshes**: Moving itinerary items on the timeline now automatically triggers background weather updates to keep forecasts in sync with dates.
+
+## [1.22.0] - 2026-04-14
+### Added
+- **AllTrails Link Sanitization**: Robustified the Quick Import tool to handle mobile app share links by automatically stripping leading descriptive text and tracking parameters.
+
 ## [1.21.0] - 2026-04-14
 ### Added
 - **Premium Excel Export**: Upgraded export to high-fidelity **Excel (.xlsx)** format with professional styling, themed categories, and balance summaries for Google Sheets.

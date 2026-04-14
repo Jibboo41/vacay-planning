@@ -1,3 +1,7 @@
+- **Phase 49 (AllTrails Sanitization)**:
+    - **Mobile Link Support**: Robustified `EditItineraryModal.tsx` to handle "messy" share links from the AllTrails mobile app. Strips leading text and `?` query parameters before API ingestion.
+- **Phase 48 (Map Routing Backlog)**:
+    - **Accommodation Origin**: Investigated logic to start daily routes from the last hotel. Reverted due to edge-case instability; moved to backlog for future refinement.
 - **Phase 47 (Data Portability & Scraper)**:
     - **ExcelJS Export**: Replaced basic CSV with premium, styled `.xlsx` reports. Includes themed day grouping and automated financial summaries.
     - **AllTrails Scraper**: Implemented backend-driven parsing for AllTrails URLs. Automatically extracts trail titles, difficulty, distance, and elevation directly into itinerary items.

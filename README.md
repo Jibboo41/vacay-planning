@@ -183,6 +183,10 @@ stateDiagram-v2
 
 ---
 
+### Phase 49 (v1.22.0): AllTrails Robustness
+- **Mobile Share Support**:
+  - Enhanced the AllTrails Quick Import tool to intelligently handle and sanitize links shared from the mobile app.
+
 ### Phase 47 (v1.21.0): Premium Export & Scraper
 - **Professional Portability**:
   - Upgraded export to high-fidelity **Excel (.xlsx)** format with professional styling, themed categories, and balance summaries for Google Sheets.

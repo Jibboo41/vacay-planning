@@ -389,7 +389,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
                   <DollarSign size={14} />
                   <span style={{ fontWeight: 600 }}>Cost:</span>
-                  <span style={{ color: '#fff', fontWeight: 700 }}>${(item.cost || 0).toLocaleString()}</span>
+                  <span style={{ color: '#fff', fontWeight: 700 }}>${(item.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )}
               {item.paidAmount !== undefined && item.paidAmount !== null && (
@@ -397,7 +397,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                   <CreditCard size={14} />
                   <span style={{ fontWeight: 600 }}>Paid:</span>
                   <span style={{ color: (item.cost && item.paidAmount > item.cost) ? '#FF453A' : 'var(--sys-green)', fontWeight: 700 }}>
-                    ${(item.paidAmount || 0).toLocaleString()}
+                    ${(item.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               )}

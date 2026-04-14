@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { ItineraryItem, TodoItem, Expense, WeatherCache } from '../core/models';
+import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay } from '../core/models';
+import { fetchWeather } from '../data/weatherApi';
 import { db, auth } from '../core/firebase';
 import { 
   collection, 
@@ -90,6 +91,7 @@ interface TripStore {
   
   // Weather
   updateWeather: (weather: WeatherCache) => Promise<void>;
+  refreshWeather: () => Promise<void>;
 
   // Debug
   debugLogs: { timestamp: number; category: string; message: string; data?: any }[];
@@ -472,6 +474,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       if (get().initialized) {
         try {
           await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(finalItems) });
+          // Auto-trigger weather refresh when items are moved
+          get().refreshWeather();
         } catch (err) {
           console.error("Reorder failed:", err);
         }
@@ -577,6 +581,88 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     set({ weather });
     await updateDoc(doc(db, "trips", currentTripId), { weather: scrubData(weather) });
+  },
+
+  refreshWeather: async () => {
+    const { items, currentTripId, updateWeather, addDebugLog } = get();
+    if (!currentTripId || !items.length) return;
+
+    addDebugLog('Weather', 'Starting automatic refresh...');
+    
+    try {
+      // 1. Determine relevant locations (logic mirrored from WeatherScreen)
+      const sorted = [...items].sort((a, b) => a.startDate.localeCompare(b.startDate));
+      const startStr = sorted[0].startDate.split('T')[0];
+      let endStr = sorted[sorted.length - 1].startDate.split('T')[0];
+      sorted.forEach((i: ItineraryItem) => { if (i.endDate && i.endDate > endStr) endStr = i.endDate.split('T')[0]; });
+
+      const startDate = new Date(startStr.replace(/-/g, '/'));
+      const endDate = new Date(endStr.replace(/-/g, '/'));
+      
+      const dayLocations: { date: string; lat: number; lon: number; name: string }[] = [];
+      const curr = new Date(startDate);
+      while (curr <= endDate) {
+        const dateKey = curr.toISOString().split('T')[0];
+        const dayItems = items.filter((i: ItineraryItem) => 
+          (getDayKey(i.startDate) === dateKey || (i.endDate && getDayKey(i.endDate) === dateKey)) &&
+          (i.type === 'hotel' || i.type === 'hiking' || i.type === 'activity') &&
+          i.location.latitude !== null && i.location.longitude !== null
+        );
+
+        if (dayItems.length > 0) {
+          dayItems.forEach((i: ItineraryItem) => {
+            if (i.location.latitude !== null) {
+              dayLocations.push({ date: dateKey, lat: i.location.latitude!, lon: i.location.longitude!, name: i.location.name || 'Stop' });
+            }
+          });
+        } else {
+          const activeHotel = items.find((i: ItineraryItem) => i.type === 'hotel' && i.location.latitude !== null && getDayKey(i.startDate) <= dateKey && i.endDate && getDayKey(i.endDate) >= dateKey);
+          if (activeHotel) {
+            dayLocations.push({ date: dateKey, lat: activeHotel.location.latitude!, lon: activeHotel.location.longitude!, name: activeHotel.location.name || 'Hotel' });
+          } else {
+            const prev = sorted.filter((i: ItineraryItem) => getDayKey(i.startDate) < dateKey && i.location.latitude !== null);
+            if (prev.length) {
+              const last = prev[prev.length - 1];
+              dayLocations.push({ date: dateKey, lat: last.location.latitude!, lon: last.location.longitude!, name: last.location.name || 'Last Known' });
+            }
+          }
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      // Deduplicate
+      const uniqueDayLocations: typeof dayLocations = [];
+      dayLocations.forEach(dl => {
+        const exists = uniqueDayLocations.some(u => u.date === dl.date && Math.abs(u.lat - dl.lat) < 0.001 && Math.abs(u.lon - dl.lon) < 0.001);
+        if (!exists) uniqueDayLocations.push(dl);
+      });
+
+      if (!uniqueDayLocations.length) return;
+
+      // 2. Fetch
+      const locationGroups: Record<string, string[]> = {};
+      const coordMap: Record<string, { lat: number; lon: number }> = {};
+      uniqueDayLocations.forEach(dl => {
+        const key = `${dl.lat.toFixed(3)},${dl.lon.toFixed(3)}`;
+        if (!locationGroups[key]) { locationGroups[key] = []; coordMap[key] = { lat: dl.lat, lon: dl.lon }; }
+        locationGroups[key].push(dl.date);
+      });
+
+      const allForecasts: WeatherDay[] = [];
+      for (const key of Object.keys(locationGroups)) {
+        const dates = locationGroups[key].sort();
+        const results = await fetchWeather(coordMap[key].lat, coordMap[key].lon, dates[0], dates[dates.length - 1]);
+        results.forEach(r => { if (dates.includes(r.date)) allForecasts.push(r); });
+      }
+
+      allForecasts.sort((a, b) => a.date.localeCompare(b.date));
+      if (allForecasts.length) {
+        await updateWeather({ lastUpdated: Date.now(), forecast: allForecasts });
+        addDebugLog('Weather', 'Auto-refresh success', { count: allForecasts.length });
+      }
+    } catch (err) {
+      addDebugLog('Weather', 'Auto-refresh failed', err);
+    }
   },
 
   addGeneralNote: async (title, content) => {

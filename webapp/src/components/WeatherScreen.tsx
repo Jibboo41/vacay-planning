@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, CloudSun } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
-import { fetchWeather } from '../data/weatherApi';
-import type { WeatherDay } from '../core/models';
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -16,119 +14,66 @@ function getDayKey(dateString: string) {
 }
 
 export default function WeatherScreen() {
-  const { weather, items, updateWeather, setSidebarOpen } = useTripStore();
+  const { weather, items, refreshWeather, setSidebarOpen } = useTripStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Determine ALL relevant locations for every single day of the trip
+  const formatLastUpdated = (timestamp: number) => {
+    const diff = Date.now() - timestamp;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return new Date(timestamp).toLocaleDateString();
+  };
+
   const getDailyLocations = () => {
     if (!items.length) return [];
-    
-    // Sort items by time
     const sorted = [...items].sort((a, b) => a.startDate.localeCompare(b.startDate));
-    
-    // Find absolute start and end
     const startStr = sorted[0].startDate.split('T')[0];
     let endStr = sorted[sorted.length - 1].startDate.split('T')[0];
-    sorted.forEach(i => {
-       if (i.endDate && i.endDate > endStr) endStr = i.endDate.split('T')[0];
-    });
+    sorted.forEach((i: any) => { if (i.endDate && i.endDate > endStr) endStr = i.endDate.split('T')[0]; });
 
     const startDate = new Date(startStr.replace(/-/g, '/'));
     const endDate = new Date(endStr.replace(/-/g, '/'));
-    
     const dayLocations: { date: string; lat: number; lon: number; name: string }[] = [];
     
-    // Iterate through every day in the trip range
     const curr = new Date(startDate);
     while (curr <= endDate) {
        const dateKey = curr.toISOString().split('T')[0];
-       
-       // Priority 1: All items on this day that are hotels, hikes, or activities with coords
-       const dayItems = items.filter(i => 
+       const dayItems = items.filter((i: any) => 
          (getDayKey(i.startDate) === dateKey || (i.endDate && getDayKey(i.endDate) === dateKey)) &&
-         (i.type === 'hotel' || i.type === 'hiking' || i.type === 'hike' || i.type === 'activity') &&
+         (i.type === 'hotel' || i.type === 'hiking' || i.type === 'activity') &&
          i.location.latitude !== null && i.location.longitude !== null
        );
 
        if (dayItems.length > 0) {
-          dayItems.forEach(i => {
-            // Add start date location
-            if (getDayKey(i.startDate) === dateKey && i.location.latitude !== null) {
-              dayLocations.push({ 
-                date: dateKey, 
-                lat: i.location.latitude!, 
-                lon: i.location.longitude!, 
-                name: i.location.name || 'Current Stop'
-              });
-            }
-            // Add end date location if it's a different day (e.g. Hotel Checkout)
-            if (i.endDate && getDayKey(i.endDate) === dateKey && i.location.latitude !== null) {
-              dayLocations.push({ 
-                date: dateKey, 
-                lat: i.location.latitude!, 
-                lon: i.location.longitude!, 
-                name: i.location.name || 'Current Stop'
-              });
+          dayItems.forEach((i: any) => {
+            if (i.location.latitude !== null) {
+              dayLocations.push({ date: dateKey, lat: i.location.latitude!, lon: i.location.longitude!, name: i.location.name || 'Stop' });
             }
           });
        } else {
-          // Priority 2: Active hotel stay spanning this day
-          const activeHotel = items.find(i => 
-             i.type === 'hotel' && 
-             i.location.latitude !== null && 
-             getDayKey(i.startDate) <= dateKey && 
-             i.endDate && getDayKey(i.endDate) >= dateKey
-          );
-          
+          const activeHotel = items.find((i: any) => i.type === 'hotel' && i.location.latitude !== null && getDayKey(i.startDate) <= dateKey && i.endDate && getDayKey(i.endDate) >= dateKey);
           if (activeHotel) {
-             dayLocations.push({ 
-               date: dateKey, 
-               lat: activeHotel.location.latitude!, 
-               lon: activeHotel.location.longitude!, 
-               name: activeHotel.location.name || 'Hotel Location'
-             });
+             dayLocations.push({ date: dateKey, lat: activeHotel.location.latitude!, lon: activeHotel.location.longitude!, name: activeHotel.location.name || 'Hotel' });
           } else {
-             // Priority 3: Last known location
-             const prevItems = sorted.filter(i => getDayKey(i.startDate) < dateKey && i.location.latitude !== null);
+             const prevItems = sorted.filter((i: any) => getDayKey(i.startDate) < dateKey && i.location.latitude !== null);
              if (prevItems.length > 0) {
                 const lastItem = prevItems[prevItems.length - 1];
-                dayLocations.push({ 
-                  date: dateKey, 
-                  lat: lastItem.location.latitude!, 
-                  lon: lastItem.location.longitude!, 
-                  name: lastItem.location.name || 'Last Known'
-                });
-             } else {
-                // Priority 4: Next known location
-                const nextItems = sorted.filter(i => getDayKey(i.startDate) > dateKey && i.location.latitude !== null);
-                if (nextItems.length > 0) {
-                   const firstNext = nextItems[0];
-                   dayLocations.push({ 
-                     date: dateKey, 
-                     lat: firstNext.location.latitude!, 
-                     lon: firstNext.location.longitude!, 
-                     name: firstNext.location.name || 'Upcoming'
-                   });
-                }
+                dayLocations.push({ date: dateKey, lat: lastItem.location.latitude!, lon: lastItem.location.longitude!, name: lastItem.location.name || 'Last Known' });
              }
           }
        }
-       
        curr.setDate(curr.getDate() + 1);
     }
     
-    // Deduplicate same-day, same-location entries
     const uniqueDayLocations: typeof dayLocations = [];
     dayLocations.forEach(dl => {
-      const exists = uniqueDayLocations.some(u => 
-        u.date === dl.date && 
-        u.lat.toFixed(4) === dl.lat.toFixed(4) && 
-        u.lon.toFixed(4) === dl.lon.toFixed(4)
-      );
+      const exists = uniqueDayLocations.some(u => u.date === dl.date && Math.abs(u.lat - dl.lat) < 0.001 && Math.abs(u.lon - dl.lon) < 0.001);
       if (!exists) uniqueDayLocations.push(dl);
     });
-
     return uniqueDayLocations;
   };
 
@@ -140,87 +85,34 @@ export default function WeatherScreen() {
       return;
     }
     setLoading(true);
-    const { addDebugLog } = useTripStore.getState();
+    setError(null);
     try {
-      addDebugLog('Weather', `Fetching for ${dailyLocations.length} days...`);
-      // To optimize, group days by location so we don't call the API for the same город many times
-      const locationGroups: Record<string, string[]> = {};
-      const coordMap: Record<string, { lat: number; lon: number; name: string }> = {};
-      
-      dailyLocations.forEach(dl => {
-         const key = `${dl.lat.toFixed(3)},${dl.lon.toFixed(3)}`;
-         if (!locationGroups[key]) {
-            locationGroups[key] = [];
-            coordMap[key] = { lat: dl.lat, lon: dl.lon, name: dl.name };
-         }
-         locationGroups[key].push(dl.date);
-      });
-
-      const allForecasts: WeatherDay[] = [];
-      
-      // Fetch each location's range
-      for (const key of Object.keys(locationGroups)) {
-         const dates = locationGroups[key].sort();
-         const start = dates[0];
-         const end = dates[dates.length - 1];
-         const { lat, lon } = coordMap[key];
-         
-         const results = await fetchWeather(lat, lon, start, end);
-         addDebugLog('Weather', `API Success for ${coordMap[key].name}`, { dates: results.length });
-         // Filter to only the specific dates we mapped to this location
-         results.forEach(r => {
-            if (dates.includes(r.date)) {
-               allForecasts.push(r);
-            }
-         });
-      }
-
-      // Sort by date
-      allForecasts.sort((a, b) => a.date.localeCompare(b.date));
-
-      if (allForecasts.length === 0) {
-        addDebugLog('Weather', 'No results returned');
-        setError("Weather forecast not available for these dates (likely too far in the future).");
-        return;
-      }
-
-      await updateWeather({
-        lastUpdated: Date.now(),
-        forecast: allForecasts
-      });
-      addDebugLog('Weather', 'Store updated successfully', { count: allForecasts.length });
+      await refreshWeather();
     } catch (err: any) {
-      addDebugLog('Weather', `Fetch FAILED: ${err.message}`);
       setError("Failed to fetch weather data. Check your connection.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial fetch if none exists
   useEffect(() => {
     if (!weather && dailyLocations.length > 0) {
       handleUpdate();
     }
-  }, [items.length]); // Re-calculates if items change significantly
-
+  }, [items.length]);
 
   return (
     <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
-      {/* Header */}
       <header className="screen-header">
-        <button 
-          className="header-icon-btn"
-          onClick={() => setSidebarOpen(true)}
-        >
+        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
             Local Weather
           </h1>
-          <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {weather?.forecast.length ? `Itinerary Forecast` : 'No data'}
+          <p style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', marginTop: '-1px', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {weather?.lastUpdated ? `Updated ${formatLastUpdated(weather.lastUpdated)}` : 'No sync data'}
           </p>
         </div>
         <button 
@@ -241,7 +133,6 @@ export default function WeatherScreen() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            
             {error && (
                <div style={{ padding: '16px', background: 'rgba(255, 69, 58, 0.1)', borderRadius: '16px', border: '1px solid rgba(255, 69, 58, 0.2)', display: 'flex', gap: '12px', alignItems: 'center', color: '#FF453A' }}>
                   <AlertCircle size={20} />
@@ -254,8 +145,7 @@ export default function WeatherScreen() {
               const isCold = day.tempHigh < 50;
               const cardBg = isHot ? 'rgba(255, 159, 10, 0.08)' : isCold ? 'rgba(10, 132, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)';
               const borderCol = isHot ? 'rgba(255, 159, 10, 0.2)' : isCold ? 'rgba(10, 132, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)';
-
-              const loc = dailyLocations.find(dl => dl.date === day.date && dl.lat?.toFixed(3) === day.lat?.toFixed(3) && dl.lon?.toFixed(3) === day.lon?.toFixed(3));
+              const loc = dailyLocations.find((dl: any) => dl.date === day.date && day.lat !== undefined && Math.abs(dl.lat - day.lat) < 0.001);
               const hasHistorical = !!day.isHistorical;
               const primaryIcon = day.icon || '⛅';
 
@@ -288,7 +178,7 @@ export default function WeatherScreen() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: 'var(--sys-blue)', opacity: 0.9 }}>
                          <MapPin size={12} />
                          <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                           {loc.name}
+                            {loc.name}
                          </span>
                       </div>
                     )}
