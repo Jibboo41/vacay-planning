@@ -28,13 +28,11 @@ npx firebase deploy --only hosting
 ```
 > ℹ️ This builds the React app and uploads it. Use this for most UI changes.
 
-### 2. Deploy Everything (Hosting + Cloud Functions)
-```powershell
-npx firebase deploy
-```
-> ⚠️ Requires the backend to build successfully. Use when backend logic changes.
 
-### 3. Set Secrets (First Time or Key Rotation)
+### 3. AllTrails Scraper Service
+The application includes a backend scraper for AllTrails links. This service is part of the Firebase Cloud Functions. Ensure you have deployed functions using `npx firebase deploy --only functions` or `npx firebase deploy` whenever updating the parsing logic.
+
+### 4. Set Secrets (First Time or Key Rotation)
 Since the backend uses Gemini AI, you must securely store your API key in Firebase so the Functions can access it:
 ```powershell
 npx firebase functions:secrets:set GEMINI_API_KEY
