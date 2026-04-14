@@ -141,13 +141,24 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   };
 
   const handleParseAllTrails = async () => {
-    if (!allTrailsUrl.trim()) return;
+    let rawUrl = allTrailsUrl.trim();
+    if (!rawUrl) return;
+
+    // --- Sanitization Logic ---
+    // Handle mobile app share text (e.g. "Bear's Hump on AllTrails https://...")
+    const httpsIdx = rawUrl.indexOf('https://');
+    if (httpsIdx !== -1) {
+      rawUrl = rawUrl.substring(httpsIdx);
+    }
+    // Remove query parameters (anything starting with ?)
+    const cleanedUrl = rawUrl.split('?')[0];
+
     setIsParsingAllTrails(true);
     try {
       const currentTripId = useTripStore.getState().currentTripId;
       const tripTitleRaw = useTripStore.getState().trips.find(t => t.id === currentTripId)?.title || '';
       
-      const hikeData = await parseAllTrailsUrl(allTrailsUrl.trim(), tripTitleRaw);
+      const hikeData = await parseAllTrailsUrl(cleanedUrl, tripTitleRaw);
       if (hikeData.title) {
         setLocationName(hikeData.title);
         if (!title || title === 'New Activity' || title === 'Hike') {
@@ -161,7 +172,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       if (hikeData.startAddress) setAddress(hikeData.startAddress);
       if (hikeData.startLat) setLat(hikeData.startLat);
       if (hikeData.startLng) setLng(hikeData.startLng);
-      setHikeLink(allTrailsUrl.trim());
+      setHikeLink(cleanedUrl);
       setAllTrailsUrl('');
     } catch(err) {
       console.error(err);
