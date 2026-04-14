@@ -326,36 +326,9 @@ export default function MapViewScreen() {
     const fetchAllRoutes = async () => {
       try {
         const routePromises = dayKeys.map(async (key, i) => {
-          const rawStops = byDayMap.get(key)!;
+          const stops = byDayMap.get(key)!;
           const colorIdx = allTripDayKeys.indexOf(key);
           const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
-
-          // ─── Find Preceding Hotel as Starting Point ──────────────────────────
-          // Requirement: Route should always start from the LAST hotel we were checked in to.
-          let stops = [...rawStops];
-          const firstItem = rawStops[0];
-          const globalIdx = mappable.findIndex(m => m.id === firstItem.id);
-          
-          let precedingHotel = null;
-          if (globalIdx > 0) {
-            for (let k = globalIdx - 1; k >= 0; k--) {
-              // We want the most recent 'hotel' that isn't a checkout.
-              if (mappable[k].type === 'hotel' && !mappable[k]._isCheckout && mappable[k].location.latitude) {
-                precedingHotel = mappable[k];
-                break;
-              }
-            }
-          }
-
-          // Prepend the preceding hotel to the STOPS list if it's not already the first item
-          // and if they are at different locations (to avoid 0-dist segments)
-          if (precedingHotel && precedingHotel.id !== stops[0].id) {
-            const sameLoc = Math.abs(precedingHotel.location.latitude! - stops[0].location.latitude!) < 0.0001 &&
-                            Math.abs(precedingHotel.location.longitude! - stops[0].location.longitude!) < 0.0001;
-            if (!sameLoc) {
-              stops = [precedingHotel, ...stops];
-            }
-          }
 
           const cacheKey = stops.map(s => {
             const landing = s.type === 'flight' ? flightLandings[s.id] : null;
@@ -371,7 +344,7 @@ export default function MapViewScreen() {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-            addDebugLog('Directions', `Calculating Day: ${key}`, { stops: stops.length, hasOriginHotel: !!precedingHotel });
+            addDebugLog('Directions', `Calculating Day: ${key}`, { stops: stops.length });
             
             const segments: RouteSegment[] = [];
             // Use <= stops.length - 1 to ensure we check the last item for a terminal flight segment
