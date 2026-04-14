@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car, ArrowRight, Gauge, Ruler, Activity } from 'lucide-react';
+import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car, ArrowRight, Gauge, Ruler, Activity, Timer } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
@@ -149,6 +149,11 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
             {item.hikeDetails.elevation && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Activity size={12} /> {item.hikeDetails.elevation}
+              </div>
+            )}
+            {item.hikeDetails.duration && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Timer size={12} /> {item.hikeDetails.duration}
               </div>
             )}
           </div>
