@@ -38,7 +38,9 @@ export async function fetchWeather(lat: number, lon: number, startDate: string, 
       tempLow: Math.round(data.daily.temperature_2m_min[i]),
       condition: getWeatherCondition(data.daily.weathercode[i]),
       icon: getWeatherIcon(data.daily.weathercode[i]),
-      isHistorical: new Date(date.replace(/-/g, '/')) < today
+      isHistorical: new Date(date.replace(/-/g, '/')) < today,
+      lat,
+      lon
     }));
     
     return days;
@@ -86,7 +88,9 @@ async function fetchHistoricalAverages(lat: number, lon: number, startDate: stri
             snowfall: data.daily.snowfall_sum[idx] * 0.393701,
             condition: '',
             icon: '',
-            isHistorical: true
+            isHistorical: true,
+            lat,
+            lon
           };
         }));
       }
@@ -127,7 +131,9 @@ async function fetchHistoricalAverages(lat: number, lon: number, startDate: stri
       snowfall: sumSnow / count,
       condition: `Hist Avg`,
       icon: '📊',
-      isHistorical: true
+      isHistorical: true,
+      lat: mostRecentYear.lat,
+      lon: mostRecentYear.lon
     });
   }
 

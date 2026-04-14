@@ -97,6 +97,8 @@ export interface WeatherDay {
   isHistorical?: boolean;
   rainfall?: number;  // Inches
   snowfall?: number;  // Inches
+  lat?: number;
+  lon?: number;
 }
 
 export interface WeatherCache {

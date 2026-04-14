@@ -20,6 +20,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
   const navigate = useNavigate();
   const setFocusedLocation = useTripStore(s => s.setFocusedLocation);
   const tintedBackgrounds = useTripStore(s => s.tintedBackgrounds);
+  const weather = useTripStore(s => s.weather);
 
     const getTheme = () => {
       // Resilience: If hikeDetails exist, force it to be a hike theme regardless of type string
@@ -141,6 +142,37 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               </div>
             )}
           </div>
+
+          {/* Weather Badge */}
+          {(() => {
+            if (!weather || !item.location.latitude || !item.location.longitude) return null;
+            if (item.type !== 'hotel' && item.type !== 'activity' && item.type !== 'hiking' && item.type !== 'hike') return null;
+            
+            const dateKey = getDayKey(isCheckout && item.endDate ? item.endDate : item.startDate);
+            const itemWeather = weather.forecast.find(f => 
+              f.date === dateKey && 
+              f.lat?.toFixed(3) === item.location.latitude?.toFixed(3) && 
+              f.lon?.toFixed(3) === item.location.longitude?.toFixed(3)
+            );
+            
+            if (!itemWeather) return null;
+            
+            return (
+              <div 
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: '4px', 
+                  fontSize: '10px', fontWeight: 800, color: '#FFF', 
+                  background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.08)'
+                }}
+                title={itemWeather.condition}
+              >
+                <span>{itemWeather.icon}</span>
+                <span>{itemWeather.tempHigh}°</span>
+              </div>
+            );
+          })()}
+
           <div
             className="drag-handle"
             onClick={e => e.stopPropagation()}

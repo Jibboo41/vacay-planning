@@ -20,7 +20,7 @@ export default function WeatherScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. Determine the best location for every single day of the trip
+  // 1. Determine ALL relevant locations for every single day of the trip
   const getDailyLocations = () => {
     if (!items.length) return [];
     
@@ -44,16 +44,33 @@ export default function WeatherScreen() {
     while (curr <= endDate) {
        const dateKey = curr.toISOString().split('T')[0];
        
-       // Priority 1: Items on this day with coords
-       const dayItems = items.filter(i => getDayKey(i.startDate) === dateKey);
-       const specificItem = dayItems.find(i => i.location.latitude !== null && i.location.longitude !== null);
-       
-       if (specificItem) {
-          dayLocations.push({ 
-            date: dateKey, 
-            lat: specificItem.location.latitude!, 
-            lon: specificItem.location.longitude!, 
-            name: specificItem.location.name || 'Current Stop'
+       // Priority 1: All items on this day that are hotels, hikes, or activities with coords
+       const dayItems = items.filter(i => 
+         (getDayKey(i.startDate) === dateKey || (i.endDate && getDayKey(i.endDate) === dateKey)) &&
+         (i.type === 'hotel' || i.type === 'hiking' || i.type === 'hike' || i.type === 'activity') &&
+         i.location.latitude !== null && i.location.longitude !== null
+       );
+
+       if (dayItems.length > 0) {
+          dayItems.forEach(i => {
+            // Add start date location
+            if (getDayKey(i.startDate) === dateKey && i.location.latitude !== null) {
+              dayLocations.push({ 
+                date: dateKey, 
+                lat: i.location.latitude!, 
+                lon: i.location.longitude!, 
+                name: i.location.name || 'Current Stop'
+              });
+            }
+            // Add end date location if it's a different day (e.g. Hotel Checkout)
+            if (i.endDate && getDayKey(i.endDate) === dateKey && i.location.latitude !== null) {
+              dayLocations.push({ 
+                date: dateKey, 
+                lat: i.location.latitude!, 
+                lon: i.location.longitude!, 
+                name: i.location.name || 'Current Stop'
+              });
+            }
           });
        } else {
           // Priority 2: Active hotel stay spanning this day
@@ -80,7 +97,7 @@ export default function WeatherScreen() {
                   date: dateKey, 
                   lat: lastItem.location.latitude!, 
                   lon: lastItem.location.longitude!, 
-                  name: lastItem.location.name || 'Last Known Location'
+                  name: lastItem.location.name || 'Last Known'
                 });
              } else {
                 // Priority 4: Next known location
@@ -91,7 +108,7 @@ export default function WeatherScreen() {
                      date: dateKey, 
                      lat: firstNext.location.latitude!, 
                      lon: firstNext.location.longitude!, 
-                     name: firstNext.location.name || 'Upcoming Location'
+                     name: firstNext.location.name || 'Upcoming'
                    });
                 }
              }
@@ -101,7 +118,18 @@ export default function WeatherScreen() {
        curr.setDate(curr.getDate() + 1);
     }
     
-    return dayLocations;
+    // Deduplicate same-day, same-location entries
+    const uniqueDayLocations: typeof dayLocations = [];
+    dayLocations.forEach(dl => {
+      const exists = uniqueDayLocations.some(u => 
+        u.date === dl.date && 
+        u.lat.toFixed(4) === dl.lat.toFixed(4) && 
+        u.lon.toFixed(4) === dl.lon.toFixed(4)
+      );
+      if (!exists) uniqueDayLocations.push(dl);
+    });
+
+    return uniqueDayLocations;
   };
 
   const dailyLocations = getDailyLocations();
