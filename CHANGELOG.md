@@ -2,6 +2,16 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.21.0] - 2026-04-14
+### Added
+- **Premium Excel Export**: Upgraded export to high-fidelity **Excel (.xlsx)** format with professional styling, themed categories, and balance summaries for Google Sheets.
+- **Hiking Stats Automation**: Integrated **AllTrails Scraper** to automatically populate hiking items with trail stats (Distance, Difficulty, Elevation) via direct link parsing.
+
+## [1.20.0] - 2026-04-12
+### Added
+- **Per-Stop Weather**: Integrated detailed weather forecasts directly into the itinerary view for each stop.
+- **Dynamic Aggregation**: Implemented real-time data aggregation for trip-wide summaries and financial breakdown.
+
 ## [1.11.7] - 2026-04-11
 ### Added
 - **Refundable Cutoff Tracking**: Users can now track "Refundable Until" dates for Flights, Hotels, and Rental Cars.

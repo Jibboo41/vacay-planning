@@ -183,12 +183,26 @@ stateDiagram-v2
 
 ---
 
-### Phase 45 (v1.19.0): Itinerary Refinement & Data Portability
-- **Note Item Evolution**:
-  - **Timeline UI**: Notes now display their `title` in the category badge and unconditionally show the `description` in the card body. The expanded view is streamlined to show only action buttons.
-  - **Summary UI**: Suppressed "START" time labels for notes in the trip outline for a cleaner reading experience.
-- **Route Engine Hardening**:
-  - Implemented `AbortController` timeouts (10s) and robust error handling for OSRM routing.
+### Phase 47 (v1.21.0): Premium Export & Scraper
+- **Professional Portability**:
+  - Upgraded export to high-fidelity **Excel (.xlsx)** format with professional styling, themed categories, and balance summaries for Google Sheets.
+- **Automated Hiking Stats**:
+  - Integrated **AllTrails Scraper** to automatically populate hiking items with trail stats (Distance, Difficulty, Elevation) via direct link parsing.
+
+### Phase 46 (v1.20.0): Per-Stop Weather & Dynamic Aggregation
+- **Stop-Level Forecasts**:
+  - Implemented granular weather fetching for every Hotel, Hike, and Activity on their specific dates.
+  - Refined weather UI to show only High/Low temperatures in a clean, icon-free format for a professional look.
+- **Extreme High/Low Logic**:
+  - Refactored `TimelineScreen` and `SummaryScreen` to calculate daily Highs and Lows by aggregating all extreme values from all stops for that day.
+- **Data Hardening**: Updated `WeatherDay` model to support `lat` and `lon` identification for accurate item-to-weather mapping.
+
+- **Phase 46 (Per-Stop Weather)**:
+    - **Granular Models**: Updated `WeatherDay` to include `lat/lon` metadata.
+    - **Batch Fetching**: Refactored `WeatherScreen.tsx` to identify all unique stop coordinates and fetch/deduplicate multi-point forecasts.
+    - **Aggregate Rendering**: `SummaryScreen` and `TimelineScreen` now use `Math.max/min` across all matching date-point sets to show true day extremes.
+    - **Contextual UI**: Injected weather badges into `TimelineItem.tsx` header for relevant item types.
+
 ### Phase 45 (Refinement & Portability):
 - **Note Rendering**: Specialized `TimelineItem.tsx` logic to elevate note titles to badges and auto-expand descriptions.
 - **Routing Robustness**: Added signal-based cancellation and 10s timeouts to `fetchOSRMRoute` in `MapViewScreen.tsx`.

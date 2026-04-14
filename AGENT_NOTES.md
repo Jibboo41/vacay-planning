@@ -1,3 +1,11 @@
+- **Phase 47 (Data Portability & Scraper)**:
+    - **ExcelJS Export**: Replaced basic CSV with premium, styled `.xlsx` reports. Includes themed day grouping and automated financial summaries.
+    - **AllTrails Scraper**: Implemented backend-driven parsing for AllTrails URLs. Automatically extracts trail titles, difficulty, distance, and elevation directly into itinerary items.
+- **Phase 46 (Per-Stop Weather)**:
+    - **Granular Models**: Updated `WeatherDay` to include `lat/lon` metadata.
+    - **Batch Fetching**: Refactored `WeatherScreen.tsx` to identify all unique stop coordinates and fetch/deduplicate multi-point forecasts.
+    - **Aggregate Rendering**: `SummaryScreen` and `TimelineScreen` now use `Math.max/min` across all matching date-point sets to show true day extremes.
+    - **Icon-Free UI**: Stripped all weather icons and bar charts from the timeline and summary views to focus on pure data (H/L temps).
 - **Phase 45 (Refinement & Portability)**:
     - **Note Rendering**: Specialized `TimelineItem.tsx` logic to elevate note titles to badges and auto-expand descriptions. Removed redundant titles in card body.
     - **Routing Robustness**: Added signal-based cancellation and 10s timeouts to `fetchOSRMRoute` in `MapViewScreen.tsx`. Refined UI with glassy loading/error indicators.
