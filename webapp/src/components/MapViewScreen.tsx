@@ -3,7 +3,7 @@ import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Menu, Loader, X } from 'lucide-react';
+import { Menu, Loader, X, RefreshCw } from 'lucide-react';
 
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
@@ -226,6 +226,13 @@ export default function MapViewScreen() {
   const [routeStatus, setRouteStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const routeCache = useRef<Map<string, RouteSegment[]>>(new Map());
   const [flightLandings, setFlightLandings] = useState<Record<string, { lat: number, lng: number, name: string }>>({});
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  const handleRefresh = () => {
+    routeCache.current.clear();
+    setFlightLandings({});
+    setRefreshTick(prev => prev + 1);
+  };
 
   // ─── Geocode Landing Airports ─────────────────────────────────────────────
   useEffect(() => {
@@ -274,7 +281,7 @@ export default function MapViewScreen() {
     };
 
     parseAndGeocode();
-  }, [items]);
+  }, [items, refreshTick]);
 
   const allPositions: [number, number][] = useMemo(() => {
     const pos: [number, number][] = mappable.map(i => [i.location.latitude!, i.location.longitude!]);
@@ -427,7 +434,7 @@ export default function MapViewScreen() {
     fetchAllRoutes();
 
     return () => { isMounted = false; };
-  }, [dayKeys, byDayMap, mappable.length, allTripDayKeys]);
+  }, [dayKeys, byDayMap, mappable.length, allTripDayKeys, refreshTick]);
 
   const crossDayLines: [number, number][][] = [];
   for (let i = 0; i < dayKeys.length - 1; i++) {
@@ -463,6 +470,14 @@ export default function MapViewScreen() {
             {mappable.length} stop{mappable.length !== 1 ? 's' : ''} · {dayKeys.length} day{dayKeys.length !== 1 ? 's' : ''}
           </p>
         </div>
+        <button 
+          className="header-icon-btn btn-glass-blue"
+          style={{ borderRadius: '14px', marginLeft: 'auto' }}
+          onClick={handleRefresh}
+          disabled={routeStatus === 'loading'}
+        >
+          <RefreshCw size={20} className={routeStatus === 'loading' ? 'spinning' : ''} />
+        </button>
       </div>
 
       <MapContainer
