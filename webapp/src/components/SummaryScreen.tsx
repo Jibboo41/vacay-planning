@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car } from 'lucide-react';
+import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car, ArrowRight, Gauge, Ruler, Activity } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
@@ -30,7 +30,7 @@ function getTimeLabel(dateString: string) {
 }
 
 interface SummaryItemProps {
-  item: ItineraryItem;
+  item: ItineraryItem & { _segments?: ItineraryItem[] };
   isCheckout?: boolean;
 }
 
@@ -88,6 +88,16 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
     }
   }
 
+  // Handle Flight Grouping khusus
+  if (item._segments && item._segments.length > 0) {
+    const first = item._segments[0];
+    const last = item._segments[item._segments.length - 1];
+    timeText = `TAKEOFF • ${getTimeLabel(first.startDate)}`;
+    if (last.endDate && last.endDate.includes('T')) {
+      timeText += ` | LANDING • ${getTimeLabel(last.endDate)}`;
+    }
+  }
+
   return (
     <div style={{ display: 'flex', marginBottom: '12px' }}>
       {/* Icon Column */}
@@ -105,13 +115,42 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
           </div>
         )}
         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#FFF', margin: '0' }}>
-          {item.title}
+          {item._segments ? `${item._segments.length} Flight segments` : item.title}
         </h3>
         
-        {item.location.name && (
+        {item._segments ? (
+          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {item._segments.map((seg, idx) => (
+              <div key={seg.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--sys-label-secondary)', fontSize: '13px' }}>
+                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--sys-blue)', opacity: 0.5 }} />
+                <span>{seg.title}</span>
+                {idx < (item._segments?.length || 0) - 1 && <ArrowRight size={12} opacity={0.3} />}
+              </div>
+            ))}
+          </div>
+        ) : item.location.name && (
           <div style={{ display: 'flex', alignItems: 'flex-start', color: 'var(--sys-label-tertiary)', fontSize: '13px', marginBottom: '4px' }}>
             <MapPin size={12} style={{ marginTop: '2px', marginRight: '4px', flexShrink: 0 }} />
             <span style={{ lineHeight: '1.4' }}>{item.location.name}</span>
+          </div>
+        )}
+
+        {/* Hike Details */}
+        {item.type === 'hiking' && item.hikeDetails && (
+          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', color: '#30D158', fontSize: '12px', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Gauge size={12} /> {(item.hikeDetails as any).difficulty.toUpperCase()}
+            </div>
+            {item.hikeDetails.distance && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Ruler size={12} /> {item.hikeDetails.distance}
+              </div>
+            )}
+            {item.hikeDetails.elevation && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Activity size={12} /> {item.hikeDetails.elevation}
+              </div>
+            )}
           </div>
         )}
 
@@ -123,31 +162,6 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
             paddingTop: '6px'
           }}>
             <Linkified text={item.description} />
-          </div>
-        )}
-
-        {/* Refundable Badge */}
-        {(item.hotelDetails?.refundable || item.rentalDetails?.refundable || item.flightDetails?.refundable) && (
-          <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
-            <div style={{ 
-              fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
-              background: 'rgba(48, 209, 88, 0.1)', color: '#30D158', border: '1px solid rgba(48, 209, 88, 0.2)'
-            }}>
-              ✓ REFUNDABLE
-            </div>
-            {(item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate) && (
-              <div style={{ 
-                fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
-                background: 'rgba(255, 159, 10, 0.1)', color: '#FF9F0A', border: '1px solid rgba(255, 159, 10, 0.2)'
-              }}>
-                ⌛ {(() => {
-                  const dStr = item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate;
-                  if (!dStr) return '';
-                  const d = new Date(dStr.replace(/-/g, '/'));
-                  return d.toLocaleDateString([], { month: 'short', day: 'numeric' }).toUpperCase();
-                })()}
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -209,7 +223,27 @@ export default function SummaryScreen() {
       current.setDate(current.getDate() + 1);
     }
 
-    return groups;
+    // 3. Post-Process Flight Grouping
+    return groups.map(group => {
+      const grouped: any[] = [];
+      group.items.forEach(item => {
+        const last = grouped[grouped.length - 1];
+        // Combine if: both are flights, neither is a virtual checkout, and they are back-to-back
+        if (item.type === 'flight' && last && last.type === 'flight' && !last._isCheckout && !item._isCheckout) {
+          if (!last._segments) {
+             // Turn last into a container
+             const original = { ...last };
+             last._segments = [original];
+          }
+          last._segments.push(item);
+          // Optional: Update last._renderDate to earliest and last.endDate to latest if needed, 
+          // but sorting already puts them in order.
+        } else {
+          grouped.push(item);
+        }
+      });
+      return { ...group, items: grouped };
+    });
   }, [items]);
 
   const handleGenerateSummary = async () => {
