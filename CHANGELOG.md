@@ -2,6 +2,11 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.26.0] - 2026-04-14
+### Added
+- **Interactive Weather Detail**: Clicking any day in the Weather screen now opens a premium, glassmorphic Detail Modal with high-resolution icons and precipitation (Rain/Snow) statistics.
+- **Smart Forecast Splitting**: Refactored the weather API to automatically split date ranges across the 16-day forecast threshold. The app now displays live forecast data for early trip days and historical averages for later days within the same view.
+
 ## [1.25.0] - 2026-04-14
 ### Added
 - **Background Weather Sync Feedback**: Users now see a spinning refresh icon on the Timeline (replacing temperatures) and on the Weather Screen whenever a background sync is active (e.g. after moving an item).

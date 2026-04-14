@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, CloudSun } from 'lucide-react';
+import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, CloudSun, X } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
+import type { WeatherDay } from '../core/models';
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -17,6 +18,7 @@ export default function WeatherScreen() {
   const { weather, items, refreshWeather, setSidebarOpen, isWeatherRefreshing } = useTripStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<WeatherDay | null>(null);
 
   const formatLastUpdated = (timestamp: number) => {
     const diff = Date.now() - timestamp;
@@ -102,7 +104,82 @@ export default function WeatherScreen() {
   }, [items.length]);
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
+    <div className="safe-area-inset" style={{ minHeight: '100vh', position: 'relative' }}>
+      {/* Detail Modal Overlay */}
+      {selectedDay && (
+        <div 
+          className="modal-overlay"
+          style={{ 
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)',
+            zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px', animation: 'fadeIn 0.2s ease-out'
+          }}
+          onClick={() => setSelectedDay(null)}
+        >
+          <div 
+            className="glass-effect"
+            style={{ 
+              width: '100%', maxWidth: '400px', background: 'rgba(255,255,255,0.05)',
+              borderRadius: '32px', border: '1px solid rgba(255,255,255,0.1)',
+              padding: '32px', position: 'relative', boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setSelectedDay(null)}
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', padding: '8px', color: '#FFF' }}
+            >
+              <X size={20} />
+            </button>
+
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--sys-blue)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              {selectedDay.isHistorical ? 'Historical Average' : 'Live Forecast'}
+            </span>
+
+            <h2 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 24px 0', color: '#FFF' }}>
+              {new Date(`${selectedDay.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+            </h2>
+
+            <div style={{ fontSize: '80px', margin: '20px 0', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.2))' }}>
+              {selectedDay.isHistorical ? <CloudSun size={80} opacity={0.5} /> : (selectedDay.icon || '⛅')}
+            </div>
+
+            <div style={{ marginBottom: '32px' }}>
+              <span style={{ fontSize: '48px', fontWeight: 800, color: '#FFF' }}>{selectedDay.tempHigh}°</span>
+              <span style={{ fontSize: '24px', fontWeight: 600, color: 'var(--sys-label-secondary)', marginLeft: '12px' }}>/ {selectedDay.tempLow}°</span>
+              <p style={{ margin: '8px 0 0 0', fontSize: '16px', fontWeight: 700, color: 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                {selectedDay.isHistorical ? 'Normal Conditions' : selectedDay.condition}
+              </p>
+            </div>
+
+            <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#0EA5E9' }}>
+                   <Droplets size={16} />
+                   <span style={{ fontSize: '11px', fontWeight: 800 }}>RAIN</span>
+                </div>
+                <span style={{ fontSize: '18px', fontWeight: 800, color: '#FFF' }}>{(selectedDay.rainfall || 0).toFixed(2)}"</span>
+              </div>
+              <div style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#94A3B8' }}>
+                   <Snowflake size={16} />
+                   <span style={{ fontSize: '11px', fontWeight: 800 }}>SNOW</span>
+                </div>
+                <span style={{ fontSize: '18px', fontWeight: 800, color: '#FFF' }}>{(selectedDay.snowfall || 0).toFixed(2)}"</span>
+              </div>
+            </div>
+
+            {selectedDay.lat !== undefined && dailyLocations.find(dl => dl.date === selectedDay.date && Math.abs(dl.lat - selectedDay.lat!) < 0.001) && (
+              <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--sys-label-secondary)' }}>
+                 <MapPin size={14} />
+                 <span style={{ fontSize: '13px', fontWeight: 600 }}>{dailyLocations.find(dl => dl.date === selectedDay.date && Math.abs(dl.lat - selectedDay.lat!) < 0.001)?.name}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <header className="screen-header">
         <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
@@ -152,7 +229,8 @@ export default function WeatherScreen() {
               return (
                 <div 
                   key={`${day.date}-${day.lat}-${day.lon}`}
-                  className="glass-effect"
+                  className="glass-effect clickable"
+                  onClick={() => setSelectedDay(day)}
                   style={{ 
                     display: 'flex', alignItems: 'center', gap: '16px', 
                     padding: '16px 20px', borderRadius: '20px', 
@@ -160,7 +238,9 @@ export default function WeatherScreen() {
                     border: `1px solid ${borderCol}`,
                     backdropFilter: 'blur(40px)',
                     WebkitBackdropFilter: 'blur(40px)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    cursor: 'pointer',
+                    userSelect: 'none'
                   }}
                 >
                   <div style={{ flex: 1 }}>

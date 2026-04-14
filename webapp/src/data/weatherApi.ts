@@ -14,43 +14,59 @@ export async function fetchWeather(lat: number, lon: number, startDate: string, 
   sixteenDaysFromNow.setDate(today.getDate() + 16);
 
   const start = new Date(startDate.includes('T') ? startDate : startDate.replace(/-/g, '/'));
+  const end = new Date(endDate.includes('T') ? endDate : endDate.replace(/-/g, '/'));
   
-  // Decide whether to use Forecast API or Archive API
-  // If start date is > 16 days in the future, we must use Archive for multi-year averaging
+  // 1. Entirely beyond forecast range
   if (start > sixteenDaysFromNow) {
     return fetchHistoricalAverages(lat, lon, startDate, endDate);
   }
 
-  // Use .split('T')[0] to ensure we only have the YYYY-MM-DD part for the API
-  const s = startDate.split('T')[0];
-  const e = endDate.split('T')[0];
+  // 2. Entirely within forecast range
+  if (end <= sixteenDaysFromNow) {
+    return fetchForecast(lat, lon, startDate, endDate);
+  }
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${s}&end_date=${e}&temperature_unit=fahrenheit`;
-  
+  // 3. Mixed range: Split at exactly 16 days
+  const splitDateStr = sixteenDaysFromNow.toISOString().split('T')[0];
+  const dayAfterSplit = new Date(sixteenDaysFromNow);
+  dayAfterSplit.setDate(dayAfterSplit.getDate() + 1);
+  const nextDateStr = dayAfterSplit.toISOString().split('T')[0];
+
   try {
-    const res = await fetch(url);
-    const data = await res.json();
-    
-    if (!data.daily) {
-      return fetchHistoricalAverages(lat, lon, startDate, endDate);
-    }
-    
-    const days: WeatherDay[] = data.daily.time.map((date: string, i: number) => ({
-      date,
-      tempHigh: Math.round(data.daily.temperature_2m_max[i]),
-      tempLow: Math.round(data.daily.temperature_2m_min[i]),
-      condition: getWeatherCondition(data.daily.weathercode[i]),
-      icon: getWeatherIcon(data.daily.weathercode[i]),
-      isHistorical: new Date(date.replace(/-/g, '/')) < today,
-      lat,
-      lon
-    }));
-    
-    return days;
-  } catch (error) {
-    console.error("Forecast fetch failed, attempting historical fallback:", error);
+    const [forecastPart, historicalPart] = await Promise.all([
+      fetchForecast(lat, lon, startDate, splitDateStr),
+      fetchHistoricalAverages(lat, lon, nextDateStr, endDate)
+    ]);
+    return [...forecastPart, ...historicalPart];
+  } catch (err) {
+    console.error("Mixed weather fetch failed, falling back to all-historical:", err);
     return fetchHistoricalAverages(lat, lon, startDate, endDate);
   }
+}
+
+async function fetchForecast(lat: number, lon: number, startDate: string, endDate: string): Promise<WeatherDay[]> {
+  const today = new Date();
+  const s = startDate.split('T')[0];
+  const e = endDate.split('T')[0];
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_sum,snowfall_sum&timezone=auto&start_date=${s}&end_date=${e}&temperature_unit=fahrenheit`;
+  
+  const res = await fetch(url);
+  const data = await res.json();
+  
+  if (!data.daily) return [];
+  
+  return data.daily.time.map((date: string, i: number) => ({
+    date,
+    tempHigh: Math.round(data.daily.temperature_2m_max[i]),
+    tempLow: Math.round(data.daily.temperature_2m_min[i]),
+    condition: getWeatherCondition(data.daily.weathercode[i]),
+    icon: getWeatherIcon(data.daily.weathercode[i]),
+    rainfall: (data.daily.precipitation_sum[i] || 0) * 0.0393701, // mm to inch
+    snowfall: (data.daily.snowfall_sum[i] || 0) * 0.393701, // cm to inch
+    isHistorical: new Date(date.replace(/-/g, '/')) < today,
+    lat,
+    lon
+  }));
 }
 
 /**
