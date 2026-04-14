@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, BarChart3 } from 'lucide-react';
+import { Thermometer, RefreshCw, AlertCircle, Menu, MapPin, Droplets, Snowflake, CloudSun } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import { fetchWeather } from '../data/weatherApi';
 import type { WeatherDay } from '../core/models';
@@ -220,7 +220,7 @@ export default function WeatherScreen() {
             Local Weather
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {weather?.forecast.length ? `${weather.forecast.length} Day Forecast` : 'No data'}
+            {weather?.forecast.length ? `Itinerary Forecast` : 'No data'}
           </p>
         </div>
         <button 
@@ -233,7 +233,7 @@ export default function WeatherScreen() {
         </button>
       </header>
 
-      <div style={{ padding: '24px', paddingBottom: '120px' }}>
+      <div style={{ padding: '16px', paddingBottom: '120px' }}>
         {dailyLocations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             <AlertCircle size={48} opacity={0.2} />
@@ -250,25 +250,40 @@ export default function WeatherScreen() {
             )}
 
             {weather?.forecast.map(day => {
-              const loc = dailyLocations.find(dl => dl.date === day.date);
+              const isHot = day.tempHigh > 80;
+              const isCold = day.tempHigh < 50;
+              const cardBg = isHot ? 'rgba(255, 159, 10, 0.08)' : isCold ? 'rgba(10, 132, 255, 0.08)' : 'rgba(255, 255, 255, 0.04)';
+              const borderCol = isHot ? 'rgba(255, 159, 10, 0.2)' : isCold ? 'rgba(10, 132, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+
+              const loc = dailyLocations.find(dl => dl.date === day.date && dl.lat?.toFixed(3) === day.lat?.toFixed(3) && dl.lon?.toFixed(3) === day.lon?.toFixed(3));
+              const hasHistorical = !!day.isHistorical;
+              const primaryIcon = day.icon || '⛅';
+
               return (
                 <div 
-                  key={day.date}
+                  key={`${day.date}-${day.lat}-${day.lon}`}
                   className="glass-effect"
                   style={{ 
-                    display: 'flex', alignItems: 'center', gap: '20px', 
-                    padding: '24px', borderRadius: '28px', 
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex', alignItems: 'center', gap: '16px', 
+                    padding: '16px 20px', borderRadius: '20px', 
+                    background: cardBg,
+                    border: `1px solid ${borderCol}`,
                     backdropFilter: 'blur(40px)',
                     WebkitBackdropFilter: 'blur(40px)',
                     boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
                   }}
                 >
                   <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#FFF', letterSpacing: '-0.3px' }}>
-                      {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-                    </h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#FFF', letterSpacing: '-0.3px' }}>
+                        {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+                      </h4>
+                      {hasHistorical && (
+                        <span style={{ fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.05em' }}>
+                          HISTORICAL
+                        </span>
+                      )}
+                    </div>
                     {loc && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: 'var(--sys-blue)', opacity: 0.9 }}>
                          <MapPin size={12} />
@@ -286,15 +301,13 @@ export default function WeatherScreen() {
                   </div>
                   
                   <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                      {day.isHistorical ? (
-                        <BarChart3 size={36} style={{ color: 'rgba(255,255,255,0.4)', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} />
-                      ) : (
-                        <span style={{ fontSize: '40px', filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.2))' }}>{day.icon}</span>
-                      )}
+                    <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <span style={{ fontSize: '32px', filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.2))' }}>
+                        {hasHistorical ? <CloudSun size={28} opacity={0.5} /> : (primaryIcon)}
+                      </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: '11px', fontWeight: 900, color: day.isHistorical ? 'var(--sys-label-tertiary)' : 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                      {day.isHistorical ? 'Historical Avg' : day.condition}
+                    <p style={{ margin: 0, fontSize: '10px', fontWeight: 900, color: isHot ? '#FF9F0A' : isCold ? '#0A84FF' : 'var(--sys-label-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                      {day.isHistorical ? 'HISTORICAL AVG' : day.condition}
                     </p>
                     {day.isHistorical && (
                       <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>

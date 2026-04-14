@@ -109,6 +109,38 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
         </span>
         
+        {/* Weather Badge */}
+        {(() => {
+          if (!weather || !item.location.latitude || !item.location.longitude) return null;
+          if (item.type !== 'hotel' && item.type !== 'activity' && item.type !== 'hiking' && item.type !== 'hike') return null;
+          
+          const dateKey = getDayKey(isCheckout && item.endDate ? item.endDate : item.startDate);
+          const itemWeather = weather.forecast.find(f => 
+            f.date === dateKey && 
+            f.lat?.toFixed(3) === item.location.latitude?.toFixed(3) && 
+            f.lon?.toFixed(3) === item.location.longitude?.toFixed(3)
+          );
+          
+          if (!itemWeather) return null;
+          
+          return (
+            <div 
+              style={{ 
+                display: 'flex', alignItems: 'center', gap: '6px', 
+                fontSize: '10px', fontWeight: 800, color: '#FFF', 
+                background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                marginRight: '8px'
+              }}
+              title={itemWeather.condition}
+            >
+              <span style={{ fontSize: '12px' }}>{itemWeather.icon || '🌡️'}</span>
+              <span style={{ color: '#FF9F0A' }}>H: {Math.round(itemWeather.tempHigh)}°</span>
+              <span style={{ color: '#0A84FF' }}>L: {Math.round(itemWeather.tempLow)}°</span>
+            </div>
+          );
+        })()}
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
@@ -142,36 +174,6 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               </div>
             )}
           </div>
-
-          {/* Weather Badge */}
-          {(() => {
-            if (!weather || !item.location.latitude || !item.location.longitude) return null;
-            if (item.type !== 'hotel' && item.type !== 'activity' && item.type !== 'hiking' && item.type !== 'hike') return null;
-            
-            const dateKey = getDayKey(isCheckout && item.endDate ? item.endDate : item.startDate);
-            const itemWeather = weather.forecast.find(f => 
-              f.date === dateKey && 
-              f.lat?.toFixed(3) === item.location.latitude?.toFixed(3) && 
-              f.lon?.toFixed(3) === item.location.longitude?.toFixed(3)
-            );
-            
-            if (!itemWeather) return null;
-            
-            return (
-              <div 
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '4px', 
-                  fontSize: '10px', fontWeight: 800, color: '#FFF', 
-                  background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '6px',
-                  border: '1px solid rgba(255,255,255,0.08)'
-                }}
-                title={itemWeather.condition}
-              >
-                <span>{itemWeather.icon}</span>
-                <span>{itemWeather.tempHigh}°</span>
-              </div>
-            );
-          })()}
 
           <div
             className="drag-handle"
