@@ -441,7 +441,48 @@ input, textarea {
   box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.6);
 }
 
-.leaflet-popup-content-wrapper { border-radius: 14px !important; }
+/* ── Leaflet Popup Overhaul (Glassmorphism) ── */
+.leaflet-popup-content-wrapper {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
+  color: var(--sys-label-primary) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 16px !important;
+  line-height: 1.4 !important;
+  width: auto !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--glass-bg) !important;
+  backdrop-filter: var(--glass-blur) !important;
+  -webkit-backdrop-filter: var(--glass-blur) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: none !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--sys-label-secondary) !important;
+  padding: 8px !important;
+  font-size: 20px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: var(--sys-label-primary) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+}
 
 /* Utility */
 .edit-field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }

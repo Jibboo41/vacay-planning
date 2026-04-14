@@ -3,7 +3,7 @@ import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Menu, Loader, X, RefreshCw } from 'lucide-react';
+import { Menu, Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
 
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
@@ -533,16 +533,23 @@ export default function MapViewScreen() {
             icon={makeMarkerIcon(item.type)}
           >
             <Popup className="custom-popup">
-              <div style={{ minWidth: '190px', padding: '4px 2px' }}>
-                <p style={{ fontSize: '11px', color: '#0A84FF', fontWeight: 800, letterSpacing: '0.05em', marginBottom: '4px', textTransform: 'uppercase' }}>
+              <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <p style={{ 
+                  fontSize: '11px', 
+                  color: TYPE_COLORS[item.type] || 'var(--sys-blue)', 
+                  fontWeight: 900, 
+                  letterSpacing: '0.08em', 
+                  marginBottom: '6px', 
+                  textTransform: 'uppercase' 
+                }}>
                   {new Date(item._renderDate.replace('T', ' ').replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                   {item._isCheckout ? ' • CHECK-OUT' : ''}
                 </p>
-                <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#111' }}>
+                <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '4px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
                   {item.title} {item._isCheckout ? '(Checkout)' : ''}
                 </p>
                 {item.location.address && (
-                  <p style={{ fontSize: '12px', color: '#555', marginBottom: '10px', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginBottom: '14px', lineHeight: 1.5, fontWeight: 500 }}>
                     {item.location.address}
                   </p>
                 )}
@@ -550,14 +557,15 @@ export default function MapViewScreen() {
                   href={mapsUrl(item.location.latitude!, item.location.longitude!, item.title)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="btn-glass-blue"
                   style={{
-                    display: 'inline-block', padding: '6px 14px',
-                    background: '#0A84FF', color: '#fff',
-                    borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                    textDecoration: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
+                    fontWeight: 700, textDecoration: 'none', gap: '8px'
                   }}
                 >
-                  {isIOS() ? '🗺️ Open in Apple Maps' : '🗺️ Open in Google Maps'}
+                  <span>{isIOS() ? ' Maps' : 'Google Maps'}</span>
+                   <ArrowRight size={14} />
                 </a>
               </div>
             </Popup>
@@ -590,22 +598,23 @@ export default function MapViewScreen() {
               })}
             >
               <Popup className="custom-popup">
-                <div style={{ padding: '4px 2px' }}>
-                  <p style={{ fontWeight: 800, color: isTripEnd ? '#FF3B30' : '#8E8E93', fontSize: '11px', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    {isTripEnd ? 'Final Destination' : 'Destination'}
+                <div style={{ minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <p style={{ fontWeight: 900, color: isTripEnd ? '#FF3B30' : 'var(--sys-label-secondary)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
+                    {isTripEnd ? '🏁 Final Destination' : 'Destination'}
                   </p>
-                  <p style={{ fontWeight: 700, fontSize: '14px', marginBottom: '4px', color: '#111' }}>
+                  <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '12px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
                     {landing.name}
                   </p>
                   <a
                     href={mapsUrl(landing.lat, landing.lng, landing.name)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="btn-glass-blue"
                     style={{
-                      display: 'inline-block', padding: '6px 14px',
-                      background: isTripEnd ? '#FF3B30' : '#8E8E93', color: '#fff',
-                      borderRadius: '8px', fontSize: '12px', fontWeight: 600,
-                      textDecoration: 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
+                      fontWeight: 700, textDecoration: 'none', background: isTripEnd ? 'rgba(255, 59, 48, 0.2)' : undefined,
+                      borderColor: isTripEnd ? 'rgba(255, 59, 48, 0.4)' : undefined
                     }}
                   >
                     Open in Maps
