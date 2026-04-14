@@ -2,6 +2,14 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.25.0] - 2026-04-14
+### Added
+- **Background Weather Sync Feedback**: Users now see a spinning refresh icon on the Timeline (replacing temperatures) and on the Weather Screen whenever a background sync is active (e.g. after moving an item).
+
+## [1.24.0] - 2026-04-14
+### Added
+- **AllTrails Link Sanitization**: Robustified the Quick Import tool to handle mobile app share links by automatically stripping leading descriptive text and tracking parameters.
+
 ## [1.23.0] - 2026-04-14
 ### Added
 - **Centralized Weather Engine**: Migrated weather fetching to the global store for multi-screen access and background sync.

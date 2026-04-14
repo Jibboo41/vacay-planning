@@ -14,7 +14,7 @@ function getDayKey(dateString: string) {
 }
 
 export default function WeatherScreen() {
-  const { weather, items, refreshWeather, setSidebarOpen } = useTripStore();
+  const { weather, items, refreshWeather, setSidebarOpen, isWeatherRefreshing } = useTripStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -119,9 +119,9 @@ export default function WeatherScreen() {
           className="header-icon-btn btn-glass-blue"
           style={{ borderRadius: '14px', marginLeft: 'auto' }}
           onClick={handleUpdate}
-          disabled={loading}
+          disabled={loading || isWeatherRefreshing}
         >
-          <RefreshCw size={20} className={loading ? 'spinning' : ''} />
+          <RefreshCw size={20} className={(loading || isWeatherRefreshing) ? 'spinning' : ''} />
         </button>
       </header>
 

@@ -21,6 +21,7 @@
 - [x] **AllTrails Robustness**: Sanitize mobile share links and strip tracking parameters.
 
 ## 🚀 Deployment
+- [ ] **Weather Polish**: Show spinning reload logo on Weather screen and Timeline headers during background refreshes.
 - [ ] **Maps:** Implement Hotel-Origin Routing (ensure routes start from the last accommodation across multi-day stays).
 - [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
 - [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.

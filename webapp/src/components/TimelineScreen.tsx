@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Menu, Map } from 'lucide-react';
+import { Menu, Map, RefreshCw } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
@@ -98,7 +98,7 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters } = useTripStore();
+  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
   const currentTrip = trips.find(t => t.id === currentTripId);
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
@@ -458,11 +458,15 @@ export default function TimelineScreen() {
                       <span style={{ fontWeight: 700 }}>Map Day</span>
                     </button>
                   </div>
-                  {high !== null && low !== null && (
+                  {isWeatherRefreshing ? (
+                    <div className="spinning" style={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
+                      <RefreshCw size={14} color="var(--sys-blue)" />
+                    </div>
+                  ) : (high !== null && low !== null && (
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
                       <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
                     </span>
-                  )}
+                  ))}
                 </div>
 
                 <div

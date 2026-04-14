@@ -45,6 +45,7 @@ interface TripStore {
   activeFilters: string[];
   hiddenDayFilters: string[];
   tintedBackgrounds: boolean;
+  isWeatherRefreshing: boolean;
   
   // Actions
   setUserId: (userId: string | null) => void;
@@ -153,6 +154,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
   hiddenDayFilters: [],
   tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') === 'true',
+  isWeatherRefreshing: false,
   debugLogs: [],
 
   addDebugLog: (category, message, data) => 
@@ -588,6 +590,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId || !items.length) return;
 
     addDebugLog('Weather', 'Starting automatic refresh...');
+    set({ isWeatherRefreshing: true });
     
     try {
       // 1. Determine relevant locations (logic mirrored from WeatherScreen)
@@ -662,6 +665,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       }
     } catch (err) {
       addDebugLog('Weather', 'Auto-refresh failed', err);
+    } finally {
+      set({ isWeatherRefreshing: false });
     }
   },
 
