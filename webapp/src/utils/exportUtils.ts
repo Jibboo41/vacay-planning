@@ -1,4 +1,5 @@
 import type { ItineraryItem, Expense } from '../core/models';
+export { downloadTripExcel } from './excelExport';
 
 /**
  * Escapes a string for CSV format by doubling quotes and wrapping in quotes if needed.

@@ -4,11 +4,11 @@ import {
   Plus, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, 
   Flower2, Waves, Flame, Flower, Zap, Plane, BedDouble, Car, Navigation, 
   MountainSnow, Utensils, StickyNote, TrainFront, ArrowLeft, Terminal,
-  ChevronDown, ChevronUp 
+  ChevronDown, ChevronUp, FileSpreadsheet 
 } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
-import { downloadTripCSV } from '../utils/exportUtils';
+import { downloadTripExcel } from '../utils/exportUtils';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -147,11 +147,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={() => {
                 const trip = trips.find(t => t.id === currentTripId);
                 if (trip) {
-                  downloadTripCSV(trip.title, trip.items || [], trip.expenses || []);
+                  downloadTripExcel(trip.title, trip.items || [], trip.expenses || []);
                 }
               }}
             >
-              <Layout size={18} />
+              <FileSpreadsheet size={18} />
               <span>Export to Sheets</span>
             </button>
           </div>
