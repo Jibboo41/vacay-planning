@@ -3,7 +3,10 @@ import type { WeatherDay } from '../core/models';
 /**
  * Fetches weather for a specific latitude and longitude over a date range.
  * If you need data for just one day, set startDate and endDate to the same value.
- * Automatiaclly switches to archive/historical if dates are out of forecast range (>16 days).
+ * Automatically switches to archive/historical if dates are out of forecast range (>16 days).
+ * 
+ * TODO: [ ] **Data Portability**: Enhance Google Sheets export with premium visual formatting, structured report styling, and professional itinerary layouts.
+ * TODO: [ ] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
  */
 export async function fetchWeather(lat: number, lon: number, startDate: string, endDate: string): Promise<WeatherDay[]> {
   const today = new Date();

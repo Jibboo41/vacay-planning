@@ -134,7 +134,6 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 }}
                 title={itemWeather.condition}
               >
-                <span style={{ fontSize: '11px' }}>{itemWeather.icon || '🌡️'}</span>
                 <span style={{ color: '#FF9F0A' }}>H: {Math.round(itemWeather.tempHigh)}°</span>
                 <span style={{ color: '#0A84FF' }}>L: {Math.round(itemWeather.tempLow)}°</span>
               </div>

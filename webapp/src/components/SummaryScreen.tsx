@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, CloudSun, Car } from 'lucide-react';
+import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
@@ -294,8 +294,6 @@ export default function SummaryScreen() {
               const dayForecasts = weather?.forecast?.filter(w => w.date === group.dateKey) || [];
               const high = dayForecasts.length > 0 ? Math.max(...dayForecasts.map(w => w.tempHigh)) : null;
               const low = dayForecasts.length > 0 ? Math.min(...dayForecasts.map(w => w.tempLow)) : null;
-              const hasHistorical = dayForecasts.some(w => w.isHistorical);
-              const primaryIcon = dayForecasts[0]?.icon || '⛅';
               
               return (
                 <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
@@ -310,13 +308,6 @@ export default function SummaryScreen() {
                     </div>
                     {high !== null && low !== null && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                        {hasHistorical ? (
-                           <CloudSun size={20} style={{ color: 'rgba(255,255,255,0.4)', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.1))' }} />
-                        ) : (
-                          <span style={{ fontSize: '24px', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }}>
-                            {primaryIcon}
-                          </span>
-                        )}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
                           <span style={{ fontSize: '13px', fontWeight: 800, color: '#FF9F0A' }}>H: {Math.round(high)}°</span>
                           <span style={{ fontSize: '10px', color: '#0A84FF', fontWeight: 700 }}>L: {Math.round(low)}°</span>
