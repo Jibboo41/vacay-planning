@@ -14,8 +14,8 @@
   --sys-bg-elevated-3: #3A3A3C;
 
   --sys-label-primary: #FFFFFF;
-  --sys-label-secondary: rgba(235, 235, 245, 0.60);
-  --sys-label-tertiary: rgba(235, 235, 245, 0.30);
+  --sys-label-secondary: rgba(235, 235, 245, 0.75);
+  --sys-label-tertiary: rgba(235, 235, 245, 0.40);
 
   --sys-separator: rgba(84, 84, 88, 0.65);
 
@@ -443,9 +443,9 @@ input, textarea {
 
 /* ── Leaflet Popup Overhaul (Glassmorphism) ── */
 .leaflet-popup-content-wrapper {
-  background: var(--glass-bg) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  -webkit-backdrop-filter: var(--glass-blur) !important;
+  background: rgba(42, 42, 46, 0.72) !important;
+  backdrop-filter: blur(44px) saturate(220%) brightness(1.1) !important;
+  -webkit-backdrop-filter: blur(44px) saturate(220%) brightness(1.1) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: 20px !important;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5) !important;
@@ -461,9 +461,9 @@ input, textarea {
 }
 
 .leaflet-popup-tip {
-  background: var(--glass-bg) !important;
-  backdrop-filter: var(--glass-blur) !important;
-  -webkit-backdrop-filter: var(--glass-blur) !important;
+  background: rgba(42, 42, 46, 0.72) !important;
+  backdrop-filter: blur(44px) saturate(220%) brightness(1.1) !important;
+  -webkit-backdrop-filter: blur(44px) saturate(220%) brightness(1.1) !important;
   border: 1px solid var(--glass-border) !important;
   box-shadow: none !important;
 }

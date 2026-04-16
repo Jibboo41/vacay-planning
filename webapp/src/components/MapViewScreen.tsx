@@ -561,7 +561,8 @@ export default function MapViewScreen() {
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
-                    fontWeight: 700, textDecoration: 'none', gap: '8px'
+                    fontWeight: 700, textDecoration: 'none', gap: '8px',
+                    background: 'rgba(10, 132, 255, 0.45)', border: '1px solid rgba(10, 132, 255, 0.6)'
                   }}
                 >
                   <span>{isIOS() ? ' Maps' : 'Google Maps'}</span>
@@ -613,8 +614,9 @@ export default function MapViewScreen() {
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
-                      fontWeight: 700, textDecoration: 'none', background: isTripEnd ? 'rgba(255, 59, 48, 0.2)' : undefined,
-                      borderColor: isTripEnd ? 'rgba(255, 59, 48, 0.4)' : undefined
+                      fontWeight: 700, textDecoration: 'none', 
+                      background: isTripEnd ? 'rgba(255, 59, 48, 0.4)' : 'rgba(10, 132, 255, 0.45)',
+                      borderColor: isTripEnd ? 'rgba(255, 59, 48, 0.6)' : 'rgba(10, 132, 255, 0.6)'
                     }}
                   >
                     Open in Maps
