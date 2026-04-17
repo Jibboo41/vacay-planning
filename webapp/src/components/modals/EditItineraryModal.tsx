@@ -549,11 +549,11 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               )}
 
               {type === 'food' && (
-                <div style={{ background: 'rgba(255, 159, 10, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(255, 159, 10, 0.2)' }}>
+                <div style={{ background: 'rgba(191, 90, 242, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(191, 90, 242, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Utensils size={18} color="#FF9F0A" />
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#FF9F0A' }}>DINING DISCOVERY</span>
+                      <Utensils size={18} color="#BF5AF2" />
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#BF5AF2' }}>DINING DISCOVERY</span>
                     </div>
                   </div>
 

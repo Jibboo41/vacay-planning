@@ -47,14 +47,14 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'RET' : 'PKUP'}</span>
             </div>
           ),
-          color: '#AF52DE', 
-          bg: 'rgba(175, 82, 222, 0.1)' 
+          color: '#64D2FF', 
+          bg: 'rgba(100, 210, 255, 0.1)' 
         };
         case 'activity': return { icon: <Navigation size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
         case 'hike':
         case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
         case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-        case 'food':     return { icon: <Utensils size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+        case 'food':     return { icon: <Utensils size={24} />, color: '#BF5AF2', bg: 'rgba(191, 90, 242, 0.1)' };
         case 'note':     return { icon: <StickyNote size={24} />, color: '#8E8E93', bg: 'rgba(142, 142, 147, 0.1)' };
         default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
       }

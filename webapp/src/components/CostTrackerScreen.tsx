@@ -18,10 +18,10 @@ const CATEGORY_ICONS: Record<Expense['category'], any> = {
 };
 
 const CATEGORY_COLORS: Record<Expense['category'], string> = {
-  'Car Rental': '#AF52DE',
+  'Car Rental': '#64D2FF',
   'Flights': '#0A84FF',
   'Gas': '#FFD60A',
-  'Dining': '#FF7000',
+  'Dining': '#BF5AF2',
   'Lodging': '#FF9F0A',
   'Souvenirs': '#FF2D55',
   'Other': 'var(--sys-label-secondary)',

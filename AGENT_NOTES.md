@@ -1,3 +1,8 @@
+- **Phase 70 (Color Palette Pivot)**:
+    - **Dining (food)**: Shifted to **System Purple (#BF5AF2)** across Map, Timeline, and Costs.
+    - **Rental Cars**: Shifted to **Light Sky Blue (#64D2FF)** across Map, Timeline, and Costs.
+    - **Hotels**: Returned to **System Orange (#FF9F0A)** for better distinction from Meals.
+    - **Consistency**: Synchronized colors in `CostTrackerScreen.tsx` and `SummaryScreen.tsx`.
 - **Phase 69 (Dining Discovery 2.0 Refinements)**:
     - **Color Hierarchy**: Shifted Dining (food) to **System Yellow (#FFD60A)** and Notes to **System Gray (#8E8E93)**. This ensures visual separation from Orange Hotel markers and Red Check-out alerts.
     - **Automated Geocoding**: Implemented sequential Nominatim geocoding in `scoutDining.ts` (backend). Scouted results now return with `lat/lng` for instant mapping visibility.
@@ -48,7 +53,7 @@
     - **UI Interaction**: Implemented a custom glass-style toggle switch in the `Sidebar` appearance menu for immediate visual feedback.
 - **Phase 42 (Palette Refresh)**:
     - **Color Logic Shift**: Re-defined semantic coloring across `TimelineItem`, `SummaryScreen`, `MapViewScreen`, and `CostTrackerScreen`.
-    - **Palette Mapping**: `Hotel` -> Orange (`#FF9F0A`), `Hike` -> iOS Green (`#30D158`), `Activity` -> Grey (`#EBEBF5`).
+    - **Palette Mapping**: `Hotel` -> Orange (`#FF9F0A`), `Hike` -> iOS Green (`#30D158`), `Activity` -> Grey (`#EBEBF5`), `Dining` -> Purple (`#BF5AF2`), `Rental Car` -> Light Blue (`#64D2FF`).
     - **Maintenance Note**: Ensure all hardcoded hex strings in inline styles (e.g., expanded view badges) are updated alongside the `getTheme` switches to prevent visual regressions.
 - **Phase 41 (AllTrails AI Extraction)**:
     - **Google Search Grounding**: AllTrails heavily limits standard headless bots (403 limits). Uses `@google/genai` with `tools: [{ googleSearch: {} }]` natively in the cloud function `/api/parse-hike` to tap the Google Search index. Avoid headless puppeteer scripts as they break on deploy.

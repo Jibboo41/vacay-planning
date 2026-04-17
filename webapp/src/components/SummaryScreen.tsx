@@ -39,12 +39,12 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
     switch (item.type) {
       case 'flight':     return { icon: <Plane size={20} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
       case 'hotel':      return { icon: <BedDouble size={20} />, color: isCheckout ? '#FF3B30' : '#FF9F0A', bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 159, 10, 0.1)' };
-      case 'rental-car': return { icon: <Car size={20} />, color: '#AF52DE', bg: 'rgba(175, 82, 222, 0.1)' };
+      case 'rental-car': return { icon: <Car size={20} />, color: '#64D2FF', bg: 'rgba(100, 210, 255, 0.1)' };
       case 'activity':   return { icon: <Navigation size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
       case 'hiking':     return { icon: <MountainSnow size={20} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
       case 'transit':    return { icon: <TrainFront size={20} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-      case 'food':       return { icon: <Utensils size={20} />, color: '#FF2D55', bg: 'rgba(255, 45, 85, 0.1)' };
-      case 'note':       return { icon: <StickyNote size={20} />, color: 'var(--sys-label-tertiary)', bg: 'rgba(255, 255, 255, 0.05)' };
+      case 'food':       return { icon: <Utensils size={20} />, color: '#BF5AF2', bg: 'rgba(191, 90, 242, 0.1)' };
+      case 'note':       return { icon: <StickyNote size={20} />, color: '#8E8E93', bg: 'rgba(142, 142, 147, 0.1)' };
       default:           return { icon: <CalendarClock size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
     }
   };

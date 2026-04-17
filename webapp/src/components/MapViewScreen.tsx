@@ -9,12 +9,12 @@ import { Menu, Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
 
 const TYPE_COLORS: Record<string, string> = {
   flight:   '#0A84FF',
-  hotel:    '#BF5AF2', // Changed to Purple for premium glass feel
+  hotel:    '#FF9F0A', // Back to Orange for distinction
   activity: '#64D2FF', // Brighter Sky Blue
   hiking:   '#30D158',
   transit:  '#5E5CE6',
-  food:     '#FFD60A',
-  note:     '#FF9F0A', // Changed to Orange
+  food:     '#BF5AF2', // Purple for meals
+  note:     '#8E8E93', // Gray for notes
   unknown:  '#8E8E93',
 };
 

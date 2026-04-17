@@ -2,13 +2,18 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.31.0] - 2026-04-17
+### Added
+- **Color Palette Pivot**: Transitioned **Dining** to System Purple (#BF5AF2) and **Rental Cars** to Light Sky Blue (#64D2FF) for improved category differentiation.
+- **Financial Sync**: Synchronized the new color hierarchy with the Cost Tracker category summary and detail badges.
+- **Note Standardization**: Normalized **Notes** to System Gray (#8E8E93) as part of the overall UI hierarchy cleanup.
+
 ## [1.30.0] - 2026-04-17
 ### Added
-- **Dining Discovery 2.0**: Overhauled the "Veggie Scout" into a centralized, trip-aware discovery workflow.
+- **Dining Discovery 2.0**: Overhauled the "Veggie Scout" into a centralized, trip-aware discovery workflow with automated geocoding.
 - **AI Proximity Intelligence**: The scout now returns estimated distances (e.g., "0.4 miles away") relative to your selected reference point.
 - **Structured Dining Links**: HappyCow and Official Website links are now stored as explicit data fields and rendered as premium glass action buttons (AllTrails style).
-- **Thematic Edit Form**: Implemented a gold/yellow "Dining Discovery" section in the Edit Modal for structured metadata management.
-- **Ergonomic FAB Reorder**: Swapped the Dining Scout and Email Parser positions in the Sparkles menu to prioritize meal discovery.
+- **Thematic Edit Form**: Implemented a "Dining Discovery" section in the Edit Modal for structured metadata management.
 
 ## [1.29.0] - 2026-04-17
 ### Added
