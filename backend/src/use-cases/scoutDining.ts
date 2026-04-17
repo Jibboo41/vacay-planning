@@ -11,6 +11,7 @@ export interface ScoutedRestaurant {
   cuisineType: string;
   happyCowUrl?: string;
   officialUrl?: string;
+  distance?: string;
 }
 
 export async function scoutVegetarianRestaurants(location: string, tripTitle: string = ''): Promise<ScoutedRestaurant[]> {
@@ -32,7 +33,8 @@ Schema:
     "description": "1-2 sentence description highlighting why a vegetarian would love it.",
     "cuisineType": "e.g. Italian, Thai, Bakery, etc.",
     "happyCowUrl": "Link to this restaurant on HappyCow.net (highly preferred)",
-    "officialUrl": "Link to the restaurant's official website"
+    "officialUrl": "Link to the restaurant's official website",
+    "distance": "Estimated distance from ${location} (e.g. '0.4 miles away' or '5 min walk')"
   }
 ]
 

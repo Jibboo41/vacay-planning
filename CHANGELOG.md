@@ -2,6 +2,14 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.30.0] - 2026-04-17
+### Added
+- **Dining Discovery 2.0**: Overhauled the "Veggie Scout" into a centralized, trip-aware discovery workflow.
+- **AI Proximity Intelligence**: The scout now returns estimated distances (e.g., "0.4 miles away") relative to your selected reference point.
+- **Structured Dining Links**: HappyCow and Official Website links are now stored as explicit data fields and rendered as premium glass action buttons (AllTrails style).
+- **Thematic Edit Form**: Implemented a gold/yellow "Dining Discovery" section in the Edit Modal for structured metadata management.
+- **Ergonomic FAB Reorder**: Swapped the Dining Scout and Email Parser positions in the Sparkles menu to prioritize meal discovery.
+
 ## [1.29.0] - 2026-04-17
 ### Added
 - **Gemini "Veggie Scout"**: Implemented a search-grounded restaurant discovery feature using the existing Google AI infrastructure. Users can now scout for top-rated vegetarian and vegan locations near their destinations directly from the Timeline view.

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Sparkles, Loader } from 'lucide-react';
+import { X, Save, Sparkles, Loader, Utensils } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
 import { parseAllTrailsUrl } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
@@ -49,6 +49,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [hikeLink, setHikeLink] = useState(item.hikeDetails?.allTrailsLink ?? '');
 
   const [foodMeal, setFoodMeal] = useState<'Breakfast'|'Lunch'|'Dinner'|'Snack'|'Dessert'>(item.foodDetails?.mealType ?? 'Dinner');
+  const [foodHappyCow, setFoodHappyCow] = useState(item.foodDetails?.happyCowUrl ?? '');
+  const [foodOfficial, setFoodOfficial]   = useState(item.foodDetails?.officialUrl ?? '');
   const [refundable, setRefundable] = useState(
     item.hotelDetails?.refundable ?? 
     item.rentalDetails?.refundable ?? 
@@ -115,7 +117,9 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         allTrailsLink: hikeLink || undefined,
       } : undefined,
       foodDetails: type === 'food' ? {
-        mealType: foodMeal
+        mealType: foodMeal,
+        happyCowUrl: foodHappyCow || undefined,
+        officialUrl: foodOfficial || undefined
       } : undefined,
       hotelDetails: type === 'hotel' ? {
         refundable,
@@ -540,6 +544,40 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                       <label className="edit-field-label">AllTrails Link</label>
                       <input className="edit-field-input" type="url" value={hikeLink} onChange={e => setHikeLink(e.target.value)} placeholder="https://www.alltrails.com/..." />
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {type === 'food' && (
+                <div style={{ background: 'rgba(255, 159, 10, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(255, 159, 10, 0.2)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Utensils size={18} color="#FF9F0A" />
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#FF9F0A' }}>DINING DISCOVERY</span>
+                    </div>
+                  </div>
+
+                  <div className="edit-field-group">
+                    <label className="edit-field-label">HappyCow Link</label>
+                    <input 
+                      className="edit-field-input" 
+                      type="url" 
+                      value={foodHappyCow} 
+                      onChange={e => setFoodHappyCow(e.target.value)} 
+                      placeholder="https://www.happycow.net/..." 
+                      style={{ background: 'rgba(48, 209, 88, 0.05)', borderColor: 'rgba(48, 209, 88, 0.15)' }}
+                    />
+                  </div>
+                  <div className="edit-field-group" style={{ marginBottom: 0 }}>
+                    <label className="edit-field-label">Official Website</label>
+                    <input 
+                      className="edit-field-input" 
+                      type="url" 
+                      value={foodOfficial} 
+                      onChange={e => setFoodOfficial(e.target.value)} 
+                      placeholder="https://restaurant-site.com/..." 
+                      style={{ background: 'rgba(10, 132, 255, 0.05)', borderColor: 'rgba(10, 132, 255, 0.15)' }}
+                    />
                   </div>
                 </div>
               )}

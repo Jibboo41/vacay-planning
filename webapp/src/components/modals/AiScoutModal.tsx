@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, Star, MapPin, Plus, ExternalLink, Globe, Utensils } from 'lucide-react';
+import { X, Star, MapPin, Plus, ExternalLink, Globe, Utensils, Navigation } from 'lucide-react';
 import { scoutDining } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
 import type { ItineraryItem } from '../../core/models';
@@ -171,8 +171,15 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
                           <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#FFF', marginBottom: '4px' }}>{res.name}</h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#FF9F0A', fontWeight: 700, marginBottom: '4px' }}>
-                            <Star size={12} fill="#FF9F0A" /> {res.rating}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#FF9F0A', fontWeight: 700 }}>
+                              <Star size={12} fill="#FF9F0A" /> {res.rating}
+                            </div>
+                            {res.distance && (
+                              <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
+                                <Navigation size={11} /> {res.distance}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>

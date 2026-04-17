@@ -22,7 +22,8 @@ Schema:
     "rating": "Numerical rating (e.g. 4.8) and source (e.g. HappyCow)",
     "description": "1-2 sentence description highlighting why a vegetarian would love it.",
     "cuisineType": "e.g. Italian, Thai, Bakery, etc.",
-    "url": "Direct link if found"
+    "happyCowUrl": "Link to this restaurant on HappyCow.net (highly preferred)",
+    "officialUrl": "Link to the restaurant's official website"
   }
 ]
 
