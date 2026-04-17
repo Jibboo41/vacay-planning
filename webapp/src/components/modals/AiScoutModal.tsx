@@ -67,11 +67,11 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-backdrop" onClick={onClose}>
       <div 
-        className="modal-content glass-morphism shimmering-border" 
+        className="modal-sheet glass-effect shimmering-border" 
         onClick={e => e.stopPropagation()}
-        style={{ maxWidth: '500px', width: '95%', position: 'relative', overflow: 'hidden' }}
+        style={{ maxWidth: '500px', alignSelf: 'center', borderRadius: '28px', overflow: 'hidden' }}
       >
         <button className="modal-close" onClick={onClose}>
           <X size={24} />
