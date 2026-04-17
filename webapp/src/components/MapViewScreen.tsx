@@ -9,13 +9,13 @@ import { Menu, Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
 
 const TYPE_COLORS: Record<string, string> = {
   flight:   '#0A84FF',
-  hotel:    '#FF9F0A',
-  activity: '#EBEBF5',
+  hotel:    '#BF5AF2', // Changed to Purple for premium glass feel
+  activity: '#64D2FF', // Brighter Sky Blue
   hiking:   '#30D158',
   transit:  '#5E5CE6',
   food:     '#FF2D55',
-  note:     '#FFD60A',
-  unknown:  '#EBEBF5',
+  note:     '#FF9F0A', // Changed to Orange
+  unknown:  '#8E8E93',
 };
 
 const TYPE_EMOJI: Record<string, string> = {
@@ -31,23 +31,41 @@ const TYPE_EMOJI: Record<string, string> = {
 
 const DAY_PALETTE = ['#0A84FF', '#30D158', '#FF9F0A', '#BF5AF2', '#FF6B6B', '#64D2FF'];
 
-function makeMarkerIcon(type: string) {
-  const color = TYPE_COLORS[type] ?? TYPE_COLORS.unknown;
+function makeMarkerIcon(type: string, isCheckout?: boolean) {
+  const color = isCheckout ? '#FF453A' : (TYPE_COLORS[type] ?? TYPE_COLORS.unknown);
   const emoji = TYPE_EMOJI[type]  ?? TYPE_EMOJI.unknown;
+  
   return L.divIcon({
     className: '',
     html: `
-      <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+      <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
+        <!-- External Glass Ring -->
         <div style="
-          position:absolute;width:36px;height:36px;
-          background:${color};border-radius:50% 50% 50% 0;
-          transform:rotate(-45deg);border:2.5px solid rgba(255,255,255,0.9);
-          box-shadow:0 4px 14px rgba(0,0,0,0.35);"></div>
-        <span style="position:relative;z-index:1;font-size:15px;line-height:1;margin-top:-6px;">${emoji}</span>
+          position:absolute;width:42px;height:42px;
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(12px) saturate(180%);
+          -webkit-backdrop-filter: blur(12px) saturate(180%);
+          border-radius:50%;
+          border:1.5px solid rgba(255, 255, 255, 0.4);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.1);"></div>
+        
+        <!-- Internal Tint Lens -->
+        <div style="
+          position:absolute;width:34px;height:34px;
+          background:${color};opacity:0.45;
+          border-radius:50%;
+          filter: blur(2px);"></div>
+          
+        <!-- Gloss Shine -->
+        <div style="
+          position:absolute;top:4px;left:10px;width:12px;height:6px;
+          background:rgba(255,255,255,0.4);border-radius:50%;filter:blur(1px);transform:rotate(-15deg);"></div>
+
+        <span style="position:relative;z-index:1;font-size:18px;line-height:1;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${emoji}</span>
       </div>`,
-    iconSize:    [40, 40],
-    iconAnchor:  [20, 40],
-    popupAnchor: [0, -44],
+    iconSize:    [44, 44],
+    iconAnchor:  [22, 22], // Circular center anchor
+    popupAnchor: [0, -22],
   });
 }
 
@@ -577,7 +595,7 @@ export default function MapViewScreen() {
           <Marker
             key={`${item.id}-${item._isCheckout ? 'out' : 'base'}-${idx}`}
             position={[item.location.latitude!, item.location.longitude!]}
-            icon={makeMarkerIcon(item.type)}
+            icon={makeMarkerIcon(item.type, item._isCheckout)}
           >
             <Popup className="custom-popup">
               <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -634,11 +652,14 @@ export default function MapViewScreen() {
                 html: `
                   <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
                     <div style="
-                      position:absolute;width:32px;height:32px;
-                      background:#8E8E93;border-radius:50%;
-                      border:2.5px solid #fff;
-                      box-shadow:0 4px 14px rgba(0,0,0,0.35);"></div>
-                    <span style="position:relative;z-index:1;font-size:14px;line-height:1;margin-top:0px;">🛬</span>
+                      position:absolute;width:34px;height:34px;
+                      background: rgba(142, 142, 147, 0.2);
+                      backdrop-filter: blur(8px);
+                      -webkit-backdrop-filter: blur(8px);
+                      border-radius:50%;
+                      border: 1.5px solid rgba(255,255,255,0.5);
+                      box-shadow:0 6px 16px rgba(0,0,0,0.3);"></div>
+                    <span style="position:relative;z-index:1;font-size:16px;line-height:1;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🛬</span>
                   </div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20],
