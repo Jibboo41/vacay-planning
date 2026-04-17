@@ -39,33 +39,30 @@ function makeMarkerIcon(type: string, isCheckout?: boolean) {
     className: '',
     html: `
       <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
-        <!-- External Glass Ring -->
-        <div style="
-          position:absolute;width:42px;height:42px;
-          background: rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(12px) saturate(180%);
-          -webkit-backdrop-filter: blur(12px) saturate(180%);
-          border-radius:50%;
-          border:1.5px solid rgba(255, 255, 255, 0.4);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.1);"></div>
-        
-        <!-- Internal Tint Lens -->
+        <!-- Glass Teardrop Pin -->
         <div style="
           position:absolute;width:34px;height:34px;
-          background:${color};opacity:0.45;
-          border-radius:50%;
-          filter: blur(2px);"></div>
-          
-        <!-- Gloss Shine -->
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px) saturate(180%);
+          -webkit-backdrop-filter: blur(12px) saturate(180%);
+          border-radius:50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border:1.5px solid rgba(255, 255, 255, 0.4);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.3);"></div>
+        
+        <!-- Internal Tint Lens (also teardrop shaped for consistency) -->
         <div style="
-          position:absolute;top:4px;left:10px;width:12px;height:6px;
-          background:rgba(255,255,255,0.4);border-radius:50%;filter:blur(1px);transform:rotate(-15deg);"></div>
+          position:absolute;width:28px;height:28px;
+          background:${color};opacity:0.4;
+          border-radius:50% 50% 50% 0;
+          transform: rotate(-45deg);
+          filter: blur(3px);"></div>
 
-        <span style="position:relative;z-index:1;font-size:18px;line-height:1;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${emoji}</span>
+        <span style="position:relative;z-index:1;font-size:16px;line-height:1;margin-top:-6px;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${emoji}</span>
       </div>`,
     iconSize:    [44, 44],
-    iconAnchor:  [22, 22], // Circular center anchor
-    popupAnchor: [0, -22],
+    iconAnchor:  [22, 44], // Point ends at bottom-center
+    popupAnchor: [0, -44],
   });
 }
 
