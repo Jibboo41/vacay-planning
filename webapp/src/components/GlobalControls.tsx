@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, DollarSign, CloudSun, StickyNote } from 'lucide-react';
+import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, DollarSign, CloudSun, StickyNote, Utensils } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import AddItineraryModal from './modals/AddItineraryModal';
 import AddNoteModal from './modals/AddNoteModal';
 import EditItineraryModal from './modals/EditItineraryModal';
+import AiScoutModal from './modals/AiScoutModal';
 
 export default function GlobalControls() {
   const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen } = useTripStore();
@@ -19,6 +20,7 @@ export default function GlobalControls() {
   const [addNoteVisible, setAddNoteVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editItem, setEditItem] = useState<ItineraryItem | null>(null);
+  const [scoutVisible, setScoutVisible] = useState(false);
 
   const shouldHide = isSidebarOpen || !!editingItem || !!editingExpense || addVisible || addNoteVisible || editVisible;
 
@@ -91,7 +93,15 @@ export default function GlobalControls() {
             onClick={() => { setAddVisible(true); setIsSparkleOpen(false); }}
             aria-label="AI Parse"
           >
-            <Sparkles size={20} color="#fff" />
+            <Sparkles size={18} color="#fff" />
+          </button>
+
+          <button 
+            className="fab-sub" 
+            onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }}
+            aria-label="Veggie Scout"
+          >
+            <Utensils size={18} color="#fff" />
           </button>
         </div>
       </div>
@@ -144,6 +154,16 @@ export default function GlobalControls() {
           item={editItem}
           onClose={() => setEditVisible(false)}
           onSave={(id, updates) => updateItem(id, updates)}
+        />
+      )}
+
+      {scoutVisible && (
+        <AiScoutModal 
+          onClose={() => setScoutVisible(false)}
+          onAdd={(item: ItineraryItem) => {
+            addItem(item);
+            setScoutVisible(false);
+          }}
         />
       )}
     </>
