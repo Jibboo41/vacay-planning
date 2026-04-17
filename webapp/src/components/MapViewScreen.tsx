@@ -13,7 +13,7 @@ const TYPE_COLORS: Record<string, string> = {
   activity: '#64D2FF', // Brighter Sky Blue
   hiking:   '#30D158',
   transit:  '#5E5CE6',
-  food:     '#FF2D55',
+  food:     '#FFD60A',
   note:     '#FF9F0A', // Changed to Orange
   unknown:  '#8E8E93',
 };

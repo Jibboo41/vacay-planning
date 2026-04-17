@@ -12,6 +12,8 @@ export interface ScoutedRestaurant {
   happyCowUrl?: string;
   officialUrl?: string;
   distance?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export async function scoutVegetarianRestaurants(location: string, tripTitle: string = ''): Promise<ScoutedRestaurant[]> {
@@ -63,6 +65,26 @@ Location to Search: ${location}
     
     const jsonStr = cleanedJsonString.substring(startIndex, endIndex + 1);
     const parsedData = JSON.parse(jsonStr) as ScoutedRestaurant[];
+    
+    // --- Sequential Geocoding for Mapping Stability ---
+    // We resolve lat/lng for each restaurant so they appear on the map instantly.
+    for (const res of parsedData) {
+      try {
+        const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(res.address)}&format=json&limit=1`;
+        const geoRes = await fetch(geoUrl, { headers: { 'User-Agent': 'VacayPlanner/1.1' } });
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData && geoData[0]) {
+            res.lat = parseFloat(geoData[0].lat);
+            res.lng = parseFloat(geoData[0].lon);
+          }
+        }
+        // Respect Nominatim's 1 req/sec rate limit
+        await new Promise(resolve => setTimeout(resolve, 1100));
+      } catch (e) {
+        console.warn(`Geocoding failed for ${res.name}:`, e);
+      }
+    }
     
     return parsedData;
   } catch (error) {

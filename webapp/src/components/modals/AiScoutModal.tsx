@@ -55,8 +55,8 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
       location: {
         name: res.name,
         address: res.address,
-        latitude: null,
-        longitude: null
+        latitude: res.lat || null,
+        longitude: res.lng || null
       },
       foodDetails: {
         mealType: 'Dinner',
@@ -131,9 +131,9 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
             <div className="spinning" style={{ position: 'relative', width: '64px', height: '64px' }}>
               <div style={{ 
                 position: 'absolute', inset: 0, borderRadius: '50%', 
-                border: '4px solid rgba(132, 115, 250, 0.1)', borderTopColor: '#BF5AF2' 
+                border: '4px solid rgba(255, 214, 10, 0.1)', borderTopColor: '#FFD60A' 
               }} />
-              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#BF5AF2' }} />
+              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#FFD60A' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>Scouting Near {selectedStop?.location.name}</h3>
@@ -172,8 +172,8 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                         <div style={{ flex: 1 }}>
                           <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#FFF', marginBottom: '4px' }}>{res.name}</h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#FF9F0A', fontWeight: 700 }}>
-                              <Star size={12} fill="#FF9F0A" /> {res.rating}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#FFD60A', fontWeight: 700 }}>
+                              <Star size={12} fill="#FFD60A" /> {res.rating}
                             </div>
                             {res.distance && (
                               <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>

@@ -54,8 +54,8 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         case 'hike':
         case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
         case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-        case 'food':     return { icon: <Utensils size={24} />, color: '#FF7000', bg: 'rgba(255, 112, 0, 0.1)' };
-        case 'note':     return { icon: <StickyNote size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+        case 'food':     return { icon: <Utensils size={24} />, color: '#FFD60A', bg: 'rgba(255, 214, 10, 0.1)' };
+        case 'note':     return { icon: <StickyNote size={24} />, color: '#8E8E93', bg: 'rgba(142, 142, 147, 0.1)' };
         default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
       }
     };

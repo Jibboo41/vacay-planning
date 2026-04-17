@@ -12,8 +12,9 @@
 
 ### 🔹 AI Itinerary Ingestion
 - **Email Parser**: Paste raw booking confirmations and Gemini 2.5 Flash will digest, categorize, and intelligently map them into your timeline.
+- **Dining Discovery 2.0**: Overhauled "Dining Scout" finds local gems (HappyCow/Veggies) near any stop with **automated geocoding** and relative distance estimates (e.g. "0.4 miles away").
 - **Hotel Check-in Extraction**: Automatically identifies "Check-in after" and "Check-out by" times to ensure perfect arrival coordination.
-- **Nominatim Geocoder**: Every AI-parsed location is silently validated against OpenStreetMap, resolving precise coordinates and snapping map routes instantly.
+- **Nominatim Geocoder**: Every AI-parsed and scouted location is silently validated against OpenStreetMap, resolving precise coordinates and snapping map routes instantly.
 
 ### 🔹 Dynamic Trip Outlining
 - **Trip Synopsis**: Generate a beautifully written AI summary of your entire journey's vibe and destination trajectory with one click.

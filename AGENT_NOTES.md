@@ -1,3 +1,13 @@
+- **Phase 69 (Dining Discovery 2.0 Refinements)**:
+    - **Color Hierarchy**: Shifted Dining (food) to **System Yellow (#FFD60A)** and Notes to **System Gray (#8E8E93)**. This ensures visual separation from Orange Hotel markers and Red Check-out alerts.
+    - **Automated Geocoding**: Implemented sequential Nominatim geocoding in `scoutDining.ts` (backend). Scouted results now return with `lat/lng` for instant mapping visibility.
+    - **UI Polish**: Updated `AiScoutModal.tsx` indicators and result badges to match the yellow theme.
+- **Phase 68 (Dining Scout Proximity & Structured Editing)**:
+    - **Distance Awareness**: Prompted Gemini to return estimated distances from search location.
+    - **Structured Data**: Migrated HappyCow/Official links to explicit `FoodDetails` fields. Added a themed "Dining Discovery" section in `EditItineraryModal.tsx`.
+- **Phase 67 (Dining Scout UX Refinements)**:
+    - **FAB Reorder**: Priority swap of Dining Scout and Email Parser.
+    - **Button Logic**: Rendered links as premium glass action buttons in `TimelineItem.tsx`.
 - **Phase 54 (Weather Accuracy & Detail)**:
     - **Smart Splitting**: Refactored `fetchWeather` to split requests at T+16 threshold. Concurrent Forecast/Historical fetching.
     - **Weather Detail Modal**: Interactivity on `WeatherScreen.tsx` allowing users to inspect precipitation and larger icons.
