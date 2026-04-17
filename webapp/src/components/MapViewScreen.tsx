@@ -95,20 +95,27 @@ async function fetchOSRMRoute(stops: any[], signal?: AbortSignal): Promise<[numb
 function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
   const { focusedLocation } = useTripStore();
+  const hasInitialFit = useRef(false);
 
   useEffect(() => {
-    // If a specific location is being flown to from the timeline, 
-    // skip fitting to all bounds to prevent "snapping back".
-    if (focusedLocation) return;
+    // Permanent fix for the "snap-back" issue:
+    // 1. If we've already done an initial fit, don't do it again automatically
+    // 2. If a specific location is being flown to, absolutely skip fitting
+    if (hasInitialFit.current || focusedLocation) return;
 
     if (!positions.length) return;
-    if (positions.length === 1) { map.setView(positions[0], 12); return; }
+    if (positions.length === 1) { 
+      map.setView(positions[0], 12); 
+      hasInitialFit.current = true;
+      return; 
+    }
     
     map.fitBounds(L.latLngBounds(positions), { 
       paddingTopLeft: [20, 120], 
       paddingBottomRight: [20, 60],
       animate: true
     });
+    hasInitialFit.current = true;
   }, [positions, map, focusedLocation]); 
   return null;
 }
@@ -339,7 +346,14 @@ export default function MapViewScreen() {
 
     const fetchAllRoutes = async () => {
       try {
-        const routePromises = dayKeys.map(async (key, i) => {
+        const results: DayRoute[] = [];
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Process days sequentially with a small delay between days to be polite to the OSRM server
+        // and avoid triggering rate limits (429 errors).
+        for (let i = 0; i < dayKeys.length; i++) {
+          if (!isMounted) break;
+          const key = dayKeys[i];
           const stops = byDayMap.get(key)!;
           const colorIdx = allTripDayKeys.indexOf(key);
           const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
@@ -351,17 +365,20 @@ export default function MapViewScreen() {
           }).join('|');
           
           if (routeCache.current.has(cacheKey)) {
-             return { dayKey: key, color, segments: routeCache.current.get(cacheKey)!, distance: 0 };
+            results.push({ dayKey: key, color, segments: routeCache.current.get(cacheKey)!, distance: 0 });
+            continue;
           }
+
+          // Small delay before each "new" routing calculation to reduce concurrency
+          if (i > 0) await sleep(400);
 
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const timeoutId = setTimeout(() => controller.abort(), 12000); // Increased timeout
 
             addDebugLog('Directions', `Calculating Day: ${key}`, { stops: stops.length });
             
             const segments: RouteSegment[] = [];
-            // Use <= stops.length - 1 to ensure we check the last item for a terminal flight segment
             for (let j = 0; j < stops.length; j++) {
               const start = stops[j];
               const next = stops[j+1];
@@ -371,16 +388,11 @@ export default function MapViewScreen() {
                 
                 if (start._isFlightTakeoff && flightLandings[start.id]) {
                   const landing = flightLandings[start.id];
-                  addDebugLog('Directions', `Air Path (Final): ${start.title} -> ${landing.name}`);
-                  segments.push({
-                    type: 'flight',
-                    coords: [startPos, [landing.lat, landing.lng]]
-                  });
+                  segments.push({ type: 'flight', coords: [startPos, [landing.lat, landing.lng]] });
                   
-                  // Only if there's a next item, draw a road transition from landing to next
                   if (next) {
                     try {
-                      addDebugLog('Directions', `Road Transition: ${landing.name} -> ${next.title}`);
+                      // Transition route
                       const transitionCoords = await fetchOSRMRoute([
                         { location: { latitude: landing.lat, longitude: landing.lng } },
                         next
@@ -391,29 +403,27 @@ export default function MapViewScreen() {
                     }
                   }
                 } else if (next) {
-                  // Intermediate flight: Dashed line direct to the next stop's location 
-                  addDebugLog('Directions', `Air Path (Segment): ${start.title} -> ${next.title}`);
-                  segments.push({
-                    type: 'flight',
-                    coords: [startPos, [next.location.latitude!, next.location.longitude!]]
-                  });
+                  segments.push({ type: 'flight', coords: [startPos, [next.location.latitude!, next.location.longitude!]] });
                 }
               } else if (next) {
-                // Normal driving segment
-                try {
-                  addDebugLog('Directions', `Road Path: ${start.title} -> ${next.title}`);
-                  let drivingCoords = await fetchOSRMRoute([start, next], controller.signal);
-                  
-                  // If OSRM returns an empty or single-point path (too close), force a 2-point line
-                  if (drivingCoords.length < 2) {
-                    drivingCoords = [
-                      [start.location.latitude!, start.location.longitude!],
-                      [next.location.latitude!, next.location.longitude!]
-                    ];
+                // Normal driving segment with internal retry
+                let drivingCoords: [number, number][] | null = null;
+                let lastErr = '';
+
+                for (let attempt = 1; attempt <= 2; attempt++) {
+                  try {
+                    drivingCoords = await fetchOSRMRoute([start, next], controller.signal);
+                    break;
+                  } catch (e: any) {
+                    lastErr = e.message;
+                    if (attempt < 2) await sleep(500);
                   }
-                  
+                }
+
+                if (drivingCoords && drivingCoords.length >= 2) {
                   segments.push({ type: 'driving', coords: drivingCoords });
-                } catch (e) {
+                } else {
+                  addDebugLog('Directions', `Fallback to straight line: ${start.title} -> ${next.title} (${lastErr})`);
                   segments.push({ type: 'driving', coords: [[start.location.latitude!, start.location.longitude!], [next.location.latitude!, next.location.longitude!]] });
                 }
               }
@@ -421,14 +431,13 @@ export default function MapViewScreen() {
             
             clearTimeout(timeoutId);
             routeCache.current.set(cacheKey, segments);
-            return { dayKey: key, color, segments, distance: 0 };
+            results.push({ dayKey: key, color, segments, distance: 0 });
           } catch (err: any) {
             addDebugLog('Directions', `Day ${key} failed: ${err.message}`);
-            return { dayKey: key, color, segments: [], distance: 0 };
+            results.push({ dayKey: key, color, segments: [], distance: 0 });
           }
-        });
+        }
 
-        const results = await Promise.all(routePromises);
         if (isMounted) {
           setDayRoutes(results);
           setRouteStatus('done');
