@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2 } from 'lucide-react';
+import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
+import AiScoutModal from './modals/AiScoutModal';
 
 interface TimelineItemProps {
   item: ItineraryItem;
@@ -17,6 +18,7 @@ interface TimelineItemProps {
 
 export default function TimelineItem({ item, onPress, onGripTouchStart, isCheckout, groupPosition }: TimelineItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showScout, setShowScout] = useState(false);
   const navigate = useNavigate();
   const setFocusedLocation = useTripStore(s => s.setFocusedLocation);
   const tintedBackgrounds = useTripStore(s => s.tintedBackgrounds);
@@ -415,6 +417,22 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             >
               Edit
             </button>
+            {item.type === 'food' && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowScout(true);
+                }}
+                className="details-btn shimmering-border"
+                style={{ 
+                  flex: 1, padding: '12px', borderRadius: '12px',
+                  fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  background: 'rgba(255, 255, 255, 0.05)', color: '#FFF'
+                }}
+              >
+                <Sparkles size={16} className="text-ai" /> Scout
+              </button>
+            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -437,6 +455,13 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </button>
           </div>
         </div>
+      )}
+      {showScout && (
+        <AiScoutModal 
+          location={item.location.address || item.location.name || ''} 
+          date={item.startDate}
+          onClose={() => setShowScout(false)}
+        />
       )}
     </div>
   );

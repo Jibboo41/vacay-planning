@@ -21,8 +21,10 @@
 - [x] **AllTrails Robustness**: Sanitize mobile share links and strip tracking parameters.
 
 ## 🚀 Deployment
-- [ ] **Weather Polish**: Show spinning reload logo on Weather screen and Timeline headers during background refreshes.
-- [ ] **Maps:** Implement Hotel-Origin Routing (ensure routes start from the last accommodation across multi-day stays).
+- [x] **Weather Polish**: Show spinning reload logo on Weather screen and Timeline headers during background refreshes.
+- [x] **Weather Accuracy & Detail**: Splitting forecast ranges and adding a premium day detail modal.
+- [x] **Summary Screen Cleanup**: removed refundable badges, added hike details, and implemented flight grouping.
+- [x] **Maps:** Implement Hotel-Origin Routing (ensure routes start from the last accommodation across multi-day stays).
 - [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
 - [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.
 - [ ] **Maps:** Configure Official Google Maps API keys (currently using Leaflet/OSM).

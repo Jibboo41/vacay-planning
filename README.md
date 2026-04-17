@@ -183,6 +183,29 @@ stateDiagram-v2
 
 ---
 
+### Phase 53 (v1.26.0): Weather Accuracy & Detail
+### Phase 54 (v1.27.0): Weather Accuracy & Detail
+- **Smart Data Fetching**:
+  - Implemented automated range splitting at the 16-day forecast mark.
+  - Hybrid results showing Live Forecast for first part and Historical averages for the tail end of long trips.
+- **Interactive Details**:
+  - Clickable weather cards opening a premium glassmorphic modal with high-res icons and precipitation depth (inches).
+
+### Phase 53 (v1.26.5): Weather Accuracy & Detail
+- **Smart Splitting**: Refactored `fetchWeather` to split requests at T+16 threshold. Concurrent Forecast/Historical fetching.
+- **Weather Detail Modal**: Interactivity on `WeatherScreen.tsx` allowing users to inspect precipitation and larger icons.
+
+### Phase 52 (v1.26.0): Weather Polish
+- **Sync Indicators**: Added `isWeatherRefreshing` to store. Integrated spinning `RefreshCw` icons in Timeline day headers and Weather screen button.
+
+### Phase 51 (v1.25.5): Summary Cleanup & Flight Grouping
+- **Grouping Logic**: Implemented 1-dimensional grouping for flights sharing the same day and contiguous index.
+- **Hike Stats**: Injected hiking metadata into `SummaryItemCard`.
+
+### Phase 50 (v1.25.0): Weather Sync & Currency
+- **Currency Formatting**: Enforced `.toFixed(2)` globally.
+- **Weather Store Fetching**: Centralized `refreshWeather` logic.
+
 ### Phase 49 (v1.22.0): AllTrails Robustness
 - **Mobile Share Support**:
   - Enhanced the AllTrails Quick Import tool to intelligently handle and sanitize links shared from the mobile app.

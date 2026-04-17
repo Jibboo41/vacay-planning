@@ -1,3 +1,16 @@
+- **Phase 54 (Weather Accuracy & Detail)**:
+    - **Smart Splitting**: Refactored `fetchWeather` to split requests at T+16 threshold. Concurrent Forecast/Historical fetching.
+    - **Weather Detail Modal**: Interactivity on `WeatherScreen.tsx` allowing users to inspect precipitation and larger icons.
+- **Phase 53 (Weather Polish)**:
+    - **Sync Indicators**: Added `isWeatherRefreshing` to store. Integrated spinning `RefreshCw` icons in Timeline day headers and Weather screen button.
+- **Phase 52 (Summary Cleanup & Flight Grouping)**:
+    - **Grouping Logic**: Implemented 1-dimensional grouping for flights sharing the same day and contiguous index.
+    - **Hike Stats**: Injected hiking metadata into `SummaryItemCard`.
+- **Phase 51 (Summary Detail Shift)**:
+    - **Minimalism**: Stripped refundable markers from summary view.
+- **Phase 50 (Weather Sync & Currency)**:
+    - **Currency Formatting**: Enforced `.toFixed(2)` globally.
+    - **Weather Store Fetching**: Centralized `refreshWeather` logic.
 - **Phase 49 (AllTrails Sanitization)**:
     - **Mobile Link Support**: Robustified `EditItineraryModal.tsx` to handle "messy" share links from the AllTrails mobile app. Strips leading text and `?` query parameters before API ingestion.
 - **Phase 48 (Map Routing Backlog)**:

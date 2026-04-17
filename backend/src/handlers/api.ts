@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { parseEmailToItinerary, generateTripSummary } from '../use-cases/emailParser';
 import { parseAllTrailsLink } from '../use-cases/hikeParser';
+import { scoutVegetarianRestaurants } from '../use-cases/scoutDining';
 
 const app = express();
 
@@ -57,6 +58,23 @@ app.post('/api/parse-hike', async (req: express.Request, res: express.Response) 
     res.json(hikeDetails);
   } catch (error: any) {
     console.error("Failed to parse AllTrails link:", error);
+    res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
+  }
+});
+
+app.post('/api/scout-dining', async (req: express.Request, res: express.Response) => {
+  const { location, tripTitle } = req.body;
+  if (!location) {
+    return res.status(400).json({ error: 'location is required in the request body.' });
+  }
+
+  try {
+    console.log(`Scouting vegetarian restaurants for: ${location}...`);
+    const results = await scoutVegetarianRestaurants(location, tripTitle);
+    console.log(`Successfully found ${results.length} results!`);
+    res.json(results);
+  } catch (error: any) {
+    console.error("Failed to scout dining:", error);
     res.status(500).json({ error: `Backend crash: ${error.message || 'Unknown error'}` });
   }
 });

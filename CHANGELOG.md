@@ -2,8 +2,27 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.29.0] - 2026-04-17
+### Added
+- **Hotel-Origin Routing**: Implemented intelligent stay-aware routing. The Destinations map and the "Map Day" button now automatically include the active hotel or rental car as the start/end point for intermediate stay days. Improved routing stability with throttled OSRM requests and retries.
+
+## [1.28.0] - 2026-04-14
+### Added
+- **Premium Map Popups**: Overhauled Leaflet popups with a modern, glassmorphic design. Integrated system typography, category-specific colored accents, and glassy blue interactive buttons.
+
+## [1.27.0] - 2026-04-14
+### Added
+- **Manual Map Refresh**: Added a refresh button to the Destinations (Map) header to resolve routing anomalies. Clicking it clears the local route cache and re-fetches all road and air paths from OSRM and Nominatim.
+
 ## [1.26.0] - 2026-04-14
 ### Added
+- **Phase 56 (Map Popup Overhaul)**:
+    - **Global Styling**: Stripped Leaflet defaults in `index.css`. Applied `var(--glass-bg)` and `backdrop-filter`.
+    - **Interactive Popups**: Updated `MapViewScreen.tsx` to use system tokens for text and glassy buttons for map links.
+- **Phase 55 (Map Route Refresh)**:
+    - **Manual Cache Clearing**: Added `handleRefresh` to `MapViewScreen.tsx` which clears `routeCache` and `flightLandings`.
+    - **UI Button**: Added a `RefreshCw` button to the map header for manual sync.
+- **Phase 54 (Weather Accuracy & Detail)**:
 - **Interactive Weather Detail**: Clicking any day in the Weather screen now opens a premium, glassmorphic Detail Modal with high-resolution icons and precipitation (Rain/Snow) statistics.
 - **Smart Forecast Splitting**: Refactored the weather API to automatically split date ranges across the 16-day forecast threshold. The app now displays live forecast data for early trip days and historical averages for later days within the same view.
 
@@ -31,10 +50,11 @@ All notable changes to the **Vacay Planning** project will be documented in this
 ## [1.21.0] - 2026-04-14
 ### Added
 - **Premium Excel Export**: Upgraded export to high-fidelity **Excel (.xlsx)** format with professional styling, themed categories, and balance summaries for Google Sheets.
-- **Hiking Stats Automation**: Integrated **AllTrails Scraper** to automatically populate hiking items with trail stats (Distance, Difficulty, Elevation) via direct link parsing.
+- **Hiking Stats Automation**: Integrated **AllTrails Scraper** to automatically populate hiking items with trail stats (Distance, Difficulty, Elevation, Duration) via direct link parsing.
 
 ## [1.20.0] - 2026-04-12
 ### Added
+- **Hike Stats (Summary)**: Integrated trail stats (Difficulty, Distance, Elevation, Duration) directly into the summary Cards.
 - **Per-Stop Weather**: Integrated detailed weather forecasts directly into the itinerary view for each stop.
 - **Dynamic Aggregation**: Implemented real-time data aggregation for trip-wide summaries and financial breakdown.
 

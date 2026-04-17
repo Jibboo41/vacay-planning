@@ -52,3 +52,26 @@ export async function parseAllTrailsUrl(url: string, tripTitle: string = ''): Pr
     throw error;
   }
 }
+
+export async function scoutDining(location: string, tripTitle: string = ''): Promise<{ name: string; address: string; rating: string; description: string; cuisineType: string }[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/scout-dining`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ location, tripTitle }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Scouting failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data || [];
+  } catch (error) {
+    console.error("Failed to call scout-dining on backend:", error);
+    throw error;
+  }
+}
