@@ -19,7 +19,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const TYPE_EMOJI: Record<string, string> = {
-  flight:   '✈️',
+  flight:   '🛫',
   hotel:    '🏨',
   activity: '🏔️',
   hiking:   '🥾',
@@ -94,15 +94,22 @@ async function fetchOSRMRoute(stops: any[], signal?: AbortSignal): Promise<[numb
 
 function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
+  const { focusedLocation } = useTripStore();
+
   useEffect(() => {
+    // If a specific location is being flown to from the timeline, 
+    // skip fitting to all bounds to prevent "snapping back".
+    if (focusedLocation) return;
+
     if (!positions.length) return;
     if (positions.length === 1) { map.setView(positions[0], 12); return; }
-    // Add extra top padding for the translucent header (especially on iOS)
+    
     map.fitBounds(L.latLngBounds(positions), { 
       paddingTopLeft: [20, 120], 
-      paddingBottomRight: [20, 60] 
+      paddingBottomRight: [20, 60],
+      animate: true
     });
-  }, [positions, map]); 
+  }, [positions, map, focusedLocation]); 
   return null;
 }
 
@@ -562,7 +569,8 @@ export default function MapViewScreen() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
                     fontWeight: 700, textDecoration: 'none', gap: '8px',
-                    background: 'rgba(10, 132, 255, 0.45)', border: '1px solid rgba(10, 132, 255, 0.6)'
+                    background: 'rgba(10, 132, 255, 0.5)', border: '1px solid rgba(10, 132, 255, 0.65)',
+                    color: '#ffffff'
                   }}
                 >
                   <span>{isIOS() ? ' Maps' : 'Google Maps'}</span>
@@ -577,7 +585,6 @@ export default function MapViewScreen() {
         {Object.entries(flightLandings)
           .filter(([id]) => mappable.some(m => m.id === id)) // Only show if parent flight is visible
           .map(([id, landing]) => {
-            const isTripEnd = mappable.length > 0 && mappable[mappable.length - 1].id === id;
           return (
             <Marker
               key={`landing-${id}`}
@@ -588,10 +595,10 @@ export default function MapViewScreen() {
                   <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
                     <div style="
                       position:absolute;width:32px;height:32px;
-                      background:${isTripEnd ? '#FF3B30' : '#8E8E93'};border-radius:50%;
+                      background:#8E8E93;border-radius:50%;
                       border:2.5px solid #fff;
                       box-shadow:0 4px 14px rgba(0,0,0,0.35);"></div>
-                    <span style="position:relative;z-index:1;font-size:14px;line-height:1;margin-top:0px;">${isTripEnd ? '🏁' : '🛬'}</span>
+                    <span style="position:relative;z-index:1;font-size:14px;line-height:1;margin-top:0px;">🛬</span>
                   </div>`,
                 iconSize: [40, 40],
                 iconAnchor: [20, 20],
@@ -600,8 +607,8 @@ export default function MapViewScreen() {
             >
               <Popup className="custom-popup">
                 <div style={{ minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <p style={{ fontWeight: 900, color: isTripEnd ? '#FF3B30' : 'var(--sys-label-secondary)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
-                    {isTripEnd ? '🏁 Final Destination' : 'Destination'}
+                  <p style={{ fontWeight: 900, color: 'var(--sys-label-secondary)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
+                    Destination
                   </p>
                   <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '12px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
                     {landing.name}
@@ -615,8 +622,9 @@ export default function MapViewScreen() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
                       fontWeight: 700, textDecoration: 'none', 
-                      background: isTripEnd ? 'rgba(255, 59, 48, 0.4)' : 'rgba(10, 132, 255, 0.45)',
-                      borderColor: isTripEnd ? 'rgba(255, 59, 48, 0.6)' : 'rgba(10, 132, 255, 0.6)'
+                      background: 'rgba(10, 132, 255, 0.5)',
+                      borderColor: 'rgba(10, 132, 255, 0.65)',
+                      color: '#ffffff'
                     }}
                   >
                     Open in Maps
