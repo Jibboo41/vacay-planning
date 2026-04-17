@@ -170,9 +170,34 @@ export default function TimelineScreen() {
       item.location.longitude
     );
 
-    // 2. Filter consecutive duplicate coordinates to avoid redundant waypoints
-    const uniqueDrivingItems: typeof drivingItems = [];
-    drivingItems.forEach(item => {
+    // 2. Identify active stay for Hotel-Origin routing
+    const activeStay = items.find(item => {
+      if (item.type !== 'hotel' && item.type !== 'rental-car') return false;
+      if (!item.location.latitude) return false;
+      const startK = getDayKey(item.startDate);
+      const endK = item.endDate ? getDayKey(item.endDate) : startK;
+      return group.dateKey >= startK && group.dateKey <= endK;
+    });
+
+    let stops = [...drivingItems];
+    if (activeStay) {
+      const startK = getDayKey(activeStay.startDate);
+      const endK = activeStay.endDate ? getDayKey(activeStay.endDate) : startK;
+      
+      const isCheckinDay = group.dateKey === startK;
+      const isCheckoutDay = group.dateKey === endK;
+
+      if (!isCheckinDay && stops[0]?.id !== activeStay.id) {
+        stops = [activeStay, ...stops];
+      }
+      if (!isCheckoutDay && stops[stops.length - 1]?.id !== activeStay.id) {
+        stops.push(activeStay);
+      }
+    }
+
+    // 3. Filter consecutive duplicate coordinates to avoid redundant waypoints
+    const uniqueDrivingItems: ItineraryItem[] = [];
+    stops.forEach(item => {
       const prev = uniqueDrivingItems[uniqueDrivingItems.length - 1];
       if (!prev) {
         uniqueDrivingItems.push(item);
