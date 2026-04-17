@@ -481,7 +481,7 @@ export default function MapViewScreen() {
     fetchAllRoutes();
 
     return () => { isMounted = false; };
-  }, [dayKeys, byDayMap, mappable.length, allTripDayKeys, refreshTick]);
+  }, [dayKeys, byDayMap, mappable.length, allTripDayKeys, flightLandings, items, refreshTick]);
 
   const crossDayLines: [number, number][][] = [];
   for (let i = 0; i < dayKeys.length - 1; i++) {
