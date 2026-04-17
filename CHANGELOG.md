@@ -4,6 +4,7 @@ All notable changes to the **Vacay Planning** project will be documented in this
 
 ## [1.29.0] - 2026-04-17
 ### Added
+- **Gemini "Veggie Scout"**: Implemented a search-grounded restaurant discovery feature using the existing Google AI infrastructure. Users can now scout for top-rated vegetarian and vegan locations near their destinations directly from the Timeline view.
 - **Hotel-Origin Routing**: Implemented intelligent stay-aware routing. The Destinations map and the "Map Day" button now automatically include the active hotel or rental car as the start/end point for intermediate stay days. Improved routing stability with throttled OSRM requests and retries.
 
 ## [1.28.0] - 2026-04-14
