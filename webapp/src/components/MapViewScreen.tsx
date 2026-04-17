@@ -354,9 +354,40 @@ export default function MapViewScreen() {
         for (let i = 0; i < dayKeys.length; i++) {
           if (!isMounted) break;
           const key = dayKeys[i];
-          const stops = byDayMap.get(key)!;
+          const baseStops = byDayMap.get(key) || [];
           const colorIdx = allTripDayKeys.indexOf(key);
           const color = DAY_PALETTE[colorIdx !== -1 ? (colorIdx % DAY_PALETTE.length) : (i % DAY_PALETTE.length)];
+
+          // ─── Phase 60: Hotel-Origin Routing Logic ─────────────────────────────
+          // Find if there's an active stay (hotel/rental) that covers this day.
+          const activeStay = items.find(item => {
+            if (item.type !== 'hotel' && item.type !== 'rental-car') return false;
+            if (!item.location.latitude) return false;
+            const startK = getDayKey(item.startDate);
+            const endK = item.endDate ? getDayKey(item.endDate) : startK;
+            return key >= startK && key <= endK;
+          });
+
+          let stops = [...baseStops];
+          if (activeStay) {
+            const startK = getDayKey(activeStay.startDate);
+            const endK = activeStay.endDate ? getDayKey(activeStay.endDate) : startK;
+            
+            const isCheckinDay = key === startK;
+            const isCheckoutDay = key === endK;
+
+            // Prepend stay if it's NOT the check-in day (meaning we started the day there)
+            // and the first stop isn't already this stay.
+            if (!isCheckinDay && stops[0]?.id !== activeStay.id) {
+              stops = [{ ...activeStay, _renderDate: key, _isVirtual: true }, ...stops];
+            }
+            // Append stay if it's NOT the checkout day (meaning we sleep there tonight)
+            // and the last stop isn't already this stay.
+            if (!isCheckoutDay && stops[stops.length - 1]?.id !== activeStay.id) {
+              stops.push({ ...activeStay, _renderDate: key, _isVirtual: true });
+            }
+          }
+          // ──────────────────────────────────────────────────────────────────────
 
           const cacheKey = stops.map(s => {
             const landing = s.type === 'flight' ? flightLandings[s.id] : null;
