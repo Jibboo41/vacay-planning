@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2 } from 'lucide-react';
+import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -323,6 +323,47 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                   }}
                 >
                   🔗 AllTrails
+                </div>
+              )}
+            </div>
+          )}
+          
+          {item.type === 'food' && item.foodDetails && (item.foodDetails.happyCowUrl || item.foodDetails.officialUrl) && (
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+              {item.foodDetails.happyCowUrl && (
+                <div 
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    window.open(item.foodDetails!.happyCowUrl!, '_blank', 'noopener,noreferrer');
+                  }}
+                  style={{ 
+                    background: 'rgba(48, 209, 88, 0.25)', color: '#30D158', padding: '4px 12px', 
+                    borderRadius: '8px', fontSize: '11px', fontWeight: 900, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    border: '1px solid rgba(48, 209, 88, 0.3)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  🥗 HappyCow
+                </div>
+              )}
+              {item.foodDetails.officialUrl && (
+                <div 
+                  role="button"
+                  onClick={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    window.open(item.foodDetails!.officialUrl!, '_blank', 'noopener,noreferrer');
+                  }}
+                  style={{ 
+                    background: 'rgba(10, 132, 255, 0.25)', color: '#0A84FF', padding: '4px 12px', 
+                    borderRadius: '8px', fontSize: '11px', fontWeight: 900, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    border: '1px solid rgba(10, 132, 255, 0.3)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  <Globe size={11} /> Website
                 </div>
               )}
             </div>

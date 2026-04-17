@@ -15,6 +15,8 @@ export interface HikeDetails {
 
 export interface FoodDetails {
   mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snack' | 'Dessert';
+  happyCowUrl?: string;
+  officialUrl?: string;
 }
 
 export interface HotelDetails {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, Sparkles, Star, MapPin, Plus, ExternalLink, Globe } from 'lucide-react';
+import { X, Star, MapPin, Plus, ExternalLink, Globe, Utensils } from 'lucide-react';
 import { scoutDining } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
 import type { ItineraryItem } from '../../core/models';
@@ -24,7 +24,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
 
   const candidateStops = useMemo(() => {
     return items
-      .filter(i => i.type !== 'flight' && i.type !== 'rental-car')
+      .filter(i => i.type !== 'flight' && i.type !== 'rental-car' && i.type !== 'food')
       .sort((a,b) => a.startDate.localeCompare(b.startDate));
   }, [items]);
 
@@ -51,7 +51,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
       type: 'food',
       title: res.name,
       startDate: selectedStop.startDate,
-      description: `Recommended via Veggie Scout ✨\n\nRating: ${res.rating}\n\n${res.description}\n\nHappyCow: ${res.happyCowUrl || 'N/A'}\nWebsite: ${res.officialUrl || 'N/A'}`,
+      description: res.description, // No sparkles added here
       location: {
         name: res.name,
         address: res.address,
@@ -59,7 +59,9 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
         longitude: null
       },
       foodDetails: {
-        mealType: 'Dinner'
+        mealType: 'Dinner',
+        happyCowUrl: res.happyCowUrl,
+        officialUrl: res.officialUrl
       }
     };
     
@@ -80,14 +82,14 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
           <div className={`ai-status-dot ${step === 'loading' ? 'active' : ''}`} />
           <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={20} className="text-ai" /> Veggie Scout ✨
+            <Utensils size={20} className="text-ai" /> Dining Scout
           </h2>
         </div>
 
         {step === 'select' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', lineHeight: '1.5' }}>
-              Where should we look for food? Pick a stop on your trip to scout the surrounding area.
+              Where should we look for food? Pick a reference stop on your trip to scout the surrounding area.
             </p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
@@ -131,7 +133,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                 position: 'absolute', inset: 0, borderRadius: '50%', 
                 border: '4px solid rgba(132, 115, 250, 0.1)', borderTopColor: '#BF5AF2' 
               }} />
-              <Sparkles size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#BF5AF2' }} />
+              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#BF5AF2' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>Scouting Near {selectedStop?.location.name}</h3>

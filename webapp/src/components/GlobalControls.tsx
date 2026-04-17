@@ -62,6 +62,14 @@ export default function GlobalControls() {
         <div className={`fab-options ${isSparkleOpen ? 'open' : ''}`}>
           <button 
             className="fab-sub" 
+            onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }}
+            aria-label="Dining Scout"
+          >
+            <Utensils size={18} color="#fff" />
+          </button>
+
+          <button 
+            className="fab-sub" 
             onClick={() => { setAddNoteVisible(true); setIsSparkleOpen(false); }}
             aria-label="Add note"
           >
@@ -94,14 +102,6 @@ export default function GlobalControls() {
             aria-label="AI Parse"
           >
             <Sparkles size={18} color="#fff" />
-          </button>
-
-          <button 
-            className="fab-sub" 
-            onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }}
-            aria-label="Veggie Scout"
-          >
-            <Utensils size={18} color="#fff" />
           </button>
         </div>
       </div>
