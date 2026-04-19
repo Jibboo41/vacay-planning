@@ -34,7 +34,7 @@
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
 
 ### 🔹 Gear & Packing
-- **Personalized Packing List**: Specialized gear management view with categorized grouping (**Luggage**, **Carry-on**, **Personal Item**). 
+- **Personalized Packing List**: Specialized gear management view with categorized grouping (**Luggage**, **Carry-on**, **Other**). 
 - **Tactile Categorization**: Uses premium segmented controls for fast, visual gear organization.
 - **No-Deadline Interface**: Streamlined purely for inventory tracking, removing the clutter of due dates for packing tasks.
 

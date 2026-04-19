@@ -101,7 +101,7 @@ export default function PackingScreen() {
 
   const completedCount = packingItems.filter(t => t.completed).length;
 
-  const categories: PackingCategory[] = ['Luggage', 'Carry-on', 'Personal Item', 'Other'];
+  const categories: PackingCategory[] = ['Luggage', 'Carry-on', 'Other'];
 
   // Flattened but grouped for rendering if we want drag/drop across the whole trip
   // For now, I'll just render them in the order they are in the store, but grouped visually
@@ -109,7 +109,6 @@ export default function PackingScreen() {
     const map: Record<PackingCategory, PackingItem[]> = {
       'Luggage': [],
       'Carry-on': [],
-      'Personal Item': [],
       'Other': []
     };
     packingItems.forEach(item => {

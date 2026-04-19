@@ -83,7 +83,7 @@ export interface PackingItem {
   id: string;
   text: string;
   completed: boolean;
-  category: 'Luggage' | 'Carry-on' | 'Personal Item' | 'Other';
+  category: 'Luggage' | 'Carry-on' | 'Other';
   createdAt: number;
 }
 
