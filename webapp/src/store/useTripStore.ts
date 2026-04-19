@@ -334,6 +334,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
     try {
       await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
       set({ saving: false });
+      // Auto-trigger weather refresh for new items
+      get().refreshWeather();
     } catch (err: any) {
       console.error("Save failed:", err);
       set({ saving: false, lastSaveError: err.message });
@@ -354,6 +356,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
     try {
       await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
       set({ saving: false });
+      // Auto-trigger weather refresh when items are updated (dates/locations might change)
+      get().refreshWeather();
     } catch (err: any) {
       console.error("Update failed:", err);
       set({ saving: false, lastSaveError: err.message });

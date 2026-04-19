@@ -760,6 +760,13 @@ export default function MapViewScreen() {
               </div>
             );
           })}
+
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '28px', height: '0', borderTop: '2px dashed rgba(180, 180, 200, 0.4)', flexShrink: 0 }} />
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--sys-label-tertiary)' }}>Overnight stay / transition</span>
+          </div>
         </div>
       )}
     </div>
