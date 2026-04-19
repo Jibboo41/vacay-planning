@@ -18,6 +18,7 @@ interface Trip {
   createdAt: number;
   aiSummary?: string;
   todos?: TodoItem[];
+  packingItems?: import('../core/models').PackingItem[];
   expenses?: Expense[];
   weather?: WeatherCache;
   generalNotes?: import('../core/models').TripNote[];
@@ -29,6 +30,7 @@ interface TripStore {
   currentTripAiSummary: string | null;
   items: ItineraryItem[];
   todos: TodoItem[];
+  packingItems: import('../core/models').PackingItem[];
   expenses: Expense[];
   weather: WeatherCache | null;
   generalNotes: import('../core/models').TripNote[];
@@ -89,6 +91,13 @@ interface TripStore {
   addExpense: (expense: Omit<Expense, 'id' | 'paid' | 'paidAmount'>) => Promise<void>;
   updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+
+  // Packing Actions
+  addPackingItem: (text: string, category: import('../core/models').PackingItem['category']) => Promise<void>;
+  updatePackingItem: (id: string, updates: Partial<import('../core/models').PackingItem>) => Promise<void>;
+  togglePackingItem: (id: string) => Promise<void>;
+  deletePackingItem: (id: string) => Promise<void>;
+  reorderPackingItems: (newOrder: import('../core/models').PackingItem[]) => Promise<void>;
   
   // Weather
   updateWeather: (weather: WeatherCache) => Promise<void>;
@@ -138,6 +147,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   currentTripAiSummary: null,
   items: [],
   todos: [],
+  packingItems: [],
   expenses: [],
   weather: null,
   generalNotes: [],
@@ -200,6 +210,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         trips: [],
         items: [],
         todos: [],
+        packingItems: [],
         expenses: [],
         weather: null,
         generalNotes: [],
@@ -248,6 +259,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       trips: sorted,
       items: newItems,
       todos: currentTrip?.todos || [],
+      packingItems: currentTrip?.packingItems || [],
       expenses: currentTrip?.expenses || [],
       weather: currentTrip?.weather || null,
       generalNotes: currentTrip?.generalNotes || [],
@@ -264,6 +276,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       currentTripId: tripId,
       items: trip?.items || [],
       todos: trip?.todos || [],
+      packingItems: trip?.packingItems || [],
       expenses: trip?.expenses || [],
       weather: trip?.weather || null,
       generalNotes: trip?.generalNotes || [],
@@ -281,7 +294,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!userId) throw new Error("User not authenticated.");
     const newTrip = { title, userId, items: [], createdAt: Date.now() };
     const docRef = await addDoc(collection(db, "trips"), newTrip);
-    set({ currentTripId: docRef.id, items: [], todos: [], expenses: [], weather: null, generalNotes: [] });
+    set({ currentTripId: docRef.id, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [] });
     localStorage.setItem('vacay_current_trip_id', docRef.id);
     return docRef.id;
   },
@@ -289,7 +302,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   deleteTrip: async (tripId) => {
     await deleteDoc(doc(db, "trips", tripId));
     if (get().currentTripId === tripId) {
-      set({ currentTripId: null, items: [], todos: [], expenses: [], weather: null });
+      set({ currentTripId: null, items: [], todos: [], packingItems: [], expenses: [], weather: null });
       localStorage.removeItem('vacay_current_trip_id');
     }
   },
@@ -580,6 +593,52 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const newExpenses = expenses.filter(e => e.id !== id);
     set({ expenses: newExpenses });
     await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
+  },
+
+  addPackingItem: async (text, category) => {
+    const { currentTripId, packingItems, initialized } = get();
+    if (!currentTripId || !initialized) return;
+    const newItem: import('../core/models').PackingItem = { 
+      id: `pack-${Date.now()}`, 
+      text, 
+      completed: false, 
+      category,
+      createdAt: Date.now()
+    };
+    const newItems = [...packingItems, newItem];
+    set({ packingItems: newItems });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
+  },
+
+  togglePackingItem: async (id) => {
+    const { currentTripId, packingItems } = get();
+    if (!currentTripId) return;
+    const newItems = packingItems.map(p => p.id === id ? { ...p, completed: !p.completed } : p);
+    set({ packingItems: newItems });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
+  },
+
+  updatePackingItem: async (id, updates) => {
+    const { currentTripId, packingItems } = get();
+    if (!currentTripId) return;
+    const newItems = packingItems.map(p => p.id === id ? { ...p, ...updates } : p);
+    set({ packingItems: newItems });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
+  },
+
+  reorderPackingItems: async (newOrder) => {
+    const { currentTripId } = get();
+    if (!currentTripId) return;
+    set({ packingItems: newOrder });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newOrder) });
+  },
+
+  deletePackingItem: async (id) => {
+    const { currentTripId, packingItems } = get();
+    if (!currentTripId) return;
+    const newItems = packingItems.filter(p => p.id !== id);
+    set({ packingItems: newItems });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
   },
 
   updateWeather: async (weather) => {

@@ -79,6 +79,14 @@ export interface TodoItem {
   notes?: string;
 }
 
+export interface PackingItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  category: 'Luggage' | 'Carry-on' | 'Personal Item' | 'Other';
+  createdAt: number;
+}
+
 export interface Expense {
   id: string;
   title: string;
