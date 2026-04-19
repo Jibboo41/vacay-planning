@@ -178,18 +178,39 @@ export default function PackingScreen() {
 
             <div className="edit-field-group" style={{ marginBottom: 0 }}>
               <label className="edit-field-label">Category</label>
-              <select
-                value={newCategory}
-                onChange={e => setNewCategory(e.target.value as PackingCategory)}
-                style={{
-                  background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '12px', padding: '14px 16px', color: '#fff',
-                  fontSize: '16px', colorScheme: 'dark', width: '100%',
-                  boxSizing: 'border-box'
-                }}
-              >
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'row', 
+                background: 'rgba(255,255,255,0.05)', 
+                borderRadius: '14px', 
+                padding: '4px',
+                gap: '4px'
+              }}>
+                {categories.map(c => {
+                  const isActive = newCategory === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNewCategory(c)}
+                      style={{
+                        flex: 1,
+                        padding: '10px 4px',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        transition: 'all 0.2s ease',
+                        background: isActive ? 'var(--sys-blue)' : 'transparent',
+                        color: isActive ? '#fff' : 'var(--sys-label-secondary)',
+                        boxShadow: isActive ? '0 4px 12px rgba(10, 132, 255, 0.3)' : 'none',
+                        border: isActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
+                      }}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -314,19 +335,40 @@ export default function PackingScreen() {
                                     fontSize: '16px', fontWeight: 500, outline: 'none', width: '100%'
                                   }}
                                 />
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>Category:</span>
-                                    <select
-                                        value={editCategory}
-                                        onChange={e => setEditCategory(e.target.value as PackingCategory)}
-                                        style={{
-                                            background: 'rgba(255,255,255,0.05)', border: 'none',
-                                            borderRadius: '6px', padding: '3px 7px', color: '#fff',
-                                            fontSize: '12px', colorScheme: 'dark'
-                                        }}
-                                    >
-                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <span style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, marginLeft: '4px' }}>Category:</span>
+                                    <div style={{ 
+                                        display: 'flex', 
+                                        flexDirection: 'row', 
+                                        background: 'rgba(255,255,255,0.05)', 
+                                        borderRadius: '12px', 
+                                        padding: '3px',
+                                        gap: '3px'
+                                      }}>
+                                        {categories.map(c => {
+                                          const isActive = editCategory === c;
+                                          return (
+                                            <button
+                                              key={c}
+                                              type="button"
+                                              onClick={() => setEditCategory(c)}
+                                              style={{
+                                                flex: 1,
+                                                padding: '6px 2px',
+                                                borderRadius: '8px',
+                                                fontSize: '10px',
+                                                fontWeight: 700,
+                                                transition: 'all 0.2s ease',
+                                                background: isActive ? 'var(--sys-blue)' : 'transparent',
+                                                color: isActive ? '#fff' : 'var(--sys-label-secondary)',
+                                                border: isActive ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                                              }}
+                                            >
+                                              {c}
+                                            </button>
+                                          );
+                                        })}
+                                    </div>
                                 </div>
                               </div>
                             ) : (

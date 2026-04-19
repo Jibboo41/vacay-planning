@@ -765,7 +765,7 @@ export default function MapViewScreen() {
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '28px', height: '0', borderTop: '2px dashed rgba(180, 180, 200, 0.4)', flexShrink: 0 }} />
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--sys-label-tertiary)' }}>Overnight stay / transition</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--sys-label-tertiary)' }}>Between Days</span>
           </div>
         </div>
       )}
