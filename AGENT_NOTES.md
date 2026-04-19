@@ -1,3 +1,9 @@
+- **Phase 71 (Packing List & Grid Menu)**:
+    - **Packing System**: Introduced `PackingItem` with `category` metadata. Created `PackingScreen.tsx` (view route `/packing`).
+    - **UI Pattern**: Implemented **Segmented Control** for tag-based selection in packing (replaces standard select dropdowns).
+    - **Navigation Redesign**: Overhauled Right FAB View Switcher to a **3x3 Grid Menu**. Added icon-label pairs for improved recognition. 8 modules: Timeline, Map, Summary, Todo, Costs, Weather, Notes, Packing.
+    - **Stability**: Fixed a critical weather sync bug by adding `refreshWeather` triggers to `addItem` and `updateItem` in `useTripStore.ts`.
+    - **Map Refinement**: Legend label changed to "Between Days".
 - **Phase 70 (Color Palette Pivot)**:
     - **Dining (food)**: Shifted to **System Purple (#BF5AF2)** across Map, Timeline, and Costs.
     - **Rental Cars**: Shifted to **Light Sky Blue (#64D2FF)** across Map, Timeline, and Costs.

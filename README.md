@@ -33,6 +33,11 @@
 - **Weather Suite**: Integrated daily forecasts via Open-Meteo API with **5-year historical precipitation averages** (rainfall + snowfall in inches) and daily H/L aggregated across all stops.
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
 
+### 🔹 Gear & Packing
+- **Personalized Packing List**: Specialized gear management view with categorized grouping (**Luggage**, **Carry-on**, **Personal Item**). 
+- **Tactile Categorization**: Uses premium segmented controls for fast, visual gear organization.
+- **No-Deadline Interface**: Streamlined purely for inventory tracking, removing the clutter of due dates for packing tasks.
+
 ### 🔹 Financial Management
 - **Unified Category System**: Car Rental, Flights, Gas, Dining, Lodging, Souvenirs, and Other.
 - **Settlement Engine**: `paidAmount` field on itinerary items and manual expenses with over-budget detection (highlighted in red).

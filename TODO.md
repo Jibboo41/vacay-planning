@@ -16,6 +16,8 @@
 - [x] **DND Prepending**: Resolved day-start dragging issues with tripled-height top-of-day drop zones and refined reordering logic.
 - [x] **Data Portability**: Google Sheets-compatible CSV export for itinerary items and expenses in the sidebar.
 - [x] **Itinerary Refinement**: Note item specialization with title-badges, auto-description display, and premium map routing stability with glassy loading indicators.
+- [x] **Packing List**: Launched specialized gear management view with categorization (Luggage/Carry-on) and a streamlined, date-free interface.
+- [x] **Navigation Architecture**: Redesigned the View Switcher as a 3x3 Grid Menu with icon-label pairs for improved module accessibility.
 - [x] **Data Portability**: Enhance Google Sheets export with premium visual formatting, structured report styling, and professional itinerary layouts.
 - [x] **AllTrails Scraper**: Automated parsing of hiking links to extract trail stats.
 - [x] **AllTrails Robustness**: Sanitize mobile share links and strip tracking parameters.

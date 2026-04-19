@@ -2,6 +2,16 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [1.32.0] - 2026-04-19
+### Added
+- **Personalized Packing List**: Launched a specialized "Packing List" view featuring category-based gear organization (Luggage, Carry-on, etc.) and a streamlined interface without due dates.
+- **View Switcher Grid**: Overhauled the bottom navigation FAB into a premium 3x3 Grid Menu. Added icon-label pairs for improved recognition and accessibility across all 8 modules.
+- **Enhanced Category Selection**: Implemented a tactile Segmented Control for gear categorization, replacing standard system dropdowns with high-fidelity glassmorphic buttons.
+
+### Fixed
+- **Weather Synchronization**: Resolved a bug where weather forecasts wouldn't update after editing an event's date or location via the edit dialog.
+- **Map Clarity**: Renamed the "Overnight stay / transition" connector label to "Between Days" for better brevity and UI polish.
+
 ## [1.31.0] - 2026-04-17
 ### Added
 - **Color Palette Pivot**: Transitioned **Dining** to System Purple (#BF5AF2) and **Rental Cars** to Light Sky Blue (#64D2FF) for improved category differentiation.
