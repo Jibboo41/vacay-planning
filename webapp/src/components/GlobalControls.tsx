@@ -119,15 +119,61 @@ export default function GlobalControls() {
           {currentIcon}
         </button>
 
-        <div className={`fab-options ${isViewOpen ? 'open' : ''}`}>
-          <NavButton icon={<Calendar size={18} />} onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} isActive={location.pathname === '/timeline'} />
-          <NavButton icon={<Compass size={18} />} onClick={() => { navigate('/map'); setIsViewOpen(false); }} isActive={location.pathname === '/map'} />
-          <NavButton icon={<BookOpen size={18} />} onClick={() => { navigate('/summary'); setIsViewOpen(false); }} isActive={location.pathname === '/summary'} />
-          <NavButton icon={<CheckSquare size={18} />} onClick={() => { navigate('/todo'); setIsViewOpen(false); }} isActive={location.pathname === '/todo'} />
-          <NavButton icon={<DollarSign size={18} />} onClick={() => { navigate('/costs'); setIsViewOpen(false); }} isActive={location.pathname === '/costs'} />
-          <NavButton icon={<CloudSun size={18} />} onClick={() => { navigate('/weather'); setIsViewOpen(false); }} isActive={location.pathname === '/weather'} />
-          <NavButton icon={<StickyNote size={18} />} onClick={() => { navigate('/notes'); setIsViewOpen(false); }} isActive={location.pathname === '/notes'} />
-          <NavButton icon={<Luggage size={18} />} onClick={() => { navigate('/packing'); setIsViewOpen(false); }} isActive={location.pathname === '/packing'} />
+        <div className={`fab-options ${isViewOpen ? 'open' : ''}`} style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(3, 1fr)', 
+          gap: '8px',
+          background: 'rgba(28, 28, 30, 0.7)',
+          padding: '12px',
+          borderRadius: '24px',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          minWidth: '240px',
+          transform: isViewOpen ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
+          opacity: isViewOpen ? 1 : 0
+        }}>
+          <NavButton 
+            icon={<Calendar size={20} />} label="Timeline" 
+            onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/timeline'} 
+          />
+          <NavButton 
+            icon={<Compass size={20} />} label="Map" 
+            onClick={() => { navigate('/map'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/map'} 
+          />
+          <NavButton 
+            icon={<BookOpen size={20} />} label="Summary" 
+            onClick={() => { navigate('/summary'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/summary'} 
+          />
+          <NavButton 
+            icon={<CheckSquare size={20} />} label="Todo" 
+            onClick={() => { navigate('/todo'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/todo'} 
+          />
+          <NavButton 
+            icon={<DollarSign size={20} />} label="Costs" 
+            onClick={() => { navigate('/costs'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/costs'} 
+          />
+          <NavButton 
+            icon={<CloudSun size={20} />} label="Weather" 
+            onClick={() => { navigate('/weather'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/weather'} 
+          />
+          <NavButton 
+            icon={<StickyNote size={20} />} label="Notes" 
+            onClick={() => { navigate('/notes'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/notes'} 
+          />
+          <NavButton 
+            icon={<Luggage size={20} />} label="Packing" 
+            onClick={() => { navigate('/packing'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/packing'} 
+          />
         </div>
       </div>
       )}
@@ -172,20 +218,36 @@ export default function GlobalControls() {
   );
 }
 
-function NavButton({ icon, onClick, isActive }: { icon: React.ReactNode, onClick: () => void, isActive: boolean }) {
+function NavButton({ icon, label, onClick, isActive }: { icon: React.ReactNode, label: string, onClick: () => void, isActive: boolean }) {
   return (
     <button
       onClick={onClick}
-      className={`fab-sub ${isActive ? 'active' : ''}`}
       style={{
-        background: isActive ? 'var(--sys-blue)' : 'var(--sys-bg-elevated-2)',
-        borderColor: isActive ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)',
-        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 6px',
+        borderRadius: '16px',
+        background: isActive ? 'rgba(10, 132, 255, 0.25)' : 'rgba(255,255,255,0.05)',
+        border: isActive ? '1px solid rgba(10, 132, 255, 0.4)' : '1px solid rgba(255,255,255,0.02)',
+        color: isActive ? '#fff' : 'var(--sys-label-secondary)',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        gap: '4px'
       }}
     >
-      <div style={{ opacity: isActive ? 1 : 0.7 }}>
+      <div style={{ opacity: isActive ? 1 : 0.8 }}>
         {icon}
       </div>
+      <span style={{ 
+        fontSize: '10px', 
+        fontWeight: isActive ? 800 : 600,
+        letterSpacing: '0.02em',
+        opacity: isActive ? 1 : 0.7 
+      }}>
+        {label}
+      </span>
     </button>
   );
 }
