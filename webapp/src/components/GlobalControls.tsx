@@ -72,7 +72,7 @@ export default function GlobalControls() {
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           minWidth: '160px',
-          transform: isSparkleOpen ? 'translateY(1) scale(1)' : 'translateY(20px) scale(0.95)',
+          transform: isSparkleOpen ? 'translateY(-10px) scale(1)' : 'translateY(20px) scale(0.95)',
           opacity: isSparkleOpen ? 1 : 0
         }}>
           <NavButton 
@@ -134,7 +134,7 @@ export default function GlobalControls() {
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
           minWidth: '240px',
-          transform: isViewOpen ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
+          transform: isViewOpen ? 'translateY(-10px) scale(1)' : 'translateY(20px) scale(0.95)',
           opacity: isViewOpen ? 1 : 0
         }}>
           <NavButton 
