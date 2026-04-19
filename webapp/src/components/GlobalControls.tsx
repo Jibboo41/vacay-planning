@@ -51,7 +51,7 @@ export default function GlobalControls() {
     <>
       {/* ── Sparkles Action FAB (Bottom Left) ── */}
       {location.pathname !== '/map' && !shouldHide && (
-        <div className="fab-group left">
+        <div className="fab-group left" style={{ alignItems: 'flex-start' }}>
         <button 
           className={`fab-main ${isSparkleOpen ? 'active' : ''}`} 
           onClick={() => { setIsSparkleOpen(!isSparkleOpen); setIsViewOpen(false); }}
