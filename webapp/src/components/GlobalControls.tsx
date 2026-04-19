@@ -60,25 +60,28 @@ export default function GlobalControls() {
           <Sparkles size={24} color="#fff" />
         </button>
 
-        <div className={`fab-options ${isSparkleOpen ? 'open' : ''}`}>
-          <button 
-            className="fab-sub" 
-            onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }}
-            aria-label="Dining Scout"
-          >
-            <Utensils size={18} color="#fff" />
-          </button>
-
-          <button 
-            className="fab-sub" 
-            onClick={() => { setAddNoteVisible(true); setIsSparkleOpen(false); }}
-            aria-label="Add note"
-          >
-            <StickyNote size={18} color="#fff" />
-          </button>
-
-          <button 
-            className="fab-sub" 
+        <div className={`fab-options ${isSparkleOpen ? 'open' : ''}`} style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(2, 1fr)', 
+          gap: '8px',
+          background: 'rgba(28, 28, 30, 0.7)',
+          padding: '12px',
+          borderRadius: '24px',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          minWidth: '160px',
+          transform: isSparkleOpen ? 'translateY(1) scale(1)' : 'translateY(20px) scale(0.95)',
+          opacity: isSparkleOpen ? 1 : 0
+        }}>
+          <NavButton 
+            icon={<Sparkles size={20} />} label="AI Parse" 
+            onClick={() => { setAddVisible(true); setIsSparkleOpen(false); }} 
+            isActive={false} 
+          />
+          <NavButton 
+            icon={<PenLine size={20} />} label="Manual" 
             onClick={() => {
               const newItem: ItineraryItem = {
                 id: `manual-${Date.now()}`,
@@ -91,26 +94,26 @@ export default function GlobalControls() {
               setEditItem(newItem);
               setEditVisible(true);
               setIsSparkleOpen(false);
-            }}
-            aria-label="Manual Entry"
-          >
-            <PenLine size={18} color="#fff" />
-          </button>
-
-          <button 
-            className="fab-sub" 
-            onClick={() => { setAddVisible(true); setIsSparkleOpen(false); }}
-            aria-label="AI Parse"
-          >
-            <Sparkles size={18} color="#fff" />
-          </button>
+            }} 
+            isActive={false} 
+          />
+          <NavButton 
+            icon={<StickyNote size={20} />} label="Note" 
+            onClick={() => { setAddNoteVisible(true); setIsSparkleOpen(false); }} 
+            isActive={false} 
+          />
+          <NavButton 
+            icon={<Utensils size={20} />} label="Scout" 
+            onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }} 
+            isActive={false} 
+          />
         </div>
       </div>
       )}
 
       {/* ── View Switcher FAB (Bottom Right) ── */}
       {!shouldHide && (
-        <div className="fab-group right">
+        <div className="fab-group right" style={{ alignItems: 'flex-end' }}>
           <button 
           className={`fab-main ${isViewOpen ? 'active' : ''}`}
           onClick={() => { setIsViewOpen(!isViewOpen); setIsSparkleOpen(false); }}
