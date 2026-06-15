@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, DollarSign, CloudSun, StickyNote, Utensils, Luggage } from 'lucide-react';
+import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, DollarSign, CloudSun, StickyNote, Utensils, Luggage, CreditCard } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import AddItineraryModal from './modals/AddItineraryModal';
@@ -44,6 +44,7 @@ export default function GlobalControls() {
     if (location.pathname === '/weather') return <CloudSun size={24} color="#fff" />;
     if (location.pathname === '/notes') return <StickyNote size={24} color="#fff" />;
     if (location.pathname === '/packing') return <Luggage size={24} color="#fff" />;
+    if (location.pathname === '/cards') return <CreditCard size={24} color="#fff" />;
     return <Layers size={24} color="#fff" />;
   }, [location.pathname]);
 
@@ -176,6 +177,11 @@ export default function GlobalControls() {
             icon={<Luggage size={20} />} label="Packing" 
             onClick={() => { navigate('/packing'); setIsViewOpen(false); }} 
             isActive={location.pathname === '/packing'} 
+          />
+          <NavButton 
+            icon={<CreditCard size={20} />} label="Cards" 
+            onClick={() => { navigate('/cards'); setIsViewOpen(false); }} 
+            isActive={location.pathname === '/cards'} 
           />
         </div>
       </div>

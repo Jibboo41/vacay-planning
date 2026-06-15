@@ -7,6 +7,7 @@ import CostTrackerScreen from './components/CostTrackerScreen';
 import WeatherScreen from './components/WeatherScreen';
 import NotesScreen from './components/NotesScreen';
 import PackingScreen from './components/PackingScreen';
+import CreditCardsScreen from './components/CreditCardsScreen';
 import DebugScreen from './components/DebugScreen';
 import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
@@ -250,6 +251,7 @@ function App() {
             <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute>{currentTripId ? <NotesScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/packing" element={<ProtectedRoute>{currentTripId ? <PackingScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/cards" element={<ProtectedRoute>{currentTripId ? <CreditCardsScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/debug" element={<ProtectedRoute><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/timeline" replace />} />
           </Routes>

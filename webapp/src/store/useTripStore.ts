@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay } from '../core/models';
+import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay, CreditCard } from '../core/models';
 import { fetchWeather } from '../data/weatherApi';
 import { db, auth } from '../core/firebase';
 import { 
@@ -22,6 +22,8 @@ interface Trip {
   expenses?: Expense[];
   weather?: WeatherCache;
   generalNotes?: import('../core/models').TripNote[];
+  creditCards?: CreditCard[];
+  cardNotes?: string;
 }
 
 interface TripStore {
@@ -34,6 +36,8 @@ interface TripStore {
   expenses: Expense[];
   weather: WeatherCache | null;
   generalNotes: import('../core/models').TripNote[];
+  creditCards: CreditCard[];
+  cardNotes: string;
   userId: string | null;
   loading: boolean;
   isSidebarOpen: boolean;
@@ -108,6 +112,12 @@ interface TripStore {
   addDebugLog: (category: string, message: string, data?: any) => void;
   clearDebugLogs: () => void;
 
+  // Credit Card Actions
+  addCreditCard: (name: string, categories: ('Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other' | 'Groceries')[], cashback: { [category: string]: number }, noForeignTxFee: boolean, specialOffers?: string, notes?: string) => Promise<void>;
+  updateCreditCard: (id: string, updates: Partial<CreditCard>) => Promise<void>;
+  deleteCreditCard: (id: string) => Promise<void>;
+  updateCardNotes: (notes: string) => Promise<void>;
+
   // Sync
   syncTrips: (trips: Trip[]) => void;
 }
@@ -151,6 +161,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
   expenses: [],
   weather: null,
   generalNotes: [],
+  creditCards: [],
+  cardNotes: '',
   userId: null,
   loading: true,
   isSidebarOpen: false,
@@ -214,6 +226,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
         expenses: [],
         weather: null,
         generalNotes: [],
+        creditCards: [],
+        cardNotes: '',
         currentTripAiSummary: null,
         initialized: true 
       });
@@ -263,6 +277,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       expenses: currentTrip?.expenses || [],
       weather: currentTrip?.weather || null,
       generalNotes: currentTrip?.generalNotes || [],
+      creditCards: currentTrip?.creditCards || [],
+      cardNotes: currentTrip?.cardNotes || '',
       currentTripAiSummary: currentTrip?.aiSummary || null,
       initialized: true
     });
@@ -280,6 +296,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       expenses: trip?.expenses || [],
       weather: trip?.weather || null,
       generalNotes: trip?.generalNotes || [],
+      creditCards: trip?.creditCards || [],
+      cardNotes: trip?.cardNotes || '',
       currentTripAiSummary: trip?.aiSummary || null
     });
     if (tripId) localStorage.setItem('vacay_current_trip_id', tripId);
@@ -294,7 +312,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!userId) throw new Error("User not authenticated.");
     const newTrip = { title, userId, items: [], createdAt: Date.now() };
     const docRef = await addDoc(collection(db, "trips"), newTrip);
-    set({ currentTripId: docRef.id, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [] });
+    set({ currentTripId: docRef.id, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [], creditCards: [], cardNotes: '' });
     localStorage.setItem('vacay_current_trip_id', docRef.id);
     return docRef.id;
   },
@@ -302,7 +320,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   deleteTrip: async (tripId) => {
     await deleteDoc(doc(db, "trips", tripId));
     if (get().currentTripId === tripId) {
-      set({ currentTripId: null, items: [], todos: [], packingItems: [], expenses: [], weather: null });
+      set({ currentTripId: null, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [], creditCards: [], cardNotes: '' });
       localStorage.removeItem('vacay_current_trip_id');
     }
   },
@@ -768,5 +786,45 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     set({ generalNotes: newOrder });
     await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newOrder) });
+  },
+
+  addCreditCard: async (name, categories, cashback, noForeignTxFee, specialOffers, notes) => {
+    const { currentTripId, creditCards, initialized } = get();
+    if (!currentTripId || !initialized) return;
+    const newCard = {
+      id: `card-${Date.now()}`,
+      name,
+      categories,
+      cashback,
+      noForeignTxFee,
+      specialOffers: specialOffers || '',
+      notes: notes || ''
+    };
+    const newCards = [...creditCards, newCard];
+    set({ creditCards: newCards });
+    await updateDoc(doc(db, "trips", currentTripId), { creditCards: scrubData(newCards) });
+  },
+
+  updateCreditCard: async (id, updates) => {
+    const { currentTripId, creditCards } = get();
+    if (!currentTripId) return;
+    const newCards = creditCards.map(c => c.id === id ? { ...c, ...updates } : c);
+    set({ creditCards: newCards });
+    await updateDoc(doc(db, "trips", currentTripId), { creditCards: scrubData(newCards) });
+  },
+
+  deleteCreditCard: async (id) => {
+    const { currentTripId, creditCards } = get();
+    if (!currentTripId) return;
+    const newCards = creditCards.filter(c => c.id !== id);
+    set({ creditCards: newCards });
+    await updateDoc(doc(db, "trips", currentTripId), { creditCards: scrubData(newCards) });
+  },
+
+  updateCardNotes: async (notes) => {
+    const { currentTripId } = get();
+    if (!currentTripId) return;
+    set({ cardNotes: notes });
+    await updateDoc(doc(db, "trips", currentTripId), { cardNotes: notes });
   }
 }));

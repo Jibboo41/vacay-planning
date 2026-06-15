@@ -339,7 +339,7 @@ export default function TodoScreen() {
                           fontSize: '16px', color: todo.completed ? 'var(--sys-label-tertiary)' : '#fff',
                           textDecoration: todo.completed ? 'line-through' : 'none',
                           transition: 'all 0.2s ease', fontWeight: 500,
-                          display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                          display: 'block', wordBreak: 'break-word', overflowWrap: 'anywhere'
                         }}>
                           {todo.text}
                         </span>
@@ -354,7 +354,7 @@ export default function TodoScreen() {
                         {todo.notes && (
                           <div style={{
                             fontSize: '13px', marginTop: '6px', color: 'var(--sys-label-secondary)',
-                            lineHeight: '1.4', whiteSpace: 'pre-wrap'
+                            lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere'
                           }}>
                             {todo.notes}
                           </div>

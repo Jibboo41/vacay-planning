@@ -115,3 +115,14 @@ export interface WeatherCache {
   lastUpdated: number;
   forecast: WeatherDay[];
 }
+
+export interface CreditCard {
+  id: string;
+  name: string;
+  categories: ('Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other' | 'Groceries')[];
+  cashback: { [category: string]: number };
+  noForeignTxFee: boolean;
+  specialOffers?: string;
+  notes?: string;
+}
+
