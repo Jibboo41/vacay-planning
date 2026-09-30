@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { X, Star, MapPin, Plus, ExternalLink, Globe, Utensils, Navigation } from 'lucide-react';
+import { Star, MapPin, Plus, ExternalLink, Globe, Utensils, Navigation } from 'lucide-react';
 import { scoutDining } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
 import type { ItineraryItem } from '../../core/models';
+import { Button, IconButton, Modal } from '../ui';
 
 interface AiScoutModalProps {
   onClose: () => void;
@@ -11,10 +12,18 @@ interface AiScoutModalProps {
 
 type ScoutStep = 'select' | 'loading' | 'results';
 
+type ScoutResult = Awaited<ReturnType<typeof scoutDining>>[number] & {
+  happyCowUrl?: string;
+  officialUrl?: string;
+  lat?: number;
+  lng?: number;
+  distance?: string;
+};
+
 export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
   const [step, setStep] = useState<ScoutStep>('select');
   const [selectedStop, setSelectedStop] = useState<ItineraryItem | null>(null);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<ScoutResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   
   const currentTripId = useTripStore(s => s.currentTripId);
@@ -37,13 +46,13 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
       const data = await scoutDining(locationQuery, currentTrip?.title || '');
       setResults(data);
       setStep('results');
-    } catch (err: any) {
-      setError(err.message || 'Failed to scout restaurants.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to scout restaurants.');
       setStep('results');
     }
   };
 
-  const handleAdd = (res: any) => {
+  const handleAdd = (res: ScoutResult) => {
     if (!selectedStop) return;
 
     const newItem: ItineraryItem = {
@@ -51,7 +60,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
       type: 'food',
       title: res.name,
       startDate: selectedStop.startDate,
-      description: res.description, // No sparkles added here
+      description: res.description,
       location: {
         name: res.name,
         address: res.address,
@@ -69,162 +78,137 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div 
-        className="modal-sheet glass-effect shimmering-border" 
-        onClick={e => e.stopPropagation()}
-        style={{ maxWidth: '500px', alignSelf: 'center', borderRadius: '28px', overflow: 'hidden' }}
-      >
-        <button className="modal-close" onClick={onClose}>
-          <X size={24} />
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-          <div className={`ai-status-dot ${step === 'loading' ? 'active' : ''}`} />
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Utensils size={20} className="text-ai" /> Dining Scout
-          </h2>
+    <Modal
+      open
+      onClose={onClose}
+      title={<><Utensils size={20} className="text-ai" /> Dining Scout</>}
+      variant="center"
+      className="glass-effect shimmering-border max-w-[500px] overflow-hidden rounded-[28px]"
+      headerActions={<div className={`ai-status-dot ${step === 'loading' ? 'active' : ''}`} />}
+    >
+      {step === 'select' && (
+        <div className="flex flex-col gap-4">
+          <p className="text-[14px] leading-normal text-label-secondary">
+            Where should we look for food? Pick a reference stop on your trip to scout the surrounding area.
+          </p>
+          
+          <div className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto pr-1">
+            {candidateStops.map(stop => {
+              const date = new Date(stop.startDate);
+              const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+              return (
+                <Button
+                  key={stop.id}
+                  onClick={() => runScout(stop)}
+                  variant="secondary"
+                  className="glass-card flex h-auto w-full cursor-pointer items-center justify-start gap-3 rounded-control border border-white/8 p-3.5 text-left transition-all duration-200"
+                >
+                  <div className="flex size-10 items-center justify-center rounded-[10px] bg-white/5 text-label-tertiary">
+                    <MapPin size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-[10px] font-black uppercase tracking-[0.05em] text-sys-blue">{dayLabel}</div>
+                    <div className="text-body font-bold text-label">{stop.title}</div>
+                    <div className="text-caption text-label-secondary opacity-80">{stop.location.name}</div>
+                  </div>
+                </Button>
+              );
+            })}
+          </div>
         </div>
+      )}
 
-        {step === 'select' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', lineHeight: '1.5' }}>
-              Where should we look for food? Pick a reference stop on your trip to scout the surrounding area.
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
-              {candidateStops.map(stop => {
-                const date = new Date(stop.startDate);
-                const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                return (
-                  <button
-                    key={stop.id}
-                    onClick={() => runScout(stop)}
-                    className="glass-card"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px',
-                      borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)',
-                      textAlign: 'left', width: '100%', cursor: 'pointer', transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <div style={{ 
-                      width: '40px', height: '40px', borderRadius: '10px', 
-                      background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', 
-                      justifyContent: 'center', color: 'var(--sys-label-tertiary)' 
-                    }}>
-                      <MapPin size={20} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', fontWeight: 900, color: 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{dayLabel}</div>
-                      <div style={{ fontSize: '15px', fontWeight: 700, color: '#FFF' }}>{stop.title}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', opacity: 0.8 }}>{stop.location.name}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+      {step === 'loading' && (
+        <div className="flex flex-col items-center gap-5 py-[60px]">
+          <div className="spinning relative size-16">
+            <div className="absolute inset-0 rounded-full border-4 border-sys-purple/10 border-t-sys-purple" />
+            <Utensils size={24} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-sys-purple" />
           </div>
-        )}
-
-        {step === 'loading' && (
-          <div style={{ padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div className="spinning" style={{ position: 'relative', width: '64px', height: '64px' }}>
-              <div style={{ 
-                position: 'absolute', inset: 0, borderRadius: '50%', 
-                border: '4px solid rgba(191, 90, 242, 0.1)', borderTopColor: '#BF5AF2' 
-              }} />
-              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#BF5AF2' }} />
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>Scouting Near {selectedStop?.location.name}</h3>
-              <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)' }}>Searching HappyCow & local gems...</p>
-            </div>
+          <div className="text-center">
+            <h3 className="mb-2 text-[18px] font-extrabold text-label">Scouting Near {selectedStop?.location.name}</h3>
+            <p className="text-footnote text-label-secondary">Searching HappyCow & local gems...</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {step === 'results' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-             {error ? (
-              <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)', color: '#FF453A' }}>
-                <p style={{ fontWeight: 700, marginBottom: '4px' }}>Scouting failed</p>
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>{error}</div>
-                <button onClick={() => setStep('select')} style={{ marginTop: '12px', fontSize: '12px', fontWeight: 700, color: '#FFF', textDecoration: 'underline' }}>Try another location</button>
+      {step === 'results' && (
+        <div className="flex flex-col gap-4">
+           {error ? (
+            <div className="rounded-control border border-sys-red/20 bg-sys-red/10 p-5 text-sys-red">
+              <p className="mb-1 font-bold">Scouting failed</p>
+              <div className="text-caption opacity-80">{error}</div>
+              <Button onClick={() => setStep('select')} variant="ghost" size="sm" className="mt-3 text-caption font-bold text-label underline">Try another location</Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-footnote text-label-secondary">Top Vegetarian Picks Found</span>
+                <Button onClick={() => setStep('select')} variant="ghost" size="sm" className="text-caption font-bold text-sys-blue">Change Location</Button>
               </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--sys-label-secondary)' }}>Top Vegetarian Picks Found</span>
-                  <button onClick={() => setStep('select')} style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-blue)' }}>Change Location</button>
-                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '55vh', overflowY: 'auto', paddingRight: '4px' }}>
-                  {results.map((res, i) => (
-                    <div 
-                      key={i} 
-                      className="glass-card" 
-                      style={{ 
-                        padding: '16px', borderRadius: '16px', 
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        display: 'flex', flexDirection: 'column', gap: '8px'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#FFF', marginBottom: '4px' }}>{res.name}</h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#BF5AF2', fontWeight: 700 }}>
-                              <Star size={12} fill="#BF5AF2" /> {res.rating}
-                            </div>
-                            {res.distance && (
-                              <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
-                                <Navigation size={11} /> {res.distance}
-                              </div>
-                            )}
+              <div className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto pr-1">
+                {results.map((res, i) => (
+                  <div 
+                    key={`${res.name}-${i}`} 
+                    className="glass-card flex flex-col gap-2 rounded-2xl border border-white/8 p-4" 
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="mb-1 text-[16px] font-bold text-label">{res.name}</h3>
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex items-center gap-1 text-caption font-bold text-sys-purple">
+                            <Star size={12} className="fill-sys-purple" /> {res.rating}
                           </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {res.happyCowUrl && (
-                            <button onClick={() => window.open(res.happyCowUrl, '_blank')} className="header-icon-btn" style={{ width: '36px', height: '36px', borderRadius: '10px' }} title="HappyCow">
-                              <ExternalLink size={16} />
-                            </button>
+                          {res.distance && (
+                            <div className="flex items-center gap-[3px] text-[11px] font-semibold text-label-secondary">
+                              <Navigation size={11} /> {res.distance}
+                            </div>
                           )}
-                          {res.officialUrl && (
-                            <button onClick={() => window.open(res.officialUrl, '_blank')} className="header-icon-btn" style={{ width: '36px', height: '36px', borderRadius: '10px' }} title="Website">
-                              <Globe size={16} />
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleAdd(res)}
-                            className="header-icon-btn"
-                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--sys-blue)', borderColor: 'rgba(255,255,255,0.2)' }}
-                          >
-                            <Plus size={20} />
-                          </button>
                         </div>
                       </div>
-
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                        <MapPin size={12} color="var(--sys-label-tertiary)" />
-                        <span style={{ fontSize: '12px', color: 'var(--sys-label-secondary)' }}>{res.address}</span>
-                      </div>
-
-                      <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', lineHeight: '1.4', fontStyle: 'italic', borderLeft: '2px solid #BF5AF2', paddingLeft: '8px' }}>
-                        "{res.description}"
-                      </p>
-
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 800, background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px', color: 'var(--sys-label-tertiary)' }}>
-                          {res.cuisineType.toUpperCase()}
-                        </span>
+                      <div className="flex gap-2">
+                        {res.happyCowUrl && (
+                          <IconButton aria-label="Open HappyCow" onClick={() => window.open(res.happyCowUrl, '_blank')} className="header-icon-btn" size="sm">
+                            <ExternalLink size={16} />
+                          </IconButton>
+                        )}
+                        {res.officialUrl && (
+                          <IconButton aria-label="Open website" onClick={() => window.open(res.officialUrl, '_blank')} className="header-icon-btn" size="sm">
+                            <Globe size={16} />
+                          </IconButton>
+                        )}
+                        <IconButton
+                          aria-label={`Add ${res.name}`}
+                          onClick={() => handleAdd(res)}
+                          className="header-icon-btn border-white/20 bg-sys-blue"
+                          size="sm"
+                        >
+                          <Plus size={20} />
+                        </IconButton>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+
+                    <div className="flex items-baseline gap-1.5">
+                      <MapPin size={12} className="text-label-tertiary" />
+                      <span className="text-caption text-label-secondary">{res.address}</span>
+                    </div>
+
+                    <p className="border-l-2 border-sys-purple pl-2 text-footnote italic leading-[1.4] text-label-secondary">
+                      &quot;{res.description}&quot;
+                    </p>
+
+                    <div className="flex gap-1.5">
+                      <span className="rounded-md bg-white/6 px-2 py-0.5 text-[10px] font-extrabold text-label-tertiary">
+                        {res.cuisineType.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </Modal>
   );
 }

@@ -1,0 +1,116 @@
+/*
+ * Design tokens (Tailwind v4 `@theme`).
+ *
+ * Every token declared here becomes both a CSS custom property on :root and a
+ * Tailwind utility, e.g. `--color-type-flight` → `text-type-flight`,
+ * `bg-type-flight/10`, `border-type-flight`.
+ *
+ * The legacy `--sys-*` / `--glass-*` variables are aliased at the bottom so any
+ * code still referencing them keeps rendering identically.
+ */
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* ── Apple iOS dark-mode system colors ── */
+  --color-sys-blue: #0A84FF;
+  --color-sys-red: #FF453A;
+  --color-sys-green: #30D158;
+  --color-sys-orange: #FF9F0A;
+  --color-sys-yellow: #FFD60A;
+  --color-sys-purple: #BF5AF2;
+  --color-sys-indigo: #5E5CE6;
+  --color-sys-teal: #64D2FF;
+  --color-sys-pink: #FF375F;
+  --color-sys-gray: #8E8E93;
+
+  /* ── Surfaces ── */
+  --color-app-bg: #0F1014;
+  --color-surface-base: #000000;
+  --color-surface: #1C1C1E;
+  --color-surface-2: #2C2C2E;
+  --color-surface-3: #3A3A3C;
+
+  /* ── Semantic labels ── */
+  --color-label: #FFFFFF;
+  --color-label-secondary: rgba(235, 235, 245, 0.78);
+  --color-label-tertiary: rgba(235, 235, 245, 0.48);
+  --color-separator: rgba(84, 84, 88, 0.65);
+
+  /* ── Glass ── */
+  --color-glass: rgba(28, 28, 30, 0.62);
+  --color-glass-strong: rgba(28, 28, 30, 0.78);
+  --color-glass-light: rgba(255, 255, 255, 0.06);
+  --color-glass-border: rgba(255, 255, 255, 0.15);
+
+  /* ── Itinerary item types (see src/core/itemTypes.ts) ── */
+  --color-type-flight: #0A84FF;
+  --color-type-hotel: #FF9F0A;
+  --color-type-hotel-out: #FF3B30;
+  --color-type-rental: #64D2FF;
+  --color-type-activity: #EBEBF5;
+  --color-type-hike: #30D158;
+  --color-type-transit: #5E5CE6;
+  --color-type-food: #BF5AF2;
+  --color-type-note: #8E8E93;
+
+  /* ── Radii ── */
+  --radius-chip: 8px;
+  --radius-control: 12px;
+  --radius-card: 20px;
+  --radius-panel: 24px;
+  --radius-sheet: 28px;
+
+  /* ── Shadows ── */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-fab: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  --shadow-glow-blue: 0 4px 16px rgba(10, 132, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+  /* ── Blur ── */
+  --blur-glass: 40px;
+  --blur-sheet: 50px;
+
+  /* ── Type scale (min 12px for readable body/label text) ── */
+  --text-caption: 12px;
+  --text-caption--line-height: 1.35;
+  --text-footnote: 13px;
+  --text-footnote--line-height: 1.4;
+  --text-body: 15px;
+  --text-body--line-height: 1.5;
+  --text-headline: 17px;
+  --text-headline--line-height: 1.3;
+  --text-title: 24px;
+  --text-title--line-height: 1.2;
+  --text-large-title: 32px;
+  --text-large-title--line-height: 1.1;
+
+  /* ── Motion ── */
+  --ease-ios: cubic-bezier(0.23, 1, 0.32, 1);
+  --animate-fade-in: fade-in 0.3s var(--ease-ios) both;
+  --animate-slide-up: slide-up 0.35s var(--ease-ios) both;
+}
+
+/* Legacy aliases — keep older code rendering while it is migrated. */
+:root {
+  --sys-blue: var(--color-sys-blue);
+  --sys-red: var(--color-sys-red);
+  --sys-green: var(--color-sys-green);
+  --sys-orange: var(--color-sys-orange);
+  --sys-purple: var(--color-sys-purple);
+
+  --sys-bg-base: var(--color-surface-base);
+  --sys-bg-elevated: var(--color-surface);
+  --sys-bg-elevated-2: var(--color-surface-2);
+  --sys-bg-elevated-3: var(--color-surface-3);
+
+  --sys-label-primary: var(--color-label);
+  --sys-label-secondary: var(--color-label-secondary);
+  --sys-label-tertiary: var(--color-label-tertiary);
+
+  --sys-separator: var(--color-separator);
+
+  --glass-bg: var(--color-glass);
+  --glass-bg-light: var(--color-glass-light);
+  --glass-border: var(--color-glass-border);
+  --glass-blur: blur(44px);
+}

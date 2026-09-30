@@ -1,17 +1,21 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Menu, Map, RefreshCw } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import type { ItineraryItem } from '../core/models';
+import { cn } from '../lib/cn';
+import { Button, IconButton } from './ui';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 interface DayGroup {
   dateKey: string;
   label: string;
-  items: ItineraryItem[];
+  items: RenderedTimelineItem[];
 }
+
+type RenderedTimelineItem = ItineraryItem & { _isCheckout?: boolean; _renderDate: string };
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -68,11 +72,10 @@ function DraggableCard({
       onDragOver={e => e.preventDefault()}
       onDrop={e => { e.preventDefault(); onDrop(dragId); }}
       onDragEnd={onDragEnd}
-      style={{
-        position: 'relative',
-        opacity: isDragging ? 0.35 : 1,
-        transition: 'opacity 0.15s ease',
-      }}
+      className={cn(
+        'relative transition-opacity duration-150 motion-reduce:transition-none',
+        isDragging && 'opacity-[0.35]',
+      )}
     >
       {isDropTarget && (
         <div className="drop-line-container">
@@ -121,44 +124,48 @@ export default function TimelineScreen() {
   }>({ draggingId: null, dropTargetId: null, ghost: null, onMove: null, onEnd: null });
 
   // ── Flatten, filter & sort items ───────────────────────────────────────────
-  const filtered = items.filter(i => activeFilters.includes(i.type));
+  const dayGroups = useMemo<DayGroup[]>(() => {
+    const filtered = items.filter(i => activeFilters.includes(i.type));
+    const flattened: RenderedTimelineItem[] = [];
 
-  const flattened: (ItineraryItem & { _isCheckout?: boolean, _renderDate: string })[] = [];
-  filtered.forEach(item => {
-    flattened.push({ ...item, _renderDate: item.startDate });
-    const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
-    if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay) {
-      flattened.push({ ...item, _isCheckout: true, _renderDate: item.endDate! });
-    }
-  });
+    filtered.forEach(item => {
+      flattened.push({ ...item, _renderDate: item.startDate });
+      const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
+      if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay && item.endDate) {
+        flattened.push({ ...item, _isCheckout: true, _renderDate: item.endDate });
+      }
+    });
 
-  flattened.sort((a, b) => {
-    const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
-    if (dayA !== dayB) return dayA.localeCompare(dayB);
-    
-    // Independent sort orders: checkouts use endSortOrder
-    const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
-    const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
-    
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    return a._renderDate.localeCompare(b._renderDate);
-  });
+    flattened.sort((a, b) => {
+      const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
+      if (dayA !== dayB) return dayA.localeCompare(dayB);
 
-  const dayGroups: DayGroup[] = [];
-  const dayMap: Record<string, DayGroup> = {};
+      // Independent sort orders: checkouts use endSortOrder
+      const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
+      const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
 
-  flattened.forEach(item => {
-    const key = getDayKey(item._renderDate);
-    if (!dayMap[key]) {
-      dayMap[key] = { dateKey: key, label: getDayLabel(item._renderDate), items: [] };
-      dayGroups.push(dayMap[key]);
-    }
-    dayMap[key].items.push(item);
-  });
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a._renderDate.localeCompare(b._renderDate);
+    });
 
-  const getScrollContainer = () => {
+    const groups: DayGroup[] = [];
+    const dayMap: Record<string, DayGroup> = {};
+
+    flattened.forEach(item => {
+      const key = getDayKey(item._renderDate);
+      if (!dayMap[key]) {
+        dayMap[key] = { dateKey: key, label: getDayLabel(item._renderDate), items: [] };
+        groups.push(dayMap[key]);
+      }
+      dayMap[key].items.push(item);
+    });
+
+    return groups;
+  }, [activeFilters, items]);
+
+  const getScrollContainer = useCallback(() => {
     return document.querySelector('.split-left') || window;
-  };
+  }, []);
 
   const handleOpenMap = (group: DayGroup) => {
     // 1. Gather all items for this day that have valid lat/lng and are NOT flights.
@@ -179,7 +186,7 @@ export default function TimelineScreen() {
       return group.dateKey >= startK && group.dateKey <= endK;
     });
 
-    let stops = [...drivingItems];
+    let stops: ItineraryItem[] = [...drivingItems];
     if (activeStay) {
       const startK = getDayKey(activeStay.startDate);
       const endK = activeStay.endDate ? getDayKey(activeStay.endDate) : startK;
@@ -267,7 +274,7 @@ export default function TimelineScreen() {
     return () => {
       observer.disconnect();
     };
-  }, [dayGroups, activeDayKey]);
+  }, [dayGroups, activeDayKey, getScrollContainer]);
 
   const scrollToDay = (key: string) => {
     const el = dayRefs.current[key];
@@ -427,27 +434,29 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header ref={headerRef} className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
-          <button 
+      <header ref={headerRef} className="screen-header flex-col items-stretch gap-0 pb-0 pt-[calc(4px+env(safe-area-inset-top))]">
+        <div className="flex items-center gap-4 pb-0">
+          <IconButton
+            variant="ghost"
+            size="md"
             className="header-icon-btn"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
           >
             <Menu size={24} />
-          </button>
-          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.7rem' }}>
+          </IconButton>
+          <h1 className="page-title flex-1 truncate text-[1.7rem]">
             {currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
-        <div className="day-timeline-strip" style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '0 0 4px 0' }}>
+        <div className="day-timeline-strip border-b-0 bg-transparent pb-1 backdrop-blur-none">
           <div className="day-pill-bar" ref={pillBarRef}>
             {dayGroups.map((group) => (
               <button
                 key={group.dateKey}
                 ref={el => { pillRefs.current[group.dateKey] = el; }}
-                className={`day-pill ${activeDayKey === group.dateKey ? 'day-pill--active' : ''}`}
+                className={cn('day-pill', activeDayKey === group.dateKey && 'day-pill--active')}
                 onClick={() => scrollToDay(group.dateKey)}
               >
                 {group.label}
@@ -470,47 +479,46 @@ export default function TimelineScreen() {
 
           return (
               <div key={group.dateKey}>
-                <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="day-section-header flex items-center justify-between" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }}>
+                  <div className="flex items-center gap-3">
                     <span className="day-section-label">{group.label}</span>
-                    <button 
+                    <Button
+                      size="sm"
                       onClick={() => handleOpenMap(group)}
-                      className="btn-glass-blue"
-                      style={{ padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', border: '1px solid rgba(10,132,255,0.3)', background: 'rgba(10,132,255,0.1)' }}
+                      className="border-sys-blue/30 bg-sys-blue/10 text-caption"
                       title="Open Directions in Google Maps"
                     >
                       <Map size={14} />
-                      <span style={{ fontWeight: 700 }}>Map Day</span>
-                    </button>
+                      <span className="font-bold">Map Day</span>
+                    </Button>
                   </div>
                   {isWeatherRefreshing ? (
-                    <div className="spinning" style={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
-                      <RefreshCw size={14} color="var(--sys-blue)" />
+                    <div className="spinning flex items-center opacity-60">
+                      <RefreshCw className="size-3.5 text-sys-blue" />
                     </div>
                   ) : (high !== null && low !== null && (
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
-                      <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
+                    <span className="text-footnote font-bold tracking-wide text-label-secondary">
+                      <span className="text-sys-orange">H: {high}°</span> <span className="text-sys-blue">L: {low}°</span>
                     </span>
                   ))}
                 </div>
 
                 <div
-                  className="start-day-drop-zone"
+                  className="start-day-drop-zone relative z-[5] -mt-1 -mb-4 h-6"
                   data-drag-id={`start-of-${group.dateKey}`}
                   onDragEnter={() => handleDragEnter(`start-of-${group.dateKey}`)}
                   onDragOver={e => e.preventDefault()}
                   onDrop={() => handleDrop(`start-of-${group.dateKey}`)}
-                  style={{ height: '24px', marginBottom: '-16px', marginTop: '-4px', position: 'relative', zIndex: 5 }}
                 >
                   {dropTargetId === `start-of-${group.dateKey}` && (
-                    <div className="drop-line-container" style={{ top: '8px' }}>
+                    <div className="drop-line-container top-2">
                       <div className="drop-line" />
                     </div>
                   )}
                 </div>
 
               {group.items.map((item, idx) => {
-                const dragId = item.id + ((item as any)._isCheckout ? '-checkout' : '');
+                const dragId = item.id + (item._isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
                 const prev = group.items[idx - 1];
                 const next = group.items[idx + 1];
                 const hasGroup = !!item.groupId;
@@ -535,7 +543,7 @@ export default function TimelineScreen() {
                     onDragEnd={handleDragEnd}
                     onDrop={handleDrop}
                     onGripTouchStart={startTouchDrag}
-                    isCheckout={(item as any)._isCheckout}
+                    isCheckout={item._isCheckout}
                     groupPosition={groupPosition}
                   />
                 );
@@ -550,7 +558,7 @@ export default function TimelineScreen() {
               >
                 {dropTargetId === `end-of-${group.dateKey}` && (
                   <div className="drop-line-container">
-                    <div className="drop-line" style={{ top: '8px' }} />
+                    <div className="drop-line top-2" />
                   </div>
                 )}
               </div>

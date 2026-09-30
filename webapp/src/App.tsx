@@ -18,6 +18,10 @@ import { auth, db } from './core/firebase';
 import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useTripStore } from './store/useTripStore';
+import { Plane } from 'lucide-react';
+import { cn } from './lib/cn';
+import { Button, EmptyState, Toaster } from './components/ui';
+import { buttonVariants } from './components/ui/variants';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const userId = useTripStore(s => s.userId);
@@ -41,38 +45,38 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const NoTripState = () => (
-  <div style={{ padding: '80px 40px', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ fontSize: '3rem', marginBottom: '20px' }}>✈️</div>
-    <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '10px', color: '#fff' }}>No Trip Active</h2>
-    <p style={{ color: 'var(--sys-label-secondary)', marginBottom: '30px', maxWidth: '300px' }}>Select a trip from the sidebar or trip selector to view your itinerary.</p>
-    <Link to="/trips" style={{ display: 'inline-flex', padding: '12px 24px', borderRadius: '12px', background: 'var(--sys-blue)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>
-      Go to Trip Selector
-    </Link>
-  </div>
+  <EmptyState
+    className="h-full px-10 py-20"
+    icon={<Plane size={28} />}
+    title="No Trip Active"
+    description="Select a trip from the sidebar or trip selector to view your itinerary."
+    action={
+      <Link to="/trips" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+        Go to Trip Selector
+      </Link>
+    }
+  />
 );
 
 const SyncStatus = () => {
   const saving = useTripStore(s => s.saving);
   const error = useTripStore(s => s.lastSaveError);
-  
+
   if (!saving && !error) return null;
 
   return (
-    <div style={{
-      position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)',
-      zIndex: 11000, display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '8px 16px', borderRadius: '100px',
-      background: error ? 'rgba(255, 59, 48, 0.95)' : 'rgba(0, 0, 0, 0.7)',
-      backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)',
-      color: '#fff', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.3)', pointerEvents: 'none',
-      transition: 'all 0.3s ease'
-    }}>
+    <div
+      role="status"
+      className={cn(
+        'pointer-events-none fixed top-3 left-1/2 z-[11000] flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-caption font-extrabold tracking-wider text-white shadow-[0_4px_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300',
+        error ? 'bg-sys-red/95' : 'bg-black/70',
+      )}
+    >
       {error ? (
-        <><span>⚠️</span> <span>SYNC ERROR: {error}</span></>
+        <><span aria-hidden="true">⚠️</span> <span>SYNC ERROR: {error}</span></>
       ) : (
         <>
-          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div className="size-3 animate-spin rounded-full border-2 border-white/30 border-t-white motion-reduce:animate-none" />
           <span>SAVING TO CLOUD...</span>
         </>
       )}
@@ -107,7 +111,7 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
+    <div className="flex min-h-screen w-full flex-1 flex-col">
       {children}
     </div>
   );
@@ -126,6 +130,10 @@ function App() {
   const syncTrips = useTripStore(s => s.syncTrips);
   
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     getRedirectResult(auth).then((result) => {
@@ -164,7 +172,7 @@ function App() {
       const tripsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as any[];
+      })) as Parameters<typeof syncTrips>[0];
       syncTrips(tripsData);
       setError(null);
     }, (err) => {
@@ -185,49 +193,28 @@ function App() {
 
   if (error) {
     return (
-      <div style={{
-        height: '100vh', padding: '40px', backgroundColor: '#300', color: '#ff453a',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', gap: '16px'
-      }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>⚠️ APP ERROR</h2>
-        <p style={{ maxWidth: '400px', fontSize: '0.8rem', opacity: 0.8 }}>{error}</p>
-        <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', backgroundColor: '#fff', color: '#000', borderRadius: '12px' }}>RELOAD</button>
+      <div role="alert" className="flex h-screen flex-col items-center justify-center gap-4 bg-[#300] p-10 text-center text-sys-red">
+        <h2 className="text-[1.2rem] font-extrabold">⚠️ APP ERROR</h2>
+        <p className="max-w-[400px] text-footnote opacity-80">{error}</p>
+        <Button className="bg-white text-black shadow-none hover:bg-white/90" onClick={() => window.location.reload()}>RELOAD</Button>
       </div>
     );
   }
 
-  const getThemeBlobs = (t: string) => {
-    switch (t) {
-      case 'sunset':     return ['#FF3B30', '#FF9F0A', '#FFD60A'];
-      case 'midnight':   return ['#5E5CE6', '#BF5AF2', '#32ADE6'];
-      case 'forest':     return ['#30D158', '#34C759', '#32ADE6'];
-      case 'aurora':     return ['#00F5A0', '#8B5CF6', '#06B6D4'];
-      case 'desert':     return ['#E2A57E', '#C9415A', '#EDCA7F'];
-      case 'ocean':      return ['#0EA5E9', '#0D9488', '#6366F1'];
-      case 'vulcan':     return ['#FF4500', '#FF8C00', '#FF2D55'];
-      case 'sakura':     return ['#FF85A2', '#D891EF', '#FFB6CE'];
-      case 'cyberpunk':  return ['#FF00AA', '#00FFEA', '#FFE600'];
-      case 'slate':      return ['#708090', '#708090', '#708090'];
-      case 'black':      return ['#000000', '#000000', '#000000'];
-      default:           return [undefined, undefined, undefined];
-    }
-  };
-  const [b1, b2, b3] = getThemeBlobs(theme);
 
   return (
     <BrowserRouter>
-      <div className="ambient-bg">
-        <div className="blob blob-1" style={b1 ? { background: b1 } : undefined} />
-        <div className="blob blob-2" style={b2 ? { background: b2 } : undefined} />
-        <div className="blob blob-3" style={b3 ? { background: b3 } : undefined} />
+      <div className="ambient-bg" aria-hidden="true">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
       </div>
 
       <div className="app-content-root">
         {(loading || (userId && !initialized)) && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#0f1014', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: '15px' }}>
-            <div style={{ fontSize: '2.5rem', animation: 'pulse 2s infinite' }}>✈️</div>
-            <div style={{ fontSize: '11px', letterSpacing: '0.2em', opacity: 0.8 }}>RESTORING TRIP...</div>
+          <div role="status" className="fixed inset-0 z-[10000] flex flex-col items-center justify-center gap-4 bg-app-bg text-white">
+            <div className="animate-pulse text-[2.5rem] motion-reduce:animate-none" aria-hidden="true">✈️</div>
+            <div className="text-caption tracking-[0.2em] opacity-80">RESTORING TRIP...</div>
           </div>
         )}
 
@@ -237,6 +224,7 @@ function App() {
 
         <SyncStatus />
         <GlobalModals />
+        <Toaster />
 
         <MainLayout>
           <Routes>

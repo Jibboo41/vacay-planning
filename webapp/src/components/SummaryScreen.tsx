@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car, ArrowRight, Gauge, Ruler, Activity, Timer } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { MapPin, Sparkles, Loader, ArrowRight, Gauge, Ruler, Activity, Timer } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
+import { getItemTone, getItemTypeMeta } from '../core/itemTypes';
 import Linkified from './Linkified';
+import { Badge, Card, ScreenHeader } from './ui';
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -30,26 +32,27 @@ function getTimeLabel(dateString: string) {
 }
 
 interface SummaryItemProps {
-  item: ItineraryItem & { _segments?: ItineraryItem[] };
+  item: SummaryRenderItem;
   isCheckout?: boolean;
 }
 
-function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
-  const getTheme = () => {
-    switch (item.type) {
-      case 'flight':     return { icon: <Plane size={20} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
-      case 'hotel':      return { icon: <BedDouble size={20} />, color: isCheckout ? '#FF3B30' : '#FF9F0A', bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 159, 10, 0.1)' };
-      case 'rental-car': return { icon: <Car size={20} />, color: '#64D2FF', bg: 'rgba(100, 210, 255, 0.1)' };
-      case 'activity':   return { icon: <Navigation size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
-      case 'hiking':     return { icon: <MountainSnow size={20} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
-      case 'transit':    return { icon: <TrainFront size={20} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-      case 'food':       return { icon: <Utensils size={20} />, color: '#BF5AF2', bg: 'rgba(191, 90, 242, 0.1)' };
-      case 'note':       return { icon: <StickyNote size={20} />, color: '#8E8E93', bg: 'rgba(142, 142, 147, 0.1)' };
-      default:           return { icon: <CalendarClock size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
-    }
-  };
+interface SummaryRenderItem extends ItineraryItem {
+  _renderDate: string;
+  _isBase?: boolean;
+  _isCheckout?: boolean;
+  _segments?: SummaryRenderItem[];
+}
 
-  const theme = getTheme();
+interface DayGroup {
+  dateKey: string;
+  label: string;
+  items: SummaryRenderItem[];
+}
+
+function SummaryItemCard({ item, isCheckout = false }: SummaryItemProps) {
+  const meta = getItemTypeMeta(item);
+  const tone = getItemTone(item, isCheckout);
+  const Icon = meta.icon;
   
   // Custom logic for times and spans
   let timeText = '';
@@ -99,60 +102,60 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
   }
 
   return (
-    <div style={{ display: 'flex', marginBottom: '12px' }}>
+  <div className="mb-3 flex">
       {/* Icon Column */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '12px', flexShrink: 0 }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: theme.bg, color: theme.color, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          {React.cloneElement(theme.icon as React.ReactElement<any>, { size: 16 })}
+    <div className="mr-3 flex shrink-0 flex-col items-center">
+      <div className={`z-[1] flex size-8 items-center justify-center rounded-full shadow-sm ${tone.bgClass} ${tone.textClass}`}>
+        <Icon size={16} />
         </div>
       </div>
 
       {/* Content Column */}
-      <div style={{ flex: 1, padding: '8px 12px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)' }}>
+    <Card variant="inset" padding="sm" className="flex-1 border-transparent bg-white/[0.02]">
         {timeText && (
-          <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, letterSpacing: '0.05em', marginBottom: '2px' }}>
+        <Badge tone="custom" size="sm" className={`mb-1 px-0 py-0 ${tone.textClass} bg-transparent`}>
             {timeText}
-          </div>
+        </Badge>
         )}
-        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#FFF', margin: '0' }}>
+      <h3 className="m-0 text-[15px] font-bold text-white">
           {item._segments ? `${item._segments.length} Flight segments` : item.title}
         </h3>
         
         {item._segments ? (
-          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div className="mt-2 flex flex-col gap-1.5">
             {item._segments.map((seg, idx) => (
-              <div key={seg.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--sys-label-secondary)', fontSize: '13px' }}>
-                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--sys-blue)', opacity: 0.5 }} />
+            <div key={seg.id} className="flex items-center gap-2 text-[13px] text-label-secondary">
+              <div className="size-1 rounded-full bg-sys-blue/50" />
                 <span>{seg.title}</span>
                 {idx < (item._segments?.length || 0) - 1 && <ArrowRight size={12} opacity={0.3} />}
               </div>
             ))}
           </div>
         ) : item.location.name && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', color: 'var(--sys-label-tertiary)', fontSize: '13px', marginBottom: '4px' }}>
-            <MapPin size={12} style={{ marginTop: '2px', marginRight: '4px', flexShrink: 0 }} />
-            <span style={{ lineHeight: '1.4' }}>{item.location.name}</span>
+        <div className="mb-1 flex items-start text-[13px] text-label-tertiary">
+          <MapPin size={12} className="mr-1 mt-0.5 shrink-0" />
+          <span className="leading-[1.4]">{item.location.name}</span>
           </div>
         )}
 
         {/* Hike Details */}
         {item.type === 'hiking' && item.hikeDetails && (
-          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', color: '#30D158', fontSize: '12px', fontWeight: 600 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Gauge size={12} /> {(item.hikeDetails as any).difficulty.toUpperCase()}
+        <div className="mt-1.5 flex gap-3 text-[12px] font-semibold text-type-hike">
+          <div className="flex items-center gap-1">
+            <Gauge size={12} /> {item.hikeDetails.difficulty.toUpperCase()}
             </div>
             {item.hikeDetails.distance && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="flex items-center gap-1">
                 <Ruler size={12} /> {item.hikeDetails.distance}
               </div>
             )}
             {item.hikeDetails.elevation && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="flex items-center gap-1">
                 <Activity size={12} /> {item.hikeDetails.elevation}
               </div>
             )}
             {item.hikeDetails.duration && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="flex items-center gap-1">
                 <Timer size={12} /> {item.hikeDetails.duration}
               </div>
             )}
@@ -161,28 +164,24 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
 
         {/* Note Description (Specific to Summary) */}
         {item.type === 'note' && item.description && (
-          <div style={{
-            fontSize: '13px', color: 'var(--sys-label-secondary)',
-            lineHeight: '1.5', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)',
-            paddingTop: '6px'
-          }}>
+          <div className="mt-1.5 border-t border-white/5 pt-1.5 text-[13px] leading-[1.5] text-label-secondary">
             <Linkified text={item.description} />
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
 
 export default function SummaryScreen() {
-  const { items, setSidebarOpen, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
+  const { items, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
   const [isGenerating, setIsGenerating] = useState(false);
   
   const dayGroups = useMemo(() => {
     if (items.length === 0) return [];
     
     // 1. Flatten all events including virtual checkouts/returns
-    const flattened: any[] = [];
+    const flattened: SummaryRenderItem[] = [];
     items.forEach(item => {
       flattened.push({ ...item, _renderDate: item.startDate, _isBase: true });
       if (item.endDate && (item.type === 'hotel' || item.type === 'rental-car')) {
@@ -201,10 +200,10 @@ export default function SummaryScreen() {
     const minKey = getDayKey(sortedDateStrings[0]);
     const maxKey = getDayKey(sortedDateStrings[sortedDateStrings.length - 1]);
 
-    const groups: { dateKey: string; label: string; items: any[] }[] = [];
+    const groups: DayGroup[] = [];
     
     // Iterate day by day from minKey to maxKey
-    let current = new Date(minKey.replace(/-/g, '/'));
+    const current = new Date(minKey.replace(/-/g, '/'));
     const end = new Date(maxKey.replace(/-/g, '/'));
 
     // Security break to prevent infinite loop
@@ -230,7 +229,7 @@ export default function SummaryScreen() {
 
     // 3. Post-Process Flight Grouping
     return groups.map(group => {
-      const grouped: any[] = [];
+      const grouped: SummaryRenderItem[] = [];
       group.items.forEach(item => {
         const last = grouped[grouped.length - 1];
         // Combine if: both are flights, neither is a virtual checkout, and they are back-to-back
@@ -274,60 +273,52 @@ export default function SummaryScreen() {
          addDebugLog('AI Summary', 'Failed: ' + res.statusText);
          console.error('Failed to generate summary');
       }
-    } catch (e: any) {
-      addDebugLog('AI Summary', 'Exception: ' + e.message);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      addDebugLog('AI Summary', 'Exception: ' + message);
       console.error(e);
     }
     setIsGenerating(false);
   };
 
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <header className="screen-header">
-        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
-          <Menu size={24} />
-        </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Trip Outline</h1>
-          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>READ-ONLY SUMMARY</div>
-        </div>
-        <div style={{ width: 44 }} /> {/* Balance header */}
-      </header>
+    <div className="min-h-screen">
+      <ScreenHeader title="Trip Outline" subtitle="READ-ONLY SUMMARY" />
 
-      <main style={{ padding: '0 20px 100px 20px', position: 'relative' }}>
+      <main className="relative px-5 pb-[100px]">
         {dayGroups.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)' }}>
-            <p style={{ margin: 0, fontSize: '15px' }}>No items in your itinerary yet.</p>
+          <div className="px-5 py-[60px] text-center text-label-secondary">
+            <p className="m-0 text-[15px]">No items in your itinerary yet.</p>
           </div>
         ) : (
-          <div style={{ position: 'relative', marginTop: '20px' }}>
+          <div className="relative mt-5">
             
             {/* The AI Summary Block */}
-            <div style={{ background: 'rgba(10, 132, 255, 0.1)', border: '1px solid rgba(10, 132, 255, 0.2)', padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                <Sparkles size={20} color="#0A84FF" />
-                <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0A84FF', margin: 0 }}>AI Trip Synopsis</h2>
+            <Card className="mb-5 border-sys-blue/20 bg-sys-blue/10 p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <Sparkles size={20} className="text-sys-blue" />
+                <h2 className="m-0 text-[16px] font-bold text-sys-blue">AI Trip Synopsis</h2>
               </div>
               
               {currentTripAiSummary ? (
                 <>
-                  <div style={{ color: 'var(--sys-label-primary)', fontSize: '15px', lineHeight: '1.6' }}>
+                  <div className="text-[15px] leading-[1.6] text-label">
                     <Linkified text={currentTripAiSummary} />
                   </div>
-                  <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn-glass-blue" style={{ marginTop: '16px', fontSize: '13px', padding: '6px 14px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn-glass-blue mt-4 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-[13px]">
                     {isGenerating ? 'Regenerating...' : 'Regenerate'}
                   </button>
                 </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <p style={{ color: 'var(--sys-label-secondary)', fontSize: '14px', marginBottom: '16px' }}>Generate a magical summary of this trip outline using AI.</p>
-                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn-glass-blue" style={{ fontSize: '14px', padding: '10px 20px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    {isGenerating ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={16} />}
+                <div className="py-2.5 text-center">
+                  <p className="mb-4 text-[14px] text-label-secondary">Generate a magical summary of this trip outline using AI.</p>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn-glass-blue inline-flex items-center gap-2 rounded-[10px] px-5 py-2.5 text-[14px]">
+                    {isGenerating ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
                     {isGenerating ? 'Synthesizing...' : 'Generate Summary'}
                   </button>
                 </div>
               )}
-            </div>
+            </Card>
 
             {dayGroups.map((group, groupIdx) => {
               const dayForecasts = weather?.forecast?.filter(w => w.date === group.dateKey) || [];
@@ -335,31 +326,31 @@ export default function SummaryScreen() {
               const low = dayForecasts.length > 0 ? Math.min(...dayForecasts.map(w => w.tempLow)) : null;
               
               return (
-                <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
+                <Card key={group.dateKey} className="mb-4 p-4">
+                  <div className="mb-3 flex items-center border-b border-white/5 pb-3">
+                    <div className="flex size-[30px] shrink-0 items-center justify-center rounded-[10px] bg-white/10 text-[13px] font-extrabold text-white">
                       {groupIdx + 1}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0, marginLeft: '12px' }}>
-                      <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div className="ml-3 min-w-0 flex-1">
+                      <h2 className="m-0 truncate text-[17px] font-extrabold tracking-[0.2px] text-white">
                         {group.label}
                       </h2>
                     </div>
                     {high !== null && low !== null && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-                          <span style={{ fontSize: '13px', fontWeight: 800, color: '#FF9F0A' }}>H: {Math.round(high)}°</span>
-                          <span style={{ fontSize: '10px', color: '#0A84FF', fontWeight: 700 }}>L: {Math.round(low)}°</span>
+                      <div className="flex items-center gap-2 border-l border-white/10 pl-2">
+                        <div className="flex flex-col items-end leading-none">
+                          <span className="text-[13px] font-extrabold text-sys-orange">H: {Math.round(high)}°</span>
+                          <span className="text-[10px] font-bold text-sys-blue">L: {Math.round(low)}°</span>
                         </div>
                       </div>
                     )}
                   </div>
-                  <div style={{ marginLeft: '4px' }}>
+                  <div className="ml-1">
                     {group.items.map((item, idx) => (
-                      <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />
+                      <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item} isCheckout={item._isCheckout} />
                     ))}
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>

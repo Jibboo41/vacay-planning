@@ -1,34 +1,52 @@
-import { useState, useEffect } from 'react';
-import { X, Save, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Save, Trash2 } from 'lucide-react';
 import { useTripStore } from '../../store/useTripStore';
 import type { Expense } from '../../core/models';
+import { Button, Field, IconButton, Input, Select, Sheet } from '../ui';
+
+const EXPENSE_CATEGORIES: Expense['category'][] = ['Car Rental', 'Flights', 'Gas', 'Dining', 'Lodging', 'Souvenirs', 'Other'];
 
 export default function EditManualExpenseModal() {
   const { editingExpense, updateExpense, deleteExpense, setEditingExpense } = useTripStore();
-  
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [paidAmount, setPaidAmount] = useState('');
-  const [category, setCategory] = useState<Expense['category']>('Other');
-  const [date, setDate] = useState('');
-
-  useEffect(() => {
-    if (editingExpense) {
-      setTitle(editingExpense.title);
-      setAmount(editingExpense.amount.toString());
-      setPaidAmount(editingExpense.paidAmount?.toString() || '0');
-      setCategory(editingExpense.category);
-      setDate(editingExpense.date || '');
-    }
-  }, [editingExpense]);
 
   if (!editingExpense) return null;
+
+  return (
+    <ExpenseEditor
+      key={editingExpense.id}
+      expense={editingExpense}
+      onClose={() => setEditingExpense(null)}
+      onSave={async (id, updates) => {
+        await updateExpense(id, updates);
+        setEditingExpense(null);
+      }}
+      onDelete={async id => {
+        await deleteExpense(id);
+        setEditingExpense(null);
+      }}
+    />
+  );
+}
+
+interface ExpenseEditorProps {
+  expense: Expense;
+  onClose: () => void;
+  onSave: (id: string, updates: Partial<Expense>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}
+
+function ExpenseEditor({ expense, onClose, onSave, onDelete }: ExpenseEditorProps) {
+  const [title, setTitle] = useState(expense.title);
+  const [amount, setAmount] = useState(expense.amount.toString());
+  const [paidAmount, setPaidAmount] = useState(expense.paidAmount?.toString() || '0');
+  const [category, setCategory] = useState<Expense['category']>(expense.category);
+  const [date, setDate] = useState(expense.date || '');
 
   const handleSave = async () => {
     const est = parseFloat(amount) || 0;
     const paid = parseFloat(paidAmount) || 0;
     
-    await updateExpense(editingExpense.id, {
+    await onSave(expense.id, {
       title,
       amount: est,
       paidAmount: paid,
@@ -36,99 +54,96 @@ export default function EditManualExpenseModal() {
       date: date || undefined,
       paid: paid >= est && est > 0
     });
-    setEditingExpense(null);
   };
 
   const handleDelete = async () => {
     if (confirm('Delete this expense?')) {
-      await deleteExpense(editingExpense.id);
-      setEditingExpense(null);
+      await onDelete(expense.id);
     }
   };
 
   return (
-    <div className="modal-backdrop" onClick={() => setEditingExpense(null)}>
-      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Edit Expense</h2>
-          <button onClick={() => setEditingExpense(null)}><X size={22} color="var(--sys-label-secondary)" /></button>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div className="edit-field-group">
-            <label className="edit-field-label">Title</label>
-            <input 
-              className="edit-field-input"
-              type="text" value={title} onChange={e => setTitle(e.target.value)}
-              placeholder="What was this for?"
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div className="edit-field-group" style={{ flex: 1 }}>
-              <label className="edit-field-label">Estimated Cost ($)</label>
-              <input 
-                className="edit-field-input"
-                type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="edit-field-group" style={{ flex: 1 }}>
-              <label className="edit-field-label">Amount Paid ($)</label>
-              <input 
-                className="edit-field-input"
-                type="number" value={paidAmount} onChange={e => setPaidAmount(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div className="edit-field-group" style={{ flex: 1 }}>
-              <label className="edit-field-label">Category</label>
-              <select 
-                className="edit-field-input"
-                value={category} onChange={e => setCategory(e.target.value as any)}
-              >
-                <option value="Car Rental">Car Rental</option>
-                <option value="Flights">Flights</option>
-                <option value="Gas">Gas</option>
-                <option value="Dining">Dining</option>
-                <option value="Lodging">Lodging</option>
-                <option value="Souvenirs">Souvenirs</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="edit-field-group" style={{ flex: 1 }}>
-              <label className="edit-field-label">Date (Optional)</label>
-              <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
-                <input 
-                  className="edit-field-input"
-                  type="date" value={date} onChange={e => setDate(e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box', display: 'block', margin: 0 }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '30px', display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={handleSave}
-            className="btn-glass-blue"
-            style={{ flex: 1, padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-          >
+    <Sheet
+      open
+      onClose={onClose}
+      title="Edit Expense"
+      footer={(
+        <>
+          <Button onClick={handleSave} className="btn-glass-blue" block size="lg">
             <Save size={18} />
             Save Changes
-          </button>
-          <button 
-            onClick={handleDelete}
-            style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 69, 58, 0.1)', border: 'none', color: '#FF453A' }}
-          >
+          </Button>
+          <IconButton aria-label="Delete expense" onClick={handleDelete} variant="danger" size="lg">
             <Trash2 size={20} />
-          </button>
+          </IconButton>
+        </>
+      )}
+    >
+      <div className="flex flex-col gap-4">
+        <Field label="Title">
+          {id => (
+            <Input
+              id={id}
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="What was this for?"
+            />
+          )}
+        </Field>
+
+        <div className="flex gap-3">
+          <Field label="Estimated Cost ($)" className="flex-1">
+            {id => (
+              <Input
+                id={id}
+                type="number"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="0.00"
+              />
+            )}
+          </Field>
+          <Field label="Amount Paid ($)" className="flex-1">
+            {id => (
+              <Input
+                id={id}
+                type="number"
+                value={paidAmount}
+                onChange={e => setPaidAmount(e.target.value)}
+                placeholder="0.00"
+              />
+            )}
+          </Field>
+        </div>
+
+        <div className="flex gap-3">
+          <Field label="Category" className="flex-1">
+            {id => (
+              <Select
+                id={id}
+                value={category}
+                onChange={e => setCategory(e.target.value as Expense['category'])}
+              >
+                {EXPENSE_CATEGORIES.map(value => <option key={value} value={value}>{value}</option>)}
+              </Select>
+            )}
+          </Field>
+          <Field label="Date (Optional)" className="flex-1">
+            {id => (
+              <div className="w-full overflow-hidden rounded-control">
+                <Input
+                  id={id}
+                  type="date"
+                  value={date}
+                  onChange={e => setDate(e.target.value)}
+                  className="m-0 block w-full box-border"
+                />
+              </div>
+            )}
+          </Field>
         </div>
       </div>
-    </div>
+    </Sheet>
   );
 }

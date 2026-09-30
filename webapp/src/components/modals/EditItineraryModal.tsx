@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Sparkles, Loader, Utensils } from 'lucide-react';
-import type { ItineraryItem } from '../../core/models';
+import { Save, Sparkles, Loader, Utensils } from 'lucide-react';
+import type { FoodDetails, HikeDetails, ItineraryItem } from '../../core/models';
 import { parseAllTrailsUrl } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
+import { ITEM_TYPES, type ItemTypeKey } from '../../core/itemTypes';
+import { Button, Field, Input, Select, Sheet, TextArea } from '../ui';
 
 interface EditItineraryModalProps {
   item: ItineraryItem;
@@ -10,10 +12,35 @@ interface EditItineraryModalProps {
   onSave: (id: string, updates: Partial<ItineraryItem>) => void;
 }
 
+type EditableItemType = Exclude<ItemTypeKey, 'unknown'>;
+type HikeDifficulty = HikeDetails['difficulty'];
+type MealType = FoodDetails['mealType'];
+
+interface NominatimSuggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+  name?: string;
+}
+
+const TYPE_OPTIONS: EditableItemType[] = ['activity', 'hiking', 'hotel', 'flight', 'rental-car', 'transit', 'food', 'note'];
+const MEAL_OPTIONS: MealType[] = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert'];
+const DIFFICULTY_OPTIONS: HikeDifficulty[] = ['Easy', 'Moderate', 'Hard', 'Expert'];
+
 /** Split "2024-07-10T08:00:00" → ["2024-07-10", "08:00"] safely */
 function splitDateTime(dateStr: string): [string, string] {
   const [datePart = '', timePart = ''] = dateStr.split('T');
   return [datePart, timePart.slice(0, 5)];
+}
+
+function normaliseType(type: ItineraryItem['type']): EditableItemType {
+  if (type === 'hike') return 'hiking';
+  if (type === 'unknown') return 'activity';
+  return type;
+}
+
+function isHikeDifficulty(value: string): value is HikeDifficulty {
+  return DIFFICULTY_OPTIONS.includes(value as HikeDifficulty);
 }
 
 export default function EditItineraryModal({ item, onClose, onSave }: EditItineraryModalProps) {
@@ -27,7 +54,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [isParsingAllTrails, setIsParsingAllTrails] = useState(false);
 
   const [title, setTitle]           = useState(item.title);
-  const [type, setType]             = useState((item.type as string) === 'hike' ? 'hiking' : item.type);
+  const [type, setType]             = useState<EditableItemType>(normaliseType(item.type));
   const [date, setDate]             = useState(initDate);
   const [time, setTime]             = useState(initTime);
   const [endDate, setEndDate]       = useState(initEndDate);
@@ -41,16 +68,15 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [paidAmount, setPaidAmount] = useState(item.paidAmount?.toString() ?? '');
   const [description, setDescription] = useState((item.description ?? '').replace(/<br\s*\/?>/gi, '\n'));
 
-  // Hike specific
-  const [hikeDiff, setHikeDiff] = useState<'Easy'|'Moderate'|'Hard'|'Expert'>(item.hikeDetails?.difficulty ?? 'Moderate');
+  const [hikeDiff, setHikeDiff] = useState<HikeDifficulty>(item.hikeDetails?.difficulty ?? 'Moderate');
   const [hikeDist, setHikeDist] = useState(item.hikeDetails?.distance ?? '');
   const [hikeDur, setHikeDur]   = useState(item.hikeDetails?.duration ?? '');
   const [hikeElev, setHikeElev] = useState(item.hikeDetails?.elevation ?? '');
   const [hikeLink, setHikeLink] = useState(item.hikeDetails?.allTrailsLink ?? '');
 
-  const [foodMeal, setFoodMeal] = useState<'Breakfast'|'Lunch'|'Dinner'|'Snack'|'Dessert'>(item.foodDetails?.mealType ?? 'Dinner');
+  const [foodMeal, setFoodMeal] = useState<MealType>(item.foodDetails?.mealType ?? 'Dinner');
   const [foodHappyCow, setFoodHappyCow] = useState(item.foodDetails?.happyCowUrl ?? '');
-  const [foodOfficial, setFoodOfficial]   = useState(item.foodDetails?.officialUrl ?? '');
+  const [foodOfficial, setFoodOfficial] = useState(item.foodDetails?.officialUrl ?? '');
   const [refundable, setRefundable] = useState(
     item.hotelDetails?.refundable ?? 
     item.rentalDetails?.refundable ?? 
@@ -70,7 +96,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
     ''
   );
 
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<NominatimSuggestion[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -83,10 +109,14 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       setIsSearching(true);
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=4`);
-        const data = await res.json();
-        setSuggestions(data);
-      } catch (e) {}
-      setIsSearching(false);
+        const data: unknown = await res.json();
+        setSuggestions(Array.isArray(data) ? data as NominatimSuggestion[] : []);
+      } catch (error) {
+        console.error('Location search failed:', error);
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
     }, 1000);
     return () => clearTimeout(t);
   }, [address]);
@@ -109,7 +139,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         latitude: lat,
         longitude: lng,
       },
-      hikeDetails: (type === 'hiking' || type === 'hike') ? {
+      hikeDetails: type === 'hiking' ? {
         difficulty: hikeDiff,
         distance: hikeDist,
         duration: hikeDur,
@@ -148,13 +178,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
     let rawUrl = allTrailsUrl.trim();
     if (!rawUrl) return;
 
-    // --- Sanitization Logic ---
-    // Handle mobile app share text (e.g. "Bear's Hump on AllTrails https://...")
     const httpsIdx = rawUrl.indexOf('https://');
     if (httpsIdx !== -1) {
       rawUrl = rawUrl.substring(httpsIdx);
     }
-    // Remove query parameters (anything starting with ?)
     const cleanedUrl = rawUrl.split('?')[0];
 
     setIsParsingAllTrails(true);
@@ -169,7 +196,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
           setTitle(`Hike at ${hikeData.title}`);
         }
       }
-      if (hikeData.difficulty) setHikeDiff(hikeData.difficulty as any);
+      if (hikeData.difficulty && isHikeDifficulty(hikeData.difficulty)) setHikeDiff(hikeData.difficulty);
       if (hikeData.distance) setHikeDist(hikeData.distance);
       if (hikeData.elevation) setHikeElev(hikeData.elevation);
       if (hikeData.duration) setHikeDur(hikeData.duration);
@@ -178,35 +205,37 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       if (hikeData.startLng) setLng(hikeData.startLng);
       setHikeLink(cleanedUrl);
       setAllTrailsUrl('');
-    } catch(err) {
-      console.error(err);
+    } catch(error) {
+      console.error(error);
       alert('Failed to parse AllTrails link. Ensure the URL is valid.');
     } finally {
       setIsParsingAllTrails(false);
     }
   };
 
+  const paidAmountClass = cost && parseFloat(paidAmount) > parseFloat(cost) ? 'text-sys-red' : 'text-sys-green';
+  const selectedTypeMeta = ITEM_TYPES[type];
+  const SelectedTypeIcon = selectedTypeMeta.icon;
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div
-        className="modal-sheet"
-        onClick={e => e.stopPropagation()}
-        style={{ paddingBottom: 0 }}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0, paddingTop: '4px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Edit Details</h2>
-          <button onClick={onClose}><X size={22} color="var(--sys-label-secondary)" /></button>
-        </div>
-
-        {/* Scrollable form body */}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingRight: '12px' }}>
-
-          {/* Title */}
-          <div className="edit-field-group">
-            <label className="edit-field-label">Title</label>
-            <input
-              className="edit-field-input"
+    <Sheet
+      open
+      onClose={onClose}
+      title="Edit Details"
+      className="flex max-h-[90vh] flex-col pb-0"
+      bodyClassName="flex-1 pr-3 pb-4"
+      footer={(
+        <Button onClick={handleSave} className="btn-glass-blue" block size="lg">
+          <Save size={18} />
+          Save Changes
+        </Button>
+      )}
+    >
+      <div className="flex flex-col gap-4">
+        <Field label="Title">
+          {id => (
+            <Input
+              id={id}
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
@@ -217,258 +246,229 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               }}
               placeholder="Activity name"
             />
-          </div>
+          )}
+        </Field>
 
-          {/* Category */}
-          <div className="edit-field-group">
-            <label className="edit-field-label">Category</label>
-            <select
-              className="edit-field-input"
-              value={type}
-              onChange={e => setType(e.target.value as any)}
-            >
-              <option value="activity">Activity</option>
-              <option value="hiking">Hiking / Trail</option>
-              <option value="hotel">Hotel / Lodging</option>
-              <option value="flight">Flight Segment</option>
-              <option value="rental-car">Rental Car</option>
-              <option value="transit">Transit</option>
-              <option value="food">Food & Dining</option>
-              <option value="note">Note / Reminder</option>
-            </select>
-          </div>
-          {type === 'note' ? (
-            /* Note-only View: Title + Description only */
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
-              <label className="edit-field-label">Note Content</label>
-              <textarea
-                className="edit-field-input"
+        <Field label="Category">
+          {id => (
+            <div className="flex items-center gap-2">
+              <SelectedTypeIcon size={20} className={selectedTypeMeta.textClass} />
+              <Select
+                id={id}
+                value={type}
+                onChange={e => setType(e.target.value as EditableItemType)}
+                className={selectedTypeMeta.borderClass}
+              >
+                {TYPE_OPTIONS.map(option => {
+                  const meta = ITEM_TYPES[option];
+                  return <option key={option} value={option}>{meta.label}</option>;
+                })}
+              </Select>
+            </div>
+          )}
+        </Field>
+
+        {type === 'note' ? (
+          <Field label="Note Content" className="mb-0">
+            {id => (
+              <TextArea
+                id={id}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Add notes, tips, or details…"
                 rows={12}
-                style={{ resize: 'none', lineHeight: '1.5' }}
+                className="resize-none leading-normal"
               />
-            </div>
-          ) : (
-            <>
-              {/* Financials */}
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <div className="edit-field-group" style={{ flex: 1, minWidth: '140px' }}>
-                  <label className="edit-field-label">Estimated Cost ($)</label>
-                  <input
-                    className="edit-field-input"
-                    type="number"
-                    value={cost}
-                    onChange={e => setCost(e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="edit-field-group" style={{ flex: 1, minWidth: '140px' }}>
-                  <label className="edit-field-label">Amount Paid ($)</label>
-                  <input
-                    className="edit-field-input"
+            )}
+          </Field>
+        ) : (
+          <>
+            <div className="flex flex-wrap gap-4">
+              <Field label="Estimated Cost ($)" className="flex-1 min-w-[140px]">
+                {id => <Input id={id} type="number" value={cost} onChange={e => setCost(e.target.value)} placeholder="0.00" />}
+              </Field>
+              <Field label="Amount Paid ($)" className="flex-1 min-w-[140px]">
+                {id => (
+                  <Input
+                    id={id}
                     type="number"
                     value={paidAmount}
                     onChange={e => setPaidAmount(e.target.value)}
                     placeholder="0.00"
-                    style={{ color: cost && parseFloat(paidAmount) > parseFloat(cost) ? 'var(--sys-red)' : 'var(--sys-green)' }}
+                    className={paidAmountClass}
                   />
-                </div>
-              </div>
-
-              {/* Start Date & Time */}
-              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                  <label className="edit-field-label">{type === 'flight' ? 'Takeoff Date' : 'Date'}</label>
-                  <input
-                    className="edit-field-input"
-                    style={{ width: 'auto', minWidth: '150px' }}
-                    type="date"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                  />
-                </div>
-
-                {type !== 'food' && (
-                  <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                    <label className="edit-field-label">{type === 'flight' ? 'Takeoff Time' : 'Time'}</label>
-                    <input
-                      className="edit-field-input"
-                      style={{ width: 'auto', minWidth: '130px' }}
-                      type="time"
-                      value={time}
-                      onChange={e => setTime(e.target.value)}
-                    />
-                  </div>
                 )}
-              </div>
+              </Field>
+            </div>
 
-              {/* End Date & Time */}
+            <div className="flex flex-wrap gap-4">
+              <Field label={type === 'flight' ? 'Takeoff Date' : 'Date'} className="flex-none">
+                {id => <Input id={id} className="w-auto min-w-[150px]" type="date" value={date} onChange={e => setDate(e.target.value)} />}
+              </Field>
+
               {type !== 'food' && (
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                  <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Landing Date (opt)' : 'End Date (opt)'}</label>
-                      {endDate && <button onClick={() => setEndDate('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
-                    </div>
-                  <input
-                    className="edit-field-input"
-                    style={{ width: 'auto', minWidth: '150px' }}
-                    type="date"
-                    value={endDate}
-                    onFocus={() => { if (!endDate && date) setEndDate(date); }}
-                    onChange={e => setEndDate(e.target.value)}
-                  />
-                </div>
+                <Field label={type === 'flight' ? 'Takeoff Time' : 'Time'} className="flex-none">
+                  {id => <Input id={id} className="w-auto min-w-[130px]" type="time" value={time} onChange={e => setTime(e.target.value)} />}
+                </Field>
+              )}
+            </div>
 
-                <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Landing Time' : 'End Time'}</label>
-                      {endTime && <button onClick={() => setEndTime('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+            {type !== 'food' && (
+              <div className="flex flex-wrap gap-4">
+                <Field label={type === 'flight' ? 'Landing Date (opt)' : 'End Date (opt)'} className="flex-none">
+                  {id => (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id={id}
+                        className="w-auto min-w-[150px]"
+                        type="date"
+                        value={endDate}
+                        onFocus={() => { if (!endDate && date) setEndDate(date); }}
+                        onChange={e => setEndDate(e.target.value)}
+                      />
+                      {endDate && <Button onClick={() => setEndDate('')} variant="ghost" size="sm" className="min-h-0 px-1 py-0 text-[10px] text-sys-blue">Clear</Button>}
                     </div>
-                  <input
-                    className="edit-field-input"
-                    style={{ width: 'auto', minWidth: '130px' }}
-                    type="time"
-                    value={endTime}
-                    onFocus={() => { if (!endTime && time) setEndTime(time); }}
-                    onChange={e => setEndTime(e.target.value)}
-                  />
-                </div>
+                  )}
+                </Field>
+
+                <Field label={type === 'flight' ? 'Landing Time' : 'End Time'} className="flex-none">
+                  {id => (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id={id}
+                        className="w-auto min-w-[130px]"
+                        type="time"
+                        value={endTime}
+                        onFocus={() => { if (!endTime && time) setEndTime(time); }}
+                        onChange={e => setEndTime(e.target.value)}
+                      />
+                      {endTime && <Button onClick={() => setEndTime('')} variant="ghost" size="sm" className="min-h-0 px-1 py-0 text-[10px] text-sys-blue">Clear</Button>}
+                    </div>
+                  )}
+                </Field>
               </div>
-              )}
+            )}
 
-              {/* Conditional Food Details */}
-              {type === 'food' && (
-                <div className="edit-field-group">
-                  <label className="edit-field-label">Meal</label>
-                  <select className="edit-field-input" value={foodMeal} onChange={e => setFoodMeal(e.target.value as any)}>
-                    <option value="Breakfast">Breakfast</option>
-                    <option value="Lunch">Lunch</option>
-                    <option value="Dinner">Dinner</option>
-                    <option value="Snack">Snack</option>
-                    <option value="Dessert">Dessert</option>
-                  </select>
-                </div>
-              )}
+            {type === 'food' && (
+              <Field label="Meal">
+                {id => (
+                  <Select id={id} value={foodMeal} onChange={e => setFoodMeal(e.target.value as MealType)}>
+                    {MEAL_OPTIONS.map(meal => <option key={meal} value={meal}>{meal}</option>)}
+                  </Select>
+                )}
+              </Field>
+            )}
 
-              {/* Confirmation Number */}
-              {type !== 'hiking' && type !== 'hike' && (
-                <div className="edit-field-group">
-                  <label className="edit-field-label">Confirmation Number</label>
-                  <input
-                    className="edit-field-input"
+            {type !== 'hiking' && (
+              <Field label="Confirmation Number">
+                {id => (
+                  <Input
+                    id={id}
                     type="text"
                     value={confirmationNumber}
                     onChange={e => setConfirmationNumber(e.target.value)}
                     placeholder="e.g. AB12345 (Optional)"
                   />
-                </div>
-              )}
-
-              {/* Conditional Hotel/Rental/Flight Details */}
-              {(type === 'hotel' || type === 'rental-car' || type === 'flight') && (
-                <div style={{ 
-                  background: type === 'hotel' ? 'rgba(10, 132, 255, 0.08)' : 
-                              type === 'rental-car' ? 'rgba(175, 82, 222, 0.08)' :
-                              'rgba(10, 132, 255, 0.08)', 
-                  padding: '16px', borderRadius: '16px', marginBottom: '16px', 
-                  border: type === 'hotel' ? '1px solid rgba(10, 132, 255, 0.2)' : 
-                          type === 'rental-car' ? '1px solid rgba(175, 82, 222, 0.2)' :
-                          '1px solid rgba(10, 132, 255, 0.2)' 
-                }}>
-                   <div className="edit-field-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: refundable ? '16px' : '12px' }}>
-                    <label className="edit-field-label" style={{ margin: 0 }}>Refundable Booking?</label>
-                    <input 
-                      type="checkbox" 
-                      checked={refundable} 
-                      onChange={e => setRefundable(e.target.checked)}
-                      style={{ width: '22px', height: '22px', accentColor: type === 'rental-car' ? 'var(--sys-purple)' : 'var(--sys-blue)' }}
-                    />
-                  </div>
-
-                  {refundable && (
-                    <div className="edit-field-group" style={{ marginBottom: '16px' }}>
-                      <label className="edit-field-label">Refundable Until (Cutoff Date)</label>
-                      <input 
-                        className="edit-field-input" 
-                        type="date" 
-                        value={refundableCutoffDate} 
-                        onChange={e => setRefundableCutoffDate(e.target.value)}
-                        style={{ colorScheme: 'dark' }}
-                      />
-                    </div>
-                  )}
-
-                  <div className="edit-field-group" style={{ marginBottom: 0 }}>
-                    <label className="edit-field-label">Booking Source / Agency</label>
-                    <input 
-                      className="edit-field-input" 
-                      type="text" 
-                      value={bookingSource} 
-                      onChange={e => setBookingSource(e.target.value)} 
-                      placeholder={type === 'flight' ? "e.g. United, Expedia, Chase Travel" : "e.g. Expedia, Direct, Turo"} 
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Location Search API + Address */}
-              <div className="edit-field-group" style={{ position: 'relative' }}>
-                <label className="edit-field-label">Search / Address</label>
-                <input
-                  className="edit-field-input"
-                  type="text"
-                  value={address}
-                  onChange={e => { setAddress(e.target.value); setShowSuggestions(true); }}
-                  onFocus={() => {
-                    if (address === 'Location TBD') setAddress('');
-                    setShowSuggestions(true);
-                  }}
-                  placeholder="Search for place or address..."
-                />
-                {isSearching && (
-                   <div style={{ position: 'absolute', right: '14px', top: '40px', fontSize: '11px', color: 'var(--sys-blue)', fontWeight: 600 }}>Searching...</div>
                 )}
-                
-                {showSuggestions && suggestions.length > 0 && (
-                  <div 
-                    style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, 
-                      background: 'var(--sys-bg-elevated-3)', border: '1px solid rgba(255,255,255,0.15)',
-                      borderRadius: '12px', marginTop: '6px', zIndex: 100, overflow: 'hidden',
-                      boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
+              </Field>
+            )}
+
+            {(type === 'hotel' || type === 'rental-car' || type === 'flight') && (
+              <div className={`mb-4 rounded-2xl p-4 ${
+                type === 'rental-car'
+                  ? 'border border-sys-purple/20 bg-sys-purple/8'
+                  : 'border border-sys-blue/20 bg-sys-blue/8'
+              }`}>
+                <Field label="Refundable Booking?" className={refundable ? 'mb-4' : 'mb-3'}>
+                  {id => (
+                    <Input
+                      id={id}
+                      type="checkbox"
+                      checked={refundable}
+                      onChange={e => setRefundable(e.target.checked)}
+                      className={`size-[22px] ${type === 'rental-car' ? 'accent-sys-purple' : 'accent-sys-blue'}`}
+                    />
+                  )}
+                </Field>
+
+                {refundable && (
+                  <Field label="Refundable Until (Cutoff Date)" className="mb-4">
+                    {id => (
+                      <Input
+                        id={id}
+                        type="date"
+                        value={refundableCutoffDate}
+                        onChange={e => setRefundableCutoffDate(e.target.value)}
+                        className="scheme-dark"
+                      />
+                    )}
+                  </Field>
+                )}
+
+                <Field label="Booking Source / Agency" className="mb-0">
+                  {id => (
+                    <Input
+                      id={id}
+                      type="text"
+                      value={bookingSource}
+                      onChange={e => setBookingSource(e.target.value)}
+                      placeholder={type === 'flight' ? 'e.g. United, Expedia, Chase Travel' : 'e.g. Expedia, Direct, Turo'}
+                    />
+                  )}
+                </Field>
+              </div>
+            )}
+
+            <Field label="Search / Address" className="relative">
+              {id => (
+                <>
+                  <Input
+                    id={id}
+                    type="text"
+                    value={address}
+                    onChange={e => { setAddress(e.target.value); setShowSuggestions(true); }}
+                    onFocus={() => {
+                      if (address === 'Location TBD') setAddress('');
+                      setShowSuggestions(true);
                     }}
-                  >
-                    {suggestions.map((s, i) => {
-                      const sName = s.name || s.display_name.split(',')[0];
-                      return (
-                        <div 
-                          key={i}
-                          style={{ padding: '12px 14px', borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
-                          onClick={() => {
+                    placeholder="Search for place or address..."
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3.5 top-10 text-[11px] font-semibold text-sys-blue">Searching...</div>
+                  )}
+                  
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full z-[100] mt-1.5 overflow-hidden rounded-control border border-white/15 bg-surface-3 shadow-elevated">
+                      {suggestions.map((s, i) => {
+                        const sName = s.name || s.display_name.split(',')[0];
+                        return (
+                          <Button
+                            key={`${s.display_name}-${i}`}
+                            variant="ghost"
+                            onClick={() => {
                               setLocationName(sName);
                               setAddress(s.display_name);
                               setLat(parseFloat(s.lat));
                               setLng(parseFloat(s.lon));
                               setShowSuggestions(false);
-                          }}
-                        >
-                          <div style={{ fontWeight: 700, color: '#fff', fontSize: '14px', marginBottom: '2px' }}>{sName}</div>
-                          <div style={{ color: 'var(--sys-label-secondary)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.display_name}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                            }}
+                            className={`block w-full rounded-none px-3.5 py-3 text-left ${i === suggestions.length - 1 ? '' : 'border-b border-white/5'}`}
+                          >
+                            <div className="mb-0.5 text-[14px] font-bold text-label">{sName}</div>
+                            <div className="truncate text-caption text-label-secondary">{s.display_name}</div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </Field>
 
-              {/* Location Name */}
-              <div className="edit-field-group">
-                <label className="edit-field-label">Location Name</label>
-                <input
-                  className="edit-field-input"
+            <Field label="Location Name">
+              {id => (
+                <Input
+                  id={id}
                   type="text"
                   value={locationName}
                   onChange={e => setLocationName(e.target.value)}
@@ -479,143 +479,116 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                   }}
                   placeholder="Custom place name or title"
                 />
-              </div>
+              )}
+            </Field>
 
-              {/* Conditional Hike Details */}
-              {(type === 'hiking' || type === 'hike') && (
-                <div style={{ background: 'rgba(52, 199, 89, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '18px' }}>🥾</span>
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#34C759' }}>TRAIL STATS</span>
-                    </div>
+            {type === 'hiking' && (
+              <div className="mb-4 rounded-2xl border border-sys-green/20 bg-sys-green/8 p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[18px]">🥾</span>
+                    <span className="text-[14px] font-extrabold text-sys-green">TRAIL STATS</span>
                   </div>
+                </div>
 
-                  <div className="edit-field-group" style={{ position: 'relative' }}>
-                    <label className="edit-field-label" style={{ color: '#34C759', fontWeight: 700 }}>AllTrails Quick Import</label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input 
-                        className="edit-field-input" 
-                        type="text" 
-                        value={allTrailsUrl} 
-                        onChange={e => setAllTrailsUrl(e.target.value)} 
-                        placeholder="Paste AllTrails URL..." 
-                        style={{ background: 'rgba(52, 199, 89, 0.05)', borderColor: 'rgba(52, 199, 89, 0.3)' }}
+                <Field label="AllTrails Quick Import" className="relative">
+                  {id => (
+                    <div className="flex gap-2">
+                      <Input
+                        id={id}
+                        type="text"
+                        value={allTrailsUrl}
+                        onChange={e => setAllTrailsUrl(e.target.value)}
+                        placeholder="Paste AllTrails URL..."
+                        className="border-sys-green/30 bg-sys-green/5"
                       />
-                      <button 
-                        type="button"
+                      <Button
                         onClick={handleParseAllTrails}
                         disabled={isParsingAllTrails || !allTrailsUrl.trim()}
-                        style={{
-                          background: '#34C759', color: '#000', border: 'none', borderRadius: '10px',
-                          padding: '0 16px', fontWeight: 700, cursor: isParsingAllTrails ? 'default' : 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!allTrailsUrl.trim() || isParsingAllTrails) ? 0.6 : 1
-                        }}
+                        className="flex items-center justify-center rounded-[10px] border-0 bg-sys-green px-4 font-bold text-black disabled:cursor-default disabled:opacity-60"
                       >
-                        {isParsingAllTrails ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={18} />}
-                      </button>
+                        {isParsingAllTrails ? <Loader size={18} className="animate-spin motion-reduce:animate-none" /> : <Sparkles size={18} />}
+                      </Button>
                     </div>
-                  </div>
-                  
-                  <div className="edit-field-group">
-                    <label className="edit-field-label">Difficulty</label>
-                    <select className="edit-field-input" value={hikeDiff} onChange={e => setHikeDiff(e.target.value as any)}>
-                      <option value="Easy">Easy</option>
-                      <option value="Moderate">Moderate</option>
-                      <option value="Hard">Hard</option>
-                      <option value="Expert">Expert</option>
-                    </select>
-                  </div>
+                  )}
+                </Field>
+                
+                <Field label="Difficulty">
+                  {id => (
+                    <Select id={id} value={hikeDiff} onChange={e => setHikeDiff(e.target.value as HikeDifficulty)}>
+                      {DIFFICULTY_OPTIONS.map(difficulty => <option key={difficulty} value={difficulty}>{difficulty}</option>)}
+                    </Select>
+                  )}
+                </Field>
 
-                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    <div className="edit-field-group" style={{ flex: '1 1 90px', minWidth: 0, marginBottom: 0 }}>
-                      <label className="edit-field-label">Distance</label>
-                      <input className="edit-field-input" type="text" value={hikeDist} onChange={e => setHikeDist(e.target.value)} placeholder="e.g. 5.2 mi" />
-                    </div>
-                    <div className="edit-field-group" style={{ flex: '1 1 90px', minWidth: 0, marginBottom: 0 }}>
-                      <label className="edit-field-label">Duration</label>
-                      <input className="edit-field-input" type="text" value={hikeDur} onChange={e => setHikeDur(e.target.value)} placeholder="e.g. 3.5 hrs" />
-                    </div>
-                    <div className="edit-field-group" style={{ flex: '1 1 90px', minWidth: 0, marginBottom: 0 }}>
-                      <label className="edit-field-label">Elevation</label>
-                      <input className="edit-field-input" type="text" value={hikeElev} onChange={e => setHikeElev(e.target.value)} placeholder="e.g. 1,500 ft" />
-                    </div>
-                    <div className="edit-field-group" style={{ flex: '1 1 100%', minWidth: 0, marginBottom: 0, marginTop: '8px' }}>
-                      <label className="edit-field-label">AllTrails Link</label>
-                      <input className="edit-field-input" type="url" value={hikeLink} onChange={e => setHikeLink(e.target.value)} placeholder="https://www.alltrails.com/..." />
-                    </div>
+                <div className="flex flex-wrap gap-2.5">
+                  <Field label="Distance" className="mb-0 flex-[1_1_90px] min-w-0">
+                    {id => <Input id={id} type="text" value={hikeDist} onChange={e => setHikeDist(e.target.value)} placeholder="e.g. 5.2 mi" />}
+                  </Field>
+                  <Field label="Duration" className="mb-0 flex-[1_1_90px] min-w-0">
+                    {id => <Input id={id} type="text" value={hikeDur} onChange={e => setHikeDur(e.target.value)} placeholder="e.g. 3.5 hrs" />}
+                  </Field>
+                  <Field label="Elevation" className="mb-0 flex-[1_1_90px] min-w-0">
+                    {id => <Input id={id} type="text" value={hikeElev} onChange={e => setHikeElev(e.target.value)} placeholder="e.g. 1,500 ft" />}
+                  </Field>
+                  <Field label="AllTrails Link" className="mb-0 mt-2 flex-[1_1_100%] min-w-0">
+                    {id => <Input id={id} type="url" value={hikeLink} onChange={e => setHikeLink(e.target.value)} placeholder="https://www.alltrails.com/..." />}
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {type === 'food' && (
+              <div className="mb-4 rounded-2xl border border-sys-purple/20 bg-sys-purple/8 p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Utensils size={18} className="text-sys-purple" />
+                    <span className="text-[14px] font-extrabold text-sys-purple">DINING DISCOVERY</span>
                   </div>
                 </div>
-              )}
 
-              {type === 'food' && (
-                <div style={{ background: 'rgba(191, 90, 242, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(191, 90, 242, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Utensils size={18} color="#BF5AF2" />
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#BF5AF2' }}>DINING DISCOVERY</span>
-                    </div>
-                  </div>
-
-                  <div className="edit-field-group">
-                    <label className="edit-field-label">HappyCow Link</label>
-                    <input 
-                      className="edit-field-input" 
-                      type="url" 
-                      value={foodHappyCow} 
-                      onChange={e => setFoodHappyCow(e.target.value)} 
-                      placeholder="https://www.happycow.net/..." 
-                      style={{ background: 'rgba(48, 209, 88, 0.05)', borderColor: 'rgba(48, 209, 88, 0.15)' }}
+                <Field label="HappyCow Link">
+                  {id => (
+                    <Input
+                      id={id}
+                      type="url"
+                      value={foodHappyCow}
+                      onChange={e => setFoodHappyCow(e.target.value)}
+                      placeholder="https://www.happycow.net/..."
+                      className="border-sys-green/15 bg-sys-green/5"
                     />
-                  </div>
-                  <div className="edit-field-group" style={{ marginBottom: 0 }}>
-                    <label className="edit-field-label">Official Website</label>
-                    <input 
-                      className="edit-field-input" 
-                      type="url" 
-                      value={foodOfficial} 
-                      onChange={e => setFoodOfficial(e.target.value)} 
-                      placeholder="https://restaurant-site.com/..." 
-                      style={{ background: 'rgba(10, 132, 255, 0.05)', borderColor: 'rgba(10, 132, 255, 0.15)' }}
+                  )}
+                </Field>
+                <Field label="Official Website" className="mb-0">
+                  {id => (
+                    <Input
+                      id={id}
+                      type="url"
+                      value={foodOfficial}
+                      onChange={e => setFoodOfficial(e.target.value)}
+                      placeholder="https://restaurant-site.com/..."
+                      className="border-sys-blue/15 bg-sys-blue/5"
                     />
-                  </div>
-                </div>
-              )}
+                  )}
+                </Field>
+              </div>
+            )}
 
-              {/* Description */}
-              <div className="edit-field-group" style={{ marginBottom: 0 }}>
-                <label className="edit-field-label">Description</label>
-                <textarea
-                  className="edit-field-input"
+            <Field label="Description" className="mb-0">
+              {id => (
+                <TextArea
+                  id={id}
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="Add notes, tips, or details…"
                   rows={4}
-                  style={{ resize: 'none', lineHeight: '1.5' }}
+                  className="resize-none leading-normal"
                 />
-              </div>
-            </>
-          )}
-
-
-          </div>
-
-        {/* Save button — fixed at bottom */}
-        <div style={{ flexShrink: 0, paddingTop: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
-          <button
-            onClick={handleSave}
-            className="btn-glass-blue"
-            style={{
-              width: '100%', padding: '16px', borderRadius: '14px',
-              fontSize: '16px',
-              display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-            }}
-          >
-            <Save size={18} />
-            Save Changes
-          </button>
-        </div>
+              )}
+            </Field>
+          </>
+        )}
       </div>
-    </div>
+    </Sheet>
   );
 }

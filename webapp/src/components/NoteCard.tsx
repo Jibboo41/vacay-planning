@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { StickyNote, GripVertical, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
+import { cn } from '../lib/cn';
 import Linkified from './Linkified';
+import { Button, IconButton } from './ui';
 
 interface NoteCardProps {
   item: ItineraryItem;
@@ -15,96 +17,73 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
 
   return (
     <div
-      className={`glass-card fade-in ${isExpanded ? 'expanded' : ''}`}
-      onClick={() => setIsExpanded(!isExpanded)}
-      role="button"
-      tabIndex={0}
-      style={{
-        borderLeft: '4px solid var(--sys-label-tertiary)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        overflow: 'hidden',
-        maxHeight: isExpanded ? '800px' : '120px',
-        padding: '16px',
-        borderRadius: '16px',
-        margin: '0 16px 12px',
-        position: 'relative',
-        background: isExpanded ? 'rgba(255, 255, 255, 0.05)' : undefined
-      }}
+      className={cn(
+        'glass-card fade-in relative mx-4 mb-3 overflow-hidden rounded-2xl border-l-4 border-type-note p-4 transition-all duration-300 ease-ios motion-reduce:transition-none',
+        isExpanded ? 'expanded max-h-[800px] bg-white/5' : 'max-h-[120px]',
+      )}
+      onClick={() => setIsExpanded(v => !v)}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: '6px', letterSpacing: '0.05em' }}>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="rounded-chip bg-white/5 px-2 py-0.5 text-caption font-extrabold tracking-wide text-label-secondary">
           {item.title.toUpperCase()}
         </span>
-        <div 
-          className="drag-handle"
-          onClick={(e: any) => e.stopPropagation()}
+        <button
+          type="button"
+          aria-label="Drag to reorder"
+          className="drag-handle text-label-tertiary"
+          onClick={e => e.stopPropagation()}
           onTouchStart={onGripTouchStart}
         >
-          <GripVertical size={16} color="var(--sys-label-tertiary)" />
-        </div>
+          <GripVertical size={16} />
+        </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-        <div style={{
-          width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0,
-          background: 'rgba(255, 255, 255, 0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <StickyNote size={20} color="var(--sys-label-secondary)" />
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-control bg-white/10 text-label-secondary">
+          <StickyNote size={20} />
         </div>
 
-        {/* Title hidden as requested since it's in the badge */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="min-w-0 flex-1">
           {item.description && (
-            <div style={{
-              fontSize: '14px', color: 'var(--sys-label-secondary)',
-              lineHeight: '1.5', margin: '4px 0 0 0',
-              maxHeight: '100px', overflowY: 'auto'
-            }}>
+            <div className="mt-1 max-h-[100px] overflow-y-auto text-[14px] leading-6 text-label-secondary">
               <Linkified text={item.description} />
             </div>
           )}
         </div>
 
-        <div style={{ padding: '4px', opacity: 0.4 }}>
+        <IconButton
+          aria-label={isExpanded ? 'Hide details' : 'Show details'}
+          aria-expanded={isExpanded}
+          variant="ghost"
+          size="sm"
+          className="opacity-60"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(v => !v);
+          }}
+        >
           {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </div>
+        </IconButton>
       </div>
 
       {isExpanded && (
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onPress(); }}
-              className="details-btn btn-glass-blue"
-              style={{
-                flex: 1, padding: '12px', borderRadius: '12px',
-                fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}
-            >
+        <div className="mt-4 border-t border-white/5 pt-4">
+          <div className="flex gap-2">
+            <Button block onClick={(e) => { e.stopPropagation(); onPress(); }}>
               Edit Note
-            </button>
-            <button
+            </Button>
+            <IconButton
+              aria-label={`Delete ${item.title}`}
+              variant="danger"
               onClick={(e) => {
                 e.stopPropagation();
                 if (window.confirm(`Delete "${item.title}"?`)) {
                   useTripStore.getState().deleteItem(item.id);
                 }
               }}
-              style={{ 
-                width: '46px', height: '46px', borderRadius: '12px',
-                color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.2s ease', border: '1px solid rgba(255, 69, 58, 0.2)',
-                cursor: 'pointer', flexShrink: 0
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
-              aria-label="Delete"
             >
               <Trash2 size={18} />
-            </button>
+            </IconButton>
           </div>
         </div>
       )}

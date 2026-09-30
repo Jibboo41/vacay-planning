@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react';
-import { CheckCircle2, Circle, Plus, Trash2, CheckSquare, Menu, Calendar, GripVertical, Pencil, X, Check } from 'lucide-react';
+import { useRef, useState, type DragEvent, type TouchEvent } from 'react';
+import { Check, CheckCircle2, CheckSquare, Circle, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { TodoItem } from '../core/models';
+import { cn } from '../lib/cn';
+import { Button, Card, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
 
 export default function TodoScreen() {
-  const { todos, addTodo, updateTodo, toggleTodo, deleteTodo, reorderTodos, setSidebarOpen } = useTripStore();
+  const { todos, addTodo, updateTodo, toggleTodo, deleteTodo, reorderTodos } = useTripStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
@@ -14,12 +16,10 @@ export default function TodoScreen() {
   const [editDueDate, setEditDueDate] = useState('');
   const [editNotes, setEditNotes] = useState('');
 
-  // Drag state
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
-  const touchStartY = useRef<number>(0);
   const touchDragIndex = useRef<number | null>(null);
 
   const handleAdd = () => {
@@ -39,21 +39,25 @@ export default function TodoScreen() {
   };
 
   const commitEdit = () => {
-    if (!editingId || !editText.trim()) { setEditingId(null); return; }
+    if (!editingId || !editText.trim()) {
+      setEditingId(null);
+      return;
+    }
     updateTodo(editingId, { text: editText.trim(), dueDate: editDueDate || null, notes: editNotes.trim() || null });
     setEditingId(null);
   };
 
-  // Mouse drag handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
+  const handleDragStart = (e: DragEvent, index: number) => {
     dragItem.current = index;
     setDraggingIndex(index);
     e.dataTransfer.effectAllowed = 'move';
   };
+
   const handleDragEnter = (index: number) => {
     dragOverItem.current = index;
     setOverIndex(index);
   };
+
   const handleDragEnd = () => {
     if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
       const ordered = [...todos];
@@ -67,21 +71,19 @@ export default function TodoScreen() {
     setOverIndex(null);
   };
 
-  // Touch drag handlers
-  const handleGripTouchStart = (e: React.TouchEvent, index: number) => {
+  const handleGripTouchStart = (e: TouchEvent, index: number) => {
     e.stopPropagation();
     touchDragIndex.current = index;
-    touchStartY.current = e.touches[0].clientY;
     setDraggingIndex(index);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: TouchEvent) => {
     if (touchDragIndex.current === null) return;
-    if (e.cancelable) e.preventDefault(); // Prevent scrolling on iOS during drag
+    if (e.cancelable) e.preventDefault();
     const touch = e.touches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
     const itemEl = target?.closest('[data-todo-item]');
-    
+
     if (itemEl) {
       const elements = Array.from(document.querySelectorAll('[data-todo-item]'));
       const newOver = elements.indexOf(itemEl);
@@ -105,136 +107,84 @@ export default function TodoScreen() {
   };
 
   const isOverdue = (todo: TodoItem) =>
-    !todo.completed && todo.dueDate &&
+    !todo.completed &&
+    todo.dueDate &&
     new Date(todo.dueDate.replace(/-/g, '/')) < new Date(new Date().setHours(0, 0, 0, 0));
 
-  const completedCount = todos.filter(t => t.completed).length;
+  const completedCount = todos.filter((todo) => todo.completed).length;
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
-      {/* Header */}
-      <header className="screen-header">
-        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
-          <Menu size={24} />
-        </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Things to Do</h1>
-          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>TRIP CHECKLIST</div>
-        </div>
-        <div style={{ width: 44 }} /> {/* Balance header */}
-      </header>
-      <div style={{ padding: '0 24px 12px 24px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {completedCount} of {todos.length} tasks completed
-          </p>
+    <div className={cn('safe-area-inset min-h-dvh', draggingIndex !== null ? 'touch-none' : 'touch-auto')}>
+      <ScreenHeader title="Things to Do" subtitle="TRIP CHECKLIST" />
+
+      <div className="px-6 pb-3">
+        <p className="-mt-0.5 m-0 text-[14px] text-label-secondary">
+          {completedCount} of {todos.length} tasks completed
+        </p>
       </div>
 
-      <div style={{ padding: '0 24px 120px 24px' }}>
-        {/* New Todo Area */}
+      <div className="px-6 pb-[120px]">
         {!showAddForm ? (
-          <button 
-            onClick={() => setShowAddForm(true)}
-            className="btn-glass-blue"
-            style={{ 
-              width: '100%', padding: '16px', borderRadius: '16px', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              marginBottom: '24px', fontSize: '16px'
-            }}
-          >
+          <Button onClick={() => setShowAddForm(true)} block size="lg" className="mb-6">
             <Plus size={20} />
             New Todo
-          </button>
+          </Button>
         ) : (
-          <div style={{
-            background: 'var(--sys-bg-elevated-2)', padding: '24px',
-            borderRadius: '24px', border: '1px solid var(--sys-blue)',
-            marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px'
-          }}>
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
-              <label className="edit-field-label">What needs to be done?</label>
-              <input
-                type="text"
-                autoFocus
-                value={newTodo}
-                onChange={e => setNewTodo(e.target.value)}
-                placeholder="Pack gear, Check in, etc."
-                style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
-                  fontSize: '17px', outline: 'none', width: '100%'
-                }}
-              />
-            </div>
+          <Card padding="lg" className="mb-8 flex flex-col gap-4 border-sys-blue">
+            <Field label="What needs to be done?" className="mb-0">
+              {(id) => (
+                <Input
+                  id={id}
+                  type="text"
+                  autoFocus
+                  value={newTodo}
+                  onChange={(e) => setNewTodo(e.target.value)}
+                  placeholder="Pack gear, Check in, etc."
+                />
+              )}
+            </Field>
 
-            <div className="edit-field-group" style={{ marginBottom: 0, width: '100%', overflow: 'hidden' }}>
-              <label className="edit-field-label">Due Date (Optional)</label>
-              <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
-                <input
+            <Field label="Due Date (Optional)" className="mb-0">
+              {(id) => (
+                <Input
+                  id={id}
                   type="date"
                   value={newDueDate}
-                  onChange={e => setNewDueDate(e.target.value)}
-                  style={{
-                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px', padding: '14px 16px', color: '#fff',
-                    fontSize: '16px', colorScheme: 'dark', width: '100%',
-                    boxSizing: 'border-box', display: 'block', margin: 0
-                  }}
+                  onChange={(e) => setNewDueDate(e.target.value)}
+                  className="scheme-dark"
                 />
-              </div>
-            </div>
-            
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
-              <label className="edit-field-label">Notes (Optional)</label>
-              <textarea
-                value={newNotes}
-                onChange={e => setNewNotes(e.target.value)}
-                placeholder="Confirmation numbers, packing details, etc."
-                style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
-                  fontSize: '15px', outline: 'none', width: '100%', minHeight: '60px',
-                  resize: 'vertical', display: 'block', boxSizing: 'border-box'
-                }}
-              />
-            </div>
+              )}
+            </Field>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-              <button 
-                onClick={handleAdd}
-                disabled={!newTodo.trim()}
-                className="btn-glass-blue"
-                style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
-              >
+            <Field label="Notes (Optional)" className="mb-0">
+              {(id) => (
+                <TextArea
+                  id={id}
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                  placeholder="Confirmation numbers, packing details, etc."
+                  className="min-h-[60px]"
+                />
+              )}
+            </Field>
+
+            <div className="mt-1 flex gap-3">
+              <Button onClick={handleAdd} disabled={!newTodo.trim()} className="flex-1">
                 Save Task
-              </button>
-              <button 
-                onClick={() => setShowAddForm(false)}
-                style={{ 
-                  flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(255,255,255,0.08)', color: '#fff', 
-                  border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
-                }}
-              >
+              </Button>
+              <Button variant="secondary" onClick={() => setShowAddForm(false)} className="flex-1">
                 Cancel
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
 
-        {/* Todo List */}
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <div className="flex flex-col gap-2.5" onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
           {todos.length === 0 ? (
-            <div style={{
-              textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
-            }}>
-              <CheckSquare size={48} opacity={0.2} />
-              <p style={{ fontSize: '15px' }}>No tasks yet. Stay organized for your trip!</p>
-            </div>
+            <Card padding="lg" className="flex flex-col items-center gap-4 text-center text-label-secondary">
+              <CheckSquare size={48} className="opacity-20" />
+              <p className="text-body">No tasks yet. Stay organized for your trip!</p>
+            </Card>
           ) : (
             todos.map((todo, index) => {
               const isEditing = editingId === todo.id;
@@ -242,150 +192,103 @@ export default function TodoScreen() {
               const isOver = overIndex === index && draggingIndex !== null && draggingIndex !== index;
 
               return (
-                <div
+                <Card
                   key={todo.id}
                   data-todo-item
                   draggable
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragEnter={() => handleDragEnter(index)}
                   onDragEnd={handleDragEnd}
-                  onDragOver={e => e.preventDefault()}
-                  className="glass-card"
-                  style={{
-                    display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
-                    padding: '14px 12px',
-                    borderRadius: '16px',
-                    background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
-                    border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                    transition: 'all 0.15s ease',
-                    opacity: isDragging ? 0.4 : 1,
-                    transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
-                    boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : undefined,
-                    zIndex: isDragging ? 2 : 1
-                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  className={cn(
+                    'flex gap-3 rounded-2xl border p-3.5 px-3 transition-all duration-150 ease-ios',
+                    isEditing ? 'items-start' : 'items-center',
+                    isOver ? 'border-sys-blue/40 bg-sys-blue/10' : 'border-white/8',
+                    isDragging && 'z-[2] -translate-y-1 scale-[1.02] opacity-40 shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
+                  )}
                 >
-                  {/* Grip */}
-                  <div
-                    style={{ 
-                      color: 'var(--sys-label-tertiary)', cursor: 'grab', flexShrink: 0, 
-                      paddingTop: isEditing ? '10px' : 0,
-                      touchAction: 'none' // Important for iOS dragging
-                    }}
-                    onTouchStart={e => handleGripTouchStart(e, index)}
+                  <button
+                    type="button"
+                    aria-label="Drag to reorder"
+                    className={cn('drag-handle shrink-0 cursor-grab touch-none text-label-tertiary', isEditing && 'pt-2.5')}
+                    onTouchStart={(e) => handleGripTouchStart(e, index)}
                   >
                     <GripVertical size={18} />
-                  </div>
+                  </button>
 
-                  {/* Check */}
                   <button
+                    type="button"
+                    aria-pressed={todo.completed}
+                    aria-label={todo.completed ? 'Mark task incomplete' : 'Mark task complete'}
                     onClick={() => toggleTodo(todo.id)}
-                    style={{
-                      background: 'transparent', border: 'none', padding: 0,
-                      color: todo.completed ? 'var(--sys-blue)' : 'var(--sys-label-tertiary)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0,
-                      paddingTop: isEditing ? '10px' : 0
-                    }}
+                    className={cn(
+                      'flex shrink-0 cursor-pointer items-center border-0 bg-transparent p-0',
+                      isEditing && 'pt-2.5',
+                      todo.completed ? 'text-sys-blue' : 'text-label-tertiary',
+                    )}
                   >
                     {todo.completed ? <CheckCircle2 size={22} /> : <Circle size={22} />}
                   </button>
 
-                  {/* Content / Edit area */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="min-w-0 flex-1">
                     {isEditing ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <input
+                      <div className="flex flex-col gap-2">
+                        <Input
                           autoFocus
                           value={editText}
-                          onChange={e => setEditText(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
-                          style={{
-                            background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(10,132,255,0.4)',
-                            borderRadius: '8px', padding: '8px 10px', color: '#fff',
-                            fontSize: '16px', fontWeight: 500, outline: 'none', width: '100%'
+                          onChange={(e) => setEditText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') commitEdit();
+                            if (e.key === 'Escape') setEditingId(null);
                           }}
                         />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Calendar size={13} color="var(--sys-label-secondary)" />
-                          <span style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>Due:</span>
-                          <input
-                            type="date"
-                            value={editDueDate}
-                            onChange={e => setEditDueDate(e.target.value)}
-                            style={{
-                              background: 'rgba(255,255,255,0.05)', border: 'none',
-                              borderRadius: '6px', padding: '3px 7px', color: '#fff',
-                              fontSize: '12px', colorScheme: 'dark'
-                            }}
-                          />
+                        <div className="flex items-center gap-2">
+                          <Input type="date" aria-label="Due date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)} className="scheme-dark text-caption" />
                           {editDueDate && (
-                            <button onClick={() => setEditDueDate('')} style={{ fontSize: '11px', color: 'var(--sys-blue)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
+                            <Button variant="ghost" size="sm" onClick={() => setEditDueDate('')}>
+                              Clear
+                            </Button>
                           )}
                         </div>
-                        <textarea
-                          value={editNotes}
-                          onChange={e => setEditNotes(e.target.value)}
-                          placeholder="Add notes..."
-                          style={{
-                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '8px', padding: '8px 10px', color: '#fff',
-                            fontSize: '14px', outline: 'none', width: '100%', minHeight: '50px',
-                            resize: 'vertical', marginTop: '2px', boxSizing: 'border-box'
-                          }}
-                        />
+                        <TextArea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} placeholder="Add notes..." className="min-h-[50px]" />
                       </div>
                     ) : (
                       <>
-                        <span style={{
-                          fontSize: '16px', color: todo.completed ? 'var(--sys-label-tertiary)' : '#fff',
-                          textDecoration: todo.completed ? 'line-through' : 'none',
-                          transition: 'all 0.2s ease', fontWeight: 500,
-                          display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                        }}>
+                        <span className={cn('block truncate text-[16px] font-medium transition-all duration-200', todo.completed ? 'text-label-tertiary line-through' : 'text-label')}>
                           {todo.text}
                         </span>
                         {todo.dueDate && (
-                          <div style={{
-                            fontSize: '11px', marginTop: '4px', fontWeight: 700,
-                            color: isOverdue(todo) ? 'var(--sys-red)' : 'var(--sys-label-secondary)'
-                          }}>
+                          <div className={cn('mt-1 text-caption font-bold', isOverdue(todo) ? 'text-sys-red' : 'text-label-secondary')}>
                             {isOverdue(todo) ? '⚠ ' : ''}Due: {new Date(todo.dueDate.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         )}
-                        {todo.notes && (
-                          <div style={{
-                            fontSize: '13px', marginTop: '6px', color: 'var(--sys-label-secondary)',
-                            lineHeight: '1.4', whiteSpace: 'pre-wrap'
-                          }}>
-                            {todo.notes}
-                          </div>
-                        )}
+                        {todo.notes && <div className="mt-1.5 whitespace-pre-wrap text-footnote leading-[1.4] text-label-secondary">{todo.notes}</div>}
                       </>
                     )}
                   </div>
 
-                  {/* Actions */}
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+                  <div className="flex shrink-0 items-center gap-1.5">
                     {isEditing ? (
                       <>
-                        <button onClick={commitEdit} style={{ background: 'rgba(48,209,88,0.15)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-green)', cursor: 'pointer', display: 'flex' }}>
+                        <IconButton aria-label="Save task" variant="ghost" size="sm" onClick={commitEdit} className="bg-sys-green/15 text-sys-green">
                           <Check size={16} />
-                        </button>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        </IconButton>
+                        <IconButton aria-label="Cancel editing task" variant="ghost" size="sm" onClick={() => setEditingId(null)}>
                           <X size={16} />
-                        </button>
+                        </IconButton>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(todo)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        <IconButton aria-label="Edit task" variant="ghost" size="sm" onClick={() => startEdit(todo)}>
                           <Pencil size={16} />
-                        </button>
-                        <button onClick={() => deleteTodo(todo.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
+                        </IconButton>
+                        <IconButton aria-label="Delete task" variant="danger" size="sm" onClick={() => deleteTodo(todo.id)}>
                           <Trash2 size={16} />
-                        </button>
+                        </IconButton>
                       </>
                     )}
                   </div>
-                </div>
+                </Card>
               );
             })
           )}
