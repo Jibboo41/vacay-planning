@@ -38,6 +38,20 @@ export function getDayKey(dateString: string): string {
   return toDayKey(d);
 }
 
+/**
+ * Day key that reads the *wall-clock* date of a timestamp, ignoring any `Z`
+ * suffix (i.e. `2024-06-12T23:30:00Z` → `2024-06-12` in every time zone).
+ * The store uses this when grouping/reordering so legacy UTC-suffixed values
+ * keep the day they were entered on.
+ */
+export function getWallClockDayKey(dateString: string): string {
+  if (!dateString) return '';
+  const clean = dateString.replace('Z', '').replace('T', ' ').replace(/-/g, '/');
+  const d = new Date(clean);
+  if (isNaN(d.getTime())) return dateString.split('T')[0];
+  return toDayKey(d);
+}
+
 /** Today's local day key. */
 export function todayKey(now: Date = new Date()): string {
   return toDayKey(now);
@@ -47,10 +61,14 @@ export function todayKey(now: Date = new Date()): string {
  * Human day label.
  * - `short` (default): `Wed 6/12` — timeline day headers.
  * - `long`: `WED, JUN 12` — card date badges (returns `DATE TBD` for missing dates).
+ * - `full`: `Wednesday, June 12` — summary outline headings (returns `Date TBD`).
  */
-export function getDayLabel(dateString: string, format: 'short' | 'long' = 'short'): string {
+export function getDayLabel(dateString: string, format: 'short' | 'long' | 'full' = 'short'): string {
   const d = parseLocalDate(dateString);
-  if (!d) return format === 'long' ? 'DATE TBD' : '';
+  if (!d) return format === 'long' ? 'DATE TBD' : format === 'full' ? 'Date TBD' : '';
+  if (format === 'full') {
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
   if (format === 'long') {
     return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
   }

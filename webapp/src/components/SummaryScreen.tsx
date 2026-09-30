@@ -5,32 +5,11 @@ import type { ItineraryItem } from '../core/models';
 import { getItemTone, getItemTypeMeta } from '../core/itemTypes';
 import { startNewItem } from '../store/itemActions';
 import Linkified from './Linkified';
+import { getDayKey, getDayLabel, getTimeLabel, nightsBetween } from '../utils/dates';
 import { Badge, Button, Card, EmptyState, ScreenHeader } from './ui';
 
-function getDayKey(dateString: string) {
-  if (!dateString) return '';
-  // Force local interpretation to avoid day-skipping
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return dateString.split('T')[0];
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
-function getDayLabel(dateString: string) {
-  if (!dateString) return 'Date TBD';
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return 'Date TBD';
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-}
 
-function getTimeLabel(dateString: string) {
-  if (!dateString.includes('T')) return '';
-  return new Date(dateString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
 
 interface SummaryItemProps {
   item: SummaryRenderItem;
@@ -68,7 +47,7 @@ function SummaryItemCard({ item, isCheckout = false }: SummaryItemProps) {
     } else {
       let nightsStr = '';
       if (item.endDate) {
-        const nDays = Math.round((new Date(item.endDate).getTime() - new Date(item.startDate).getTime()) / (1000 * 60 * 60 * 24));
+        const nDays = nightsBetween(item.startDate, item.endDate);
         if (nDays > 0) nightsStr = ` (${nDays} ${nDays === 1 ? 'night' : 'nights'})`;
       }
       timeText = `CHECK-IN${item.startDate.includes('T') ? ` • ${getTimeLabel(item.startDate)}` : ''}${nightsStr}`;
@@ -212,7 +191,7 @@ export default function SummaryScreen() {
     while (current <= end && safety < 100) {
       safety++;
       const key = getDayKey(current.toISOString().split('T')[0]);
-      const label = getDayLabel(current.toISOString().split('T')[0]);
+      const label = getDayLabel(current.toISOString().split('T')[0], 'full');
       
       const dayItems = flattened.filter(i => getDayKey(i._renderDate) === key)
         .sort((a, b) => {

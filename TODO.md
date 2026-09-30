@@ -28,6 +28,6 @@
 - [x] **Summary Screen Cleanup**: removed refundable badges, added hike details, and implemented flight grouping.
 - [x] **Maps:** Implement Hotel-Origin Routing (ensure routes start from the last accommodation across multi-day stays).
 - [x] **Dining Discovery 2.0**: Overhauled the restaurant search into a centralized, trip-aware "Dining Scout". Implemented structured link persistence (HappyCow/Official), AI-estimated proximity distances, and premium action-button rendering in the timeline.
-- [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries.
-- [ ] **Offline Mode**: Service Worker (PWA) improvements for full offline read/write support.
+- [ ] **Trip Sharing**: Invite-only collaborator access to shared itineraries. *(UI scaffold behind `vacay:ff:sharing` flag; backend not wired.)*
+- [x] **Offline Mode**: Service Worker (PWA) via `vite-plugin-pwa` + Firestore persistent local cache.
 - [ ] **Maps:** Configure Official Google Maps API keys (currently using Leaflet/OSM).

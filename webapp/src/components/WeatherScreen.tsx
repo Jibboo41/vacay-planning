@@ -5,6 +5,7 @@ import type { ItineraryItem, WeatherDay } from '../core/models';
 import { cn } from '../lib/cn';
 import { startNewItem } from '../store/itemActions';
 import { Button, Card, EmptyState, IconButton, Modal, ScreenHeader, Skeleton } from './ui';
+import { getDayKey } from '../utils/dates';
 
 type DailyWeatherLocation = { date: string; lat: number; lon: number; name: string };
 type ItemWithCoordinates = ItineraryItem & {
@@ -15,16 +16,6 @@ function hasCoordinates(item: ItineraryItem): item is ItemWithCoordinates {
   return typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number';
 }
 
-function getDayKey(dateString: string) {
-  if (!dateString) return '';
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return dateString.split('T')[0];
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 export default function WeatherScreen() {
   const { weather, items, refreshWeather, isWeatherRefreshing } = useTripStore();

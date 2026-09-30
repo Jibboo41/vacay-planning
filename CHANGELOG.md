@@ -2,6 +2,22 @@
 
 All notable changes to the **Vacay Planning** project will be documented in this file.
 
+## [2.0.0] - Unreleased
+### Added
+- **Design system**: Tailwind v4 tokens (`src/styles/tokens.css`), `[data-theme]` themes, item-type registry (`src/core/itemTypes.ts`) and a shared `src/components/ui/` kit.
+- **Quality of life**: undo toasts for deletes, persistent sync indicator, error banners with Retry, per-route error boundaries, skeleton loaders, command palette (⌘K / Ctrl+K, `/`), shortcuts (`N`, `J`/`K`, `Esc`), timeline search + type filters, sticky day headers, "Today" button, card quick actions (copy confirmation, directions, .ics export), empty states.
+- **Layout**: desktop side rail + resizable/collapsible split view, mobile bottom tab bar, route config in `src/app/routes.ts`, view transitions.
+- **Platform**: installable PWA with update toast and map-tile caching; feature-flagged Share sheet scaffold.
+- **Tooling**: Vitest unit tests (`npm test`), `typecheck` script, GitHub Actions `webapp-ci.yml`.
+
+### Changed
+- All screens and modals migrated off inline styles; real `<button>`/`<a>` elements, focus rings, keyboard reordering, reduced-motion support, ≥12px text and 44px targets.
+- `/debug` is only available in dev or with `localStorage['vacay:debug'] = '1'`.
+- Date helpers consolidated in `src/utils/dates.ts`.
+
+### Removed
+- Unused Vite scaffold assets and `App.css`; the view-switcher FAB (replaced by tab bar / side rail).
+
 ## [1.32.0] - 2026-04-19
 ### Added
 - **Personalized Packing List**: Launched a specialized "Packing List" view featuring category-based gear organization (Luggage, Carry-on, etc.) and a streamlined interface without due dates.

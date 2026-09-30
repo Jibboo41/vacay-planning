@@ -71,3 +71,31 @@ export default defineConfig([
   },
 ])
 ```
+
+
+## Design system
+
+- **Tokens** live in `src/styles/tokens.css` (`@theme`): semantic colors (`text-label`, `text-label-secondary`, `bg-sys-blue`…), item-type colors (`text-type-flight`, `bg-type-hotel`…), radii, shadows and font sizes. Legacy `--sys-*` variables are aliased.
+- **Themes** are `[data-theme="…"]` blocks in `src/styles/themes.css`; the root `data-theme` is set from the store.
+- **Glass effects/keyframes** live in `src/styles/glass.css`; shell offsets in `src/styles/layout.css`.
+- **Item types**: use `src/core/itemTypes.ts` for icons, colors and start/end labels.
+- **UI components** (`src/components/ui`): `Button`, `IconButton` (requires `aria-label`), `Chip`/`Badge`, `LinkChip`, `Card`, `Modal`/`Sheet`, `EmptyState`, `Skeleton`, `toast()`. Combine classes with `cn()` from `src/lib/cn.ts`.
+- `.tsx` files export components only (react-refresh lint); put helpers and cva variants in `.ts` files.
+
+## Keyboard shortcuts
+
+| Keys | Action |
+| --- | --- |
+| ⌘K / Ctrl+K, `/` | Command palette |
+| `N` | New itinerary item |
+| `J` / `K` | Next / previous timeline item |
+| `Esc` | Close dialog |
+
+## Flags
+
+- `localStorage['vacay:debug'] = '1'` — enables `/debug` in production builds.
+- `localStorage['vacay:ff:sharing'] = '1'` (or `VITE_FEATURE_SHARING=true`) — shows the Share sheet preview.
+
+## Scripts
+
+`npm run lint`, `npm run typecheck`, `npm run build`, `npm test`. Install with `npm ci --ignore-scripts` (firebase-tools' native postinstall can hang).

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay } from '../core/models';
 import { fetchWeather } from '../data/weatherApi';
+import { getWallClockDayKey } from '../utils/dates';
 import {
   createUndoQueue,
   excludePending,
@@ -134,17 +135,6 @@ interface TripStore {
   syncTrips: (trips: Trip[]) => void;
 }
 
-function getDayKey(dateStr: string) {
-  if (!dateStr) return '';
-  // Standardize parsing to local time: Remove 'Z' if present, replace T with space for reliable local parsing
-  const clean = dateStr.replace('Z', '').replace('T', ' ').replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return dateStr.split('T')[0];
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 
 
@@ -516,7 +506,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       startDate: dayKey,
       location: { name: '', address: '', latitude: null, longitude: null },
     };
-    const dayItems = items.filter(i => getDayKey(i.startDate) === dayKey);
+    const dayItems = items.filter(i => getWallClockDayKey(i.startDate) === dayKey);
     note.sortOrder = dayItems.length * 10;
     const newItems = [...items, note];
     set({ items: newItems });
@@ -555,8 +545,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       const getDayEventWrappers = (dayKey: string) => {
         const wrappers: { id: string, item: ItineraryItem, isCheckout: boolean }[] = [];
         remaining.forEach(item => {
-          const startKey = getDayKey(item.startDate);
-          const endKey = item.endDate ? getDayKey(item.endDate) : startKey;
+          const startKey = getWallClockDayKey(item.startDate);
+          const endKey = item.endDate ? getWallClockDayKey(item.endDate) : startKey;
           const isHotel = item.type === 'hotel' || item.type === 'rental-car';
 
           if (startKey === dayKey) {
@@ -786,7 +776,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       while (curr <= endDate) {
         const dateKey = curr.toISOString().split('T')[0];
         const dayItems = items.filter((i: ItineraryItem) => 
-          (getDayKey(i.startDate) === dateKey || (i.endDate && getDayKey(i.endDate) === dateKey)) &&
+          (getWallClockDayKey(i.startDate) === dateKey || (i.endDate && getWallClockDayKey(i.endDate) === dateKey)) &&
           (i.type === 'hotel' || i.type === 'hiking' || i.type === 'activity') &&
           i.location.latitude !== null && i.location.longitude !== null
         );
@@ -798,11 +788,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
             }
           });
         } else {
-          const activeHotel = items.find((i: ItineraryItem) => i.type === 'hotel' && i.location.latitude !== null && getDayKey(i.startDate) <= dateKey && i.endDate && getDayKey(i.endDate) >= dateKey);
+          const activeHotel = items.find((i: ItineraryItem) => i.type === 'hotel' && i.location.latitude !== null && getWallClockDayKey(i.startDate) <= dateKey && i.endDate && getWallClockDayKey(i.endDate) >= dateKey);
           if (activeHotel) {
             dayLocations.push({ date: dateKey, lat: activeHotel.location.latitude!, lon: activeHotel.location.longitude!, name: activeHotel.location.name || 'Hotel' });
           } else {
-            const prev = sorted.filter((i: ItineraryItem) => getDayKey(i.startDate) < dateKey && i.location.latitude !== null);
+            const prev = sorted.filter((i: ItineraryItem) => getWallClockDayKey(i.startDate) < dateKey && i.location.latitude !== null);
             if (prev.length) {
               const last = prev[prev.length - 1];
               dayLocations.push({ date: dateKey, lat: last.location.latitude!, lon: last.location.longitude!, name: last.location.name || 'Last Known' });
