@@ -1,0 +1,35 @@
+/*
+ * App-shell layout variables. MainLayout mirrors the visible navigation chrome
+ * to <html data-nav="none|bottom|rail"> so fixed-position UI (FABs, sync pill,
+ * toasts, "Today" button) can offset itself without JS measurements.
+ */
+:root {
+  --side-rail-w: 84px;
+  --bottom-nav-offset: 0px;
+  --side-rail-offset: 0px;
+}
+
+html[data-nav="bottom"] {
+  --bottom-nav-offset: 64px;
+}
+
+html[data-nav="rail"] {
+  --side-rail-offset: var(--side-rail-w);
+}
+
+@layer components {
+  .fab-group {
+    bottom: calc(20px + env(safe-area-inset-bottom) + var(--bottom-nav-offset));
+  }
+  .fab-group.left {
+    left: calc(16px + var(--side-rail-offset));
+  }
+}
+
+/* Route change cross-fade (react-router `viewTransition`). Disabled under
+   prefers-reduced-motion in glass.css. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}

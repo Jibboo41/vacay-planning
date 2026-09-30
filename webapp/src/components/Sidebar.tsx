@@ -2,7 +2,9 @@ import React, { useRef, useState } from 'react';
 import { useTripStore } from '../store/useTripStore';
 import { Plus, LogOut, X, Sparkles, ArrowLeft, Terminal, ChevronDown, FileSpreadsheet } from 'lucide-react';
 import { auth } from '../core/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { APP_ROUTES, DEFAULT_ROUTE, isDebugEnabled } from '../app/routes';
+import { usePrefersReducedMotion } from '../hooks/useMediaQuery';
 import { downloadTripExcel } from '../utils/exportUtils';
 import { ITEM_TYPES, type ItemTypeKey } from '../core/itemTypes';
 import { THEMES } from '../core/themes';
@@ -30,6 +32,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [appearanceExpanded, setAppearanceExpanded] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const reducedMotion = usePrefersReducedMotion();
   const panelRef = useRef<HTMLElement>(null);
   useFocusTrap(panelRef, isOpen && !isAdding, onClose);
 
@@ -41,7 +45,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       setNewTripTitle('');
       setIsAdding(false);
       onClose();
-      navigate('/timeline');
+      navigate(DEFAULT_ROUTE);
     } catch (err) {
       console.error(err);
     }
@@ -50,7 +54,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const handleSelectTrip = (id: string) => {
     setCurrentTrip(id);
     onClose();
-    navigate('/timeline');
+    navigate(DEFAULT_ROUTE);
   };
 
   return (
@@ -112,6 +116,36 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Plus size={20} />
             <span>Add Trip</span>
           </Button>
+
+          {currentTripId && (
+            <nav aria-label="Screens" className="pt-6 pb-2.5">
+              <h3 className={sectionTitle}>Go To</h3>
+              <ul className="grid grid-cols-4 gap-2.5">
+                {APP_ROUTES.map(route => {
+                  const Icon = route.icon;
+                  const active = location.pathname === route.path;
+                  return (
+                    <li key={route.key}>
+                      <button
+                        type="button"
+                        aria-current={active ? 'page' : undefined}
+                        onClick={() => { onClose(); navigate(route.path, { viewTransition: !reducedMotion }); }}
+                        className={cn(
+                          'flex min-h-16 w-full flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2 text-caption font-bold transition-colors motion-reduce:transition-none',
+                          active
+                            ? 'border-sys-blue/40 bg-sys-blue/15 text-label'
+                            : 'border-white/8 bg-white/4 text-label-secondary hover:bg-white/8 hover:text-label',
+                        )}
+                      >
+                        <Icon size={18} aria-hidden="true" />
+                        <span>{route.label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          )}
 
           <section className="pt-6 pb-2.5">
             <h3 className={sectionTitle}>Filter Views</h3>
@@ -235,7 +269,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <LogOut size={18} />
             <span>Sign Out</span>
           </button>
-          <button
+          {isDebugEnabled() && <button
             type="button"
             onClick={() => { onClose(); navigate('/debug'); }}
             className="logout-pill w-[50px] justify-center bg-white/3 text-label-secondary hover:bg-white/8"
@@ -243,7 +277,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             title="System Logs"
           >
             <Terminal size={18} />
-          </button>
+          </button>}
         </div>
       </aside>
 

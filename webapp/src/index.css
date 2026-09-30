@@ -3,6 +3,7 @@
 @import "./styles/tokens.css";
 @import "./styles/themes.css";
 @import "./styles/glass.css";
+@import "./styles/layout.css";
 
 @layer base {
   :root {

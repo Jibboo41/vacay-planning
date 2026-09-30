@@ -29,6 +29,11 @@ import { buttonVariants } from './components/ui/variants';
 import { useUiStore } from './store/useUiStore';
 import { useHotkeys, isDialogOpen } from './hooks/useHotkeys';
 import { startNewItem } from './store/itemActions';
+import { useIsWide } from './hooks/useMediaQuery';
+import { DEFAULT_ROUTE, isDebugEnabled } from './app/routes';
+import TabBar from './components/TabBar';
+import SideRail from './components/layout/SideRail';
+import SplitPane from './components/layout/SplitPane';
 
 const RouteSkeleton = () => {
   const { pathname } = useLocation();
@@ -105,35 +110,53 @@ const GlobalShortcuts = () => {
   return null;
 };
 
+/** Which navigation chrome is visible; mirrored to `<html data-nav>` so fixed UI can offset itself in CSS. */
+type NavMode = 'none' | 'bottom' | 'rail';
+
 function MainLayout({ children }: { children: React.ReactNode }) {
-  const { currentTripId } = useTripStore();
-  const location = useLocation();
-  const [isWide, setIsWide] = useState(window.innerWidth >= 1000);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const userId = useTripStore(s => s.userId);
+  const initialized = useTripStore(s => s.initialized);
+  const collapsed = useUiStore(s => s.timelineCollapsed);
+  const { pathname } = useLocation();
+  const isWide = useIsWide();
+
+  const showNav = !!userId && pathname !== '/login';
+  const navMode: NavMode = !showNav ? 'none' : isWide ? 'rail' : 'bottom';
 
   useEffect(() => {
-    const handleResize = () => setIsWide(window.innerWidth >= 1000);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    document.documentElement.dataset.nav = navMode;
+  }, [navMode]);
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/trips';
+  if (navMode === 'none') {
+    return <div className="flex min-h-dvh w-full flex-1 flex-col">{children}</div>;
+  }
 
-  if (!isAuthPage && isWide && currentTripId) {
+  if (navMode === 'bottom') {
     return (
-      <div className="split-layout">
-        <div className="split-left">
-          <TimelineScreen />
-        </div>
-        <div className="split-right">
-          {location.pathname === '/timeline' ? <MapViewScreen /> : children}
-        </div>
+      <div className="flex min-h-dvh w-full flex-1 flex-col pb-(--bottom-nav-offset)">
+        {children}
+        <TabBar />
       </div>
     );
   }
 
+  const split = !!currentTripId && initialized && pathname !== '/trips' && pathname !== '/debug';
   return (
-    <div className="flex min-h-screen w-full flex-1 flex-col">
-      {children}
+    <div className="flex min-h-dvh w-full flex-1 flex-col pl-(--side-rail-w)">
+      <SideRail showTimelineToggle={split} />
+      {split ? (
+        <SplitPane
+          leftLabel="Timeline"
+          collapsed={collapsed}
+          left={<ErrorBoundary name="Timeline" resetKey={currentTripId}><TimelineScreen /></ErrorBoundary>}
+          right={pathname === '/timeline' && !collapsed
+            ? <ErrorBoundary name="Map" resetKey={pathname}><MapViewScreen /></ErrorBoundary>
+            : children}
+        />
+      ) : (
+        <div className="flex min-h-dvh w-full flex-1 flex-col">{children}</div>
+      )}
     </div>
   );
 }
@@ -262,8 +285,10 @@ function App() {
             <Route path="/weather" element={<ProtectedRoute name="Weather">{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute name="Notes">{currentTripId ? <NotesScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/packing" element={<ProtectedRoute name="Packing">{currentTripId ? <PackingScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/debug" element={<ProtectedRoute name="Debug"><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/timeline" replace />} />
+            {isDebugEnabled() && (
+              <Route path="/debug" element={<ProtectedRoute name="Debug"><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
+            )}
+            <Route path="*" element={<Navigate to={DEFAULT_ROUTE} replace />} />
           </Routes>
         </MainLayout>
       </div>
