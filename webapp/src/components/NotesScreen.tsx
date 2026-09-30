@@ -4,10 +4,11 @@ import { useTripStore } from '../store/useTripStore';
 import type { TripNote } from '../core/models';
 import { cn } from '../lib/cn';
 import Linkified from './Linkified';
-import { Button, Card, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
+import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
+import { deleteWithUndo } from '../store/deleteWithUndo';
 
 export default function NotesScreen() {
-  const { generalNotes, addGeneralNote, updateGeneralNote, deleteGeneralNote } = useTripStore();
+  const { generalNotes, addGeneralNote, updateGeneralNote } = useTripStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
@@ -38,7 +39,7 @@ export default function NotesScreen() {
   const commitEdit = () => {
     if (!editingId) return;
     if (!editTitle.trim() && !editContent.trim()) {
-      deleteGeneralNote(editingId);
+      deleteWithUndo('generalNotes', editingId, 'empty note');
       setEditingId(null);
       return;
     }
@@ -152,9 +153,18 @@ export default function NotesScreen() {
 
         <div className="flex flex-col gap-3">
           {generalNotes.length === 0 ? (
-            <Card padding="lg" className="flex flex-col items-center gap-4 text-center text-label-secondary">
-              <StickyNote size={48} className="opacity-20" />
-              <p className="text-body">No general notes. Jot down ideas, lists, and contacts here!</p>
+            <Card>
+              <EmptyState
+                icon={<StickyNote size={32} />}
+                title="No notes yet"
+                description="Capture ideas, confirmation details, links, and reference info for your trip."
+                action={(
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus size={18} />
+                    New note
+                  </Button>
+                )}
+              />
             </Card>
           ) : (
             generalNotes.map((note, index) => {
@@ -197,7 +207,7 @@ export default function NotesScreen() {
                           <IconButton aria-label="Edit note" variant="ghost" size="sm" onClick={() => startEdit(note)}>
                             <Pencil size={16} />
                           </IconButton>
-                          <IconButton aria-label="Delete note" variant="danger" size="sm" onClick={() => deleteGeneralNote(note.id)}>
+                          <IconButton aria-label="Delete note" variant="danger" size="sm" onClick={() => deleteWithUndo('generalNotes', note.id, note.title ? `"${note.title}"` : 'note')}>
                             <Trash2 size={16} />
                           </IconButton>
                           <button type="button" aria-label="Drag to reorder" className="drag-handle -ml-1 flex cursor-grab touch-none items-center border-0 bg-transparent px-1 py-2 text-label-tertiary" onTouchStart={(e) => handleGripTouchStart(e, index)}>

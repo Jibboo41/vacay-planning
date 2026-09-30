@@ -3,10 +3,13 @@ import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
+import { Loader, X, RefreshCw, ArrowRight, MapPin, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { ItineraryItem } from '../core/models';
 import { ITEM_TYPES, getItemTypeMeta } from '../core/itemTypes';
-import { Card, Badge, IconButton, ScreenHeader } from './ui';
+import { startNewItem } from '../store/itemActions';
+import { Badge, Button, Card, EmptyState, IconButton, ScreenHeader } from './ui';
+import { buttonVariants } from './ui/variants';
 
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
@@ -550,6 +553,40 @@ export default function MapViewScreen() {
         ]);
       }
     }
+  }
+
+  const hasItemsWithCoordinates = items.some(item => typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number');
+  const shouldShowEmptyState = items.length === 0 || !hasItemsWithCoordinates;
+
+  if (shouldShowEmptyState) {
+    return (
+      <div className="relative z-10 flex h-dvh w-full flex-col overflow-hidden">
+        <ScreenHeader
+          title="Destinations"
+          subtitle="No mapped stops"
+          className="absolute inset-x-0 top-0 z-[1000] bg-app-bg/45"
+        />
+        <div className="flex flex-1 items-center justify-center px-6 pt-[120px] pb-[120px]">
+          <Card className="w-full max-w-md">
+            <EmptyState
+              icon={<MapPin size={32} />}
+              title={items.length === 0 ? 'No itinerary items yet' : 'No mapped locations yet'}
+              description={items.length === 0 ? 'Add your first itinerary item to start mapping your trip.' : 'Your itinerary items do not have coordinates yet. Add or update locations from the timeline to show them on the map.'}
+              action={items.length === 0 ? (
+                <Button onClick={startNewItem}>
+                  <Plus size={18} />
+                  Add your first item
+                </Button>
+              ) : (
+                <Link to="/timeline" className={buttonVariants()}>
+                  Go to timeline
+                </Link>
+              )}
+            />
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -3,12 +3,13 @@ import { Check, CheckCircle2, Circle, GripVertical, Luggage, Package, Pencil, Pl
 import { useTripStore } from '../store/useTripStore';
 import type { PackingItem } from '../core/models';
 import { cn } from '../lib/cn';
-import { Button, Card, Field, IconButton, Input, ScreenHeader } from './ui';
+import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader } from './ui';
+import { deleteWithUndo } from '../store/deleteWithUndo';
 
 type PackingCategory = PackingItem['category'];
 
 export default function PackingScreen() {
-  const { packingItems, addPackingItem, updatePackingItem, togglePackingItem, deletePackingItem, reorderPackingItems } = useTripStore();
+  const { packingItems, addPackingItem, updatePackingItem, togglePackingItem, reorderPackingItems } = useTripStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newItemText, setNewItemText] = useState('');
   const [newCategory, setNewCategory] = useState<PackingCategory>('Luggage');
@@ -183,9 +184,18 @@ export default function PackingScreen() {
 
         <div className="flex flex-col gap-8" onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
           {packingItems.length === 0 ? (
-            <Card padding="lg" className="flex flex-col items-center gap-4 text-center text-label-secondary">
-              <Package size={48} className="opacity-20" />
-              <p className="text-body">Your packing list is empty. Start adding gear!</p>
+            <Card>
+              <EmptyState
+                icon={<Package size={32} />}
+                title="Your packing list is empty"
+                description="Add luggage, carry-on, and other gear so nothing gets left behind."
+                action={(
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus size={18} />
+                    Add an item
+                  </Button>
+                )}
+              />
             </Card>
           ) : (
             categories.map((category) => {
@@ -269,7 +279,7 @@ export default function PackingScreen() {
                                 <IconButton aria-label="Edit packing item" variant="ghost" size="sm" onClick={() => startEdit(item)}>
                                   <Pencil size={16} />
                                 </IconButton>
-                                <IconButton aria-label="Delete packing item" variant="danger" size="sm" onClick={() => deletePackingItem(item.id)}>
+                                <IconButton aria-label="Delete packing item" variant="danger" size="sm" onClick={() => deleteWithUndo('packingItems', item.id, `"${item.text}"`)}>
                                   <Trash2 size={16} />
                                 </IconButton>
                               </>

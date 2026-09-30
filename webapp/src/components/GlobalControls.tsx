@@ -8,11 +8,12 @@ const fabPanel = 'fab-options grid transform-none gap-2 rounded-panel border bor
 import type { ItineraryItem } from '../core/models';
 import AddItineraryModal from './modals/AddItineraryModal';
 import AddNoteModal from './modals/AddNoteModal';
+import { startNewItem } from '../store/itemActions';
 import EditItineraryModal from './modals/EditItineraryModal';
 import AiScoutModal from './modals/AiScoutModal';
 
 export default function GlobalControls() {
-  const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen } = useTripStore();
+  const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen, selectedDayKey } = useTripStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,8 +35,7 @@ export default function GlobalControls() {
   };
 
   const getActiveDayKey = () => {
-    const earliest = getEarliestDate();
-    return earliest.split('T')[0];
+    return selectedDayKey ?? getEarliestDate().split('T')[0];
   };
 
   const currentIcon = useMemo(() => {
@@ -73,16 +73,7 @@ export default function GlobalControls() {
           <NavButton 
             icon={<PenLine size={20} />} label="Manual" 
             onClick={() => {
-              const newItem: ItineraryItem = {
-                id: `manual-${Date.now()}`,
-                type: 'activity',
-                title: 'New Activity',
-                startDate: getEarliestDate(),
-                location: { name: 'TBD', address: 'Location TBD', latitude: null, longitude: null }
-              };
-              addItem(newItem);
-              setEditItem(newItem);
-              setEditVisible(true);
+              startNewItem();
               setIsSparkleOpen(false);
             }} 
             isActive={false} 

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Trash2, Compass } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 import type { ItineraryItem } from '../core/models';
 import { cn } from '../lib/cn';
-import { Button, Card, IconButton, Input, Modal } from './ui';
+import { Button, Card, EmptyState, IconButton, Input, Modal } from './ui';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown error';
@@ -26,7 +26,9 @@ const TripSelector: React.FC = () => {
   
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [pendingDeleteTripId, setPendingDeleteTripId] = useState<string | null>(null);
   const renameTrip = useTripStore(s => s.renameTrip);
+  const pendingDeleteTrip = trips.find(trip => trip.id === pendingDeleteTripId);
 
   const handleStartRename = (e: React.MouseEvent, id: string, title: string) => {
     e.stopPropagation();
@@ -93,9 +95,13 @@ const TripSelector: React.FC = () => {
 
   const handleDeleteTrip = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this trip?')) {
-      deleteTrip(id);
-    }
+    setPendingDeleteTripId(id);
+  };
+
+  const handleConfirmDeleteTrip = () => {
+    if (!pendingDeleteTripId) return;
+    deleteTrip(pendingDeleteTripId);
+    setPendingDeleteTripId(null);
   };
 
   const handleDuplicateTrip = async (e: React.MouseEvent, id: string) => {
@@ -129,9 +135,19 @@ const TripSelector: React.FC = () => {
       <main className="px-6 pb-[120px] pt-6">
         <div className="flex flex-col gap-4">
         {trips.length === 0 ? (
-          <div className="mb-6 rounded-panel border-2 border-dashed border-white/5 p-10 text-center text-label-tertiary">
-            <p>No trips yet. Plan your first adventure!</p>
-          </div>
+          <Card className="mb-2">
+            <EmptyState
+              icon={<Compass size={32} />}
+              title="No trips yet"
+              description="Create a trip to start planning your itinerary, notes, costs, and packing list."
+              action={(
+                <Button onClick={() => setIsAdding(true)}>
+                  <Plus size={18} />
+                  Create your first trip
+                </Button>
+              )}
+            />
+          </Card>
         ) : (
           trips.map(trip => (
             <Card
@@ -245,6 +261,23 @@ const TripSelector: React.FC = () => {
                 className="text-[16px]"
               />
             </form>
+      </Modal>
+
+      <Modal
+        open={!!pendingDeleteTripId}
+        onClose={() => setPendingDeleteTripId(null)}
+        title="Delete trip?"
+        variant="center"
+        footer={(
+          <>
+            <Button variant="secondary" onClick={() => setPendingDeleteTripId(null)} className="flex-1">Cancel</Button>
+            <Button variant="danger" onClick={handleConfirmDeleteTrip} className="flex-1">Delete</Button>
+          </>
+        )}
+      >
+        <p className="text-body leading-[1.5] text-label-secondary">
+          This will permanently delete {pendingDeleteTrip ? <span className="font-bold text-label">&quot;{pendingDeleteTrip.title}&quot;</span> : 'this trip'} and all of its itinerary items, notes, costs, and lists.
+        </p>
       </Modal>
     </div>
   );

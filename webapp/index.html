@@ -19,12 +19,24 @@
   </head>
   <body>
     <script>
+      // Last-resort fatal screen. Only used when the React app failed to mount
+      // (empty #root); once mounted, render errors are handled by React error
+      // boundaries and recoverable errors surface as banners/toasts.
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
       window.onerror = function(msg, url, lineNo, columnNo, error) {
         var root = document.getElementById('root');
+        if (root && root.childElementCount > 0) {
+          console.error('Uncaught error:', error || msg);
+          return false;
+        }
         if (root) {
           var errorName = error ? (error.name + ': ') : '';
-          var fullMessage = errorName + (error ? error.message : msg);
-          var stack = error ? error.stack : '';
+          var fullMessage = escapeHtml(errorName + (error ? error.message : msg));
+          var stack = error && error.stack ? escapeHtml(error.stack) : '';
           
           // Handle "Script error." which is generic due to CORS or browser interrupts (common on iOS Share)
           if (msg === 'Script error.' || (!url && lineNo === 0)) {
@@ -42,7 +54,7 @@
             '<h1 style="color:#FF3B30;font-size:18px;font-weight:800;letter-spacing:0.05em;margin:0 0 10px 0;">SYSTEM FATAL ERROR</h1>' +
             '<p style="font-size:14px;line-height:1.6;color:#fafafa;max-width:500px;margin:0 auto 20px auto;">' + fullMessage + '</p>' +
             (stack ? '<div style="font-size:10px;color:#888;background:rgba(255,255,255,0.05);padding:15px;border-radius:12px;text-align:left;max-width:90%;overflow:auto;max-height:200px;margin-bottom:30px;font-family:monospace;white-space:pre-wrap;">' + stack + '</div>' : '') +
-            '<p style="font-size:11px;color:#555;margin-bottom:30px;">' + (url || 'unknown-file') + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
+            '<p style="font-size:11px;color:#555;margin-bottom:30px;">' + escapeHtml(url || 'unknown-file') + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
             '<button onclick="window.location.reload()" style="padding:14px 28px;background:#fff;color:#000;border:none;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,0.3);">RELOAD APP</button>' +
             '</div>';
         }

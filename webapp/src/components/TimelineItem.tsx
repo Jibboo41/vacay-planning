@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MapPin, GripVertical, ChevronDown, ChevronUp, Hash, DollarSign, CreditCard, Trash2, Globe } from 'lucide-react';
+import React, { useId, useState } from 'react';
+import { MapPin, GripVertical, ChevronDown, ChevronUp, Hash, DollarSign, CreditCard, Trash2, Globe, Copy, Navigation, CalendarPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -7,6 +7,11 @@ import { getEventLabel, getItemTone, getItemTypeMeta } from '../core/itemTypes';
 import { cn } from '../lib/cn';
 import Linkified from './Linkified';
 import { Button, IconButton, LinkChip } from './ui';
+import { deleteWithUndo } from '../store/deleteWithUndo';
+import { dayDiff, getDayKey, getDayLabel, getTimeLabel, nightsBetween } from '../utils/dates';
+import { getDirectionsUrl } from '../utils/itinerary';
+import { downloadIcs } from '../utils/ics';
+import { toast } from '../store/useToastStore';
 
 interface TimelineItemProps {
   item: ItineraryItem;
@@ -20,6 +25,7 @@ interface TimelineItemProps {
 
 export default function TimelineItem({ item, onPress, onGripTouchStart, isCheckout = false, groupPosition }: TimelineItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const detailsId = useId();
   const navigate = useNavigate();
   const setFocusedLocation = useTripStore(s => s.setFocusedLocation);
   const tintedBackgrounds = useTripStore(s => s.tintedBackgrounds);
@@ -33,7 +39,28 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
   const shortLabel = isCheckout ? meta.endShort : meta.startShort;
   const canExpand = !(item.type === 'note' && !item.confirmationNumber && item.cost === undefined && item.paidAmount === undefined);
 
-  const toggleExpanded = () => setIsExpanded(v => !v);
+  const directionsUrl = getDirectionsUrl(item.location);
+
+  const toggleExpanded = () => {
+    if (canExpand) setIsExpanded(v => !v);
+  };
+
+  const copyConfirmation = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!item.confirmationNumber) return;
+    try {
+      await navigator.clipboard.writeText(item.confirmationNumber);
+      toast.success('Confirmation number copied');
+    } catch {
+      toast.error('Could not copy confirmation number');
+    }
+  };
+
+  const addToCalendar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    downloadIcs(item);
+    toast.success('Calendar file downloaded');
+  };
 
   const openLocation = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,16 +96,25 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         groupPosition === 'start' && 'z-[2]',
         groupPosition === 'middle' && 'z-[1]',
       )}
-      onClick={toggleExpanded}
     >
       {(groupPosition === 'middle' || groupPosition === 'end') && (
         <div className="absolute inset-x-0 top-0 z-[5] h-px bg-white/5" />
       )}
 
       <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
+        <button
+          type="button"
+          className={cn(
+            '-ml-2 flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-control px-2 text-left transition-colors hover:bg-white/6 motion-reduce:transition-none',
+            !canExpand && 'cursor-default hover:bg-transparent',
+          )}
+          aria-expanded={canExpand ? isExpanded : undefined}
+          aria-controls={canExpand ? detailsId : undefined}
+          onClick={toggleExpanded}
+          disabled={!canExpand}
+        >
           <span className="whitespace-nowrap text-caption font-extrabold tracking-wide text-label-secondary">
-            {getDayLabel(eventDate)}
+            {getDayLabel(eventDate, 'long')}
           </span>
 
           {(() => {
@@ -101,7 +137,12 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               </div>
             );
           })()}
-        </div>
+          {canExpand && (
+            <span className="ml-auto shrink-0 text-label-secondary opacity-70">
+              {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            </span>
+          )}
+        </button>
 
         <div className="flex items-center gap-2">
           <div className="flex min-w-0 items-center gap-1.5">
@@ -110,7 +151,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               {item.type !== 'food' && ` ${getTimeLabel(eventDate)}`}
               {(() => {
                 if (item.type === 'hotel' && !isCheckout && item.endDate) {
-                  const nDays = Math.round((new Date(item.endDate).getTime() - new Date(item.startDate).getTime()) / (1000 * 60 * 60 * 24));
+                  const nDays = nightsBetween(item.startDate, item.endDate);
                   if (nDays > 0) return ` (${nDays} ${nDays === 1 ? 'night' : 'nights'})`;
                 }
                 return '';
@@ -120,12 +161,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               <div className="whitespace-nowrap rounded-chip bg-white/6 px-2 py-0.5 text-caption font-bold text-label-secondary">
                 {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
                 {(() => {
-                  const s = item.startDate.split('T')[0];
-                  const e = item.endDate.split('T')[0];
-                  if (s === e) return null;
-                  const d1 = new Date(s);
-                  const d2 = new Date(e);
-                  const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
+                  const diff = dayDiff(item.startDate, item.endDate);
                   return diff > 0 ? <span className="ml-0.5 text-sys-blue">+{diff}</span> : null;
                 })()}
               </div>
@@ -169,21 +205,6 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           )}
         </div>
 
-        {canExpand && (
-          <IconButton
-            aria-label={isExpanded ? 'Hide details' : 'Show details'}
-            aria-expanded={isExpanded}
-            variant="ghost"
-            size="sm"
-            className="z-10 shrink-0 opacity-60"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleExpanded();
-            }}
-          >
-            {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </IconButton>
-        )}
       </div>
 
       {item.type === 'note' && item.description && (
@@ -193,18 +214,18 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       )}
 
       {isExpanded && (
-        <div className="expand-content mt-5 border-t border-white/5 pt-4">
+        <div id={detailsId} className="expand-content mt-5 border-t border-white/5 pt-4">
           {isCheckout ? (
             <div className="mb-4 flex items-center gap-2">
               <div className="rounded-chip bg-type-hotel/10 px-2 py-0.5 text-caption font-bold text-type-hotel">
                 {item.type === 'hotel' ? 'CHECK-IN' : 'PICKUP'} {getTimeLabel(item.startDate)}
-                {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
+                {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate, 'long')})`}
               </div>
             </div>
           ) : (item.type === 'hotel' || item.type === 'rental-car') && item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) ? (
             <div className="mb-4 flex items-center gap-2">
               <div className="rounded-chip bg-white/6 px-2 py-0.5 text-caption font-bold text-label-secondary">
-                {item.type === 'hotel' ? 'CHECK-OUT' : 'RETURN'} {getTimeLabel(item.endDate)} ({getDayLabel(item.endDate)})
+                {item.type === 'hotel' ? 'CHECK-OUT' : 'RETURN'} {getTimeLabel(item.endDate)} ({getDayLabel(item.endDate, 'long')})
               </div>
             </div>
           ) : null}
@@ -237,12 +258,28 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           )}
 
           {item.confirmationNumber && (
-            <div className="mb-3 flex items-center gap-2 text-footnote text-label-secondary">
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-footnote text-label-secondary">
               <Hash size={14} />
               <span className="font-semibold">Confirmation:</span>
               <span className="font-bold text-label">{item.confirmationNumber}</span>
+              <Button variant="secondary" size="md" className="min-h-11 px-3" onClick={copyConfirmation}>
+                <Copy size={15} />
+                Copy
+              </Button>
             </div>
           )}
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {directionsUrl && (
+              <LinkChip href={directionsUrl} tone="blue" icon={<Navigation size={13} />} className="min-h-11">
+                Directions
+              </LinkChip>
+            )}
+            <Button variant="secondary" size="md" className="min-h-11" onClick={addToCalendar}>
+              <CalendarPlus size={16} />
+              Add to calendar
+            </Button>
+          </div>
 
           {(item.type === 'hotel' || item.type === 'rental-car' || item.type === 'flight') && (item.hotelDetails || item.rentalDetails || item.flightDetails) && (
             <div className="mb-4 flex flex-wrap gap-2">
@@ -297,9 +334,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               variant="danger"
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm(`Delete "${item.title}"?`)) {
-                  useTripStore.getState().deleteItem(item.id);
-                }
+                deleteWithUndo('items', item.id, `"${item.title}"`);
               }}
             >
               <Trash2 size={18} />
@@ -309,30 +344,4 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       )}
     </div>
   );
-}
-
-function getDayLabel(dateString: string) {
-  if (!dateString) return 'DATE TBD';
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return 'DATE TBD';
-  return d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
-}
-
-function getTimeLabel(dateString: string) {
-  if (!dateString.includes('T')) return '';
-  const d = new Date(dateString);
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
-function getDayKey(dateString: string) {
-  if (!dateString) return '';
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return dateString.split('T')[0];
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }

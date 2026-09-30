@@ -3,11 +3,12 @@ import { Save, Trash2 } from 'lucide-react';
 import { useTripStore } from '../../store/useTripStore';
 import type { Expense } from '../../core/models';
 import { Button, Field, IconButton, Input, Select, Sheet } from '../ui';
+import { deleteWithUndo } from '../../store/deleteWithUndo';
 
 const EXPENSE_CATEGORIES: Expense['category'][] = ['Car Rental', 'Flights', 'Gas', 'Dining', 'Lodging', 'Souvenirs', 'Other'];
 
 export default function EditManualExpenseModal() {
-  const { editingExpense, updateExpense, deleteExpense, setEditingExpense } = useTripStore();
+  const { editingExpense, updateExpense, setEditingExpense } = useTripStore();
 
   if (!editingExpense) return null;
 
@@ -20,8 +21,8 @@ export default function EditManualExpenseModal() {
         await updateExpense(id, updates);
         setEditingExpense(null);
       }}
-      onDelete={async id => {
-        await deleteExpense(id);
+      onDelete={id => {
+        deleteWithUndo('expenses', id, `"${editingExpense.title}"`);
         setEditingExpense(null);
       }}
     />
@@ -32,7 +33,7 @@ interface ExpenseEditorProps {
   expense: Expense;
   onClose: () => void;
   onSave: (id: string, updates: Partial<Expense>) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (id: string) => void;
 }
 
 function ExpenseEditor({ expense, onClose, onSave, onDelete }: ExpenseEditorProps) {
@@ -56,10 +57,8 @@ function ExpenseEditor({ expense, onClose, onSave, onDelete }: ExpenseEditorProp
     });
   };
 
-  const handleDelete = async () => {
-    if (confirm('Delete this expense?')) {
-      await onDelete(expense.id);
-    }
+  const handleDelete = () => {
+    onDelete(expense.id);
   };
 
   return (

@@ -5,7 +5,7 @@ import { useTripStore } from '../store/useTripStore';
 import type { Expense } from '../core/models';
 import { getItemTypeMeta } from '../core/itemTypes';
 import { cn } from '../lib/cn';
-import { Button, Card, IconButton, Input, Select } from './ui';
+import { Button, Card, EmptyState, IconButton, Input, Select } from './ui';
 
 const EXPENSE_CATEGORIES: Expense['category'][] = [
   'Car Rental', 'Flights', 'Gas', 'Dining', 'Lodging', 'Souvenirs', 'Other'
@@ -231,7 +231,21 @@ export default function CostTrackerScreen() {
         )}
 
         <div className="flex flex-col gap-3">
-          {allExpenses.map((exp: Expense) => {
+          {allExpenses.length === 0 ? (
+            <Card>
+              <EmptyState
+                icon={<Wallet size={32} />}
+                title="No expenses yet"
+                description="Track manual expenses here, alongside any itinerary items with costs."
+                action={(
+                  <Button onClick={() => setShowAdd(true)}>
+                    <Plus size={18} />
+                    Add an expense
+                  </Button>
+                )}
+              />
+            </Card>
+          ) : allExpenses.map((exp: Expense) => {
             const categoryClass = CATEGORY_CLASSES[exp.category];
             return (
               <button

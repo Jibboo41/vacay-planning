@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { StickyNote, GripVertical, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import { cn } from '../lib/cn';
 import Linkified from './Linkified';
 import { Button, IconButton } from './ui';
+import { deleteWithUndo } from '../store/deleteWithUndo';
 
 interface NoteCardProps {
   item: ItineraryItem;
@@ -14,6 +14,7 @@ interface NoteCardProps {
 
 export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const detailsId = useId();
 
   return (
     <div
@@ -21,12 +22,22 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
         'glass-card fade-in relative mx-4 mb-3 overflow-hidden rounded-2xl border-l-4 border-type-note p-4 transition-all duration-300 ease-ios motion-reduce:transition-none',
         isExpanded ? 'expanded max-h-[800px] bg-white/5' : 'max-h-[120px]',
       )}
-      onClick={() => setIsExpanded(v => !v)}
     >
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="rounded-chip bg-white/5 px-2 py-0.5 text-caption font-extrabold tracking-wide text-label-secondary">
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          aria-controls={detailsId}
+          className="-ml-2 flex min-h-11 min-w-0 flex-1 items-center rounded-control px-2 text-left transition-colors hover:bg-white/6 motion-reduce:transition-none"
+          onClick={() => setIsExpanded(v => !v)}
+        >
+          <span className="truncate rounded-chip bg-white/5 px-2 py-0.5 text-caption font-extrabold tracking-wide text-label-secondary">
           {item.title.toUpperCase()}
-        </span>
+          </span>
+          <span className="ml-auto shrink-0 text-label-secondary opacity-60">
+            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </span>
+        </button>
         <button
           type="button"
           aria-label="Drag to reorder"
@@ -51,23 +62,10 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
           )}
         </div>
 
-        <IconButton
-          aria-label={isExpanded ? 'Hide details' : 'Show details'}
-          aria-expanded={isExpanded}
-          variant="ghost"
-          size="sm"
-          className="opacity-60"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsExpanded(v => !v);
-          }}
-        >
-          {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </IconButton>
       </div>
 
       {isExpanded && (
-        <div className="mt-4 border-t border-white/5 pt-4">
+        <div id={detailsId} className="mt-4 border-t border-white/5 pt-4">
           <div className="flex gap-2">
             <Button block onClick={(e) => { e.stopPropagation(); onPress(); }}>
               Edit Note
@@ -77,9 +75,7 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
               variant="danger"
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm(`Delete "${item.title}"?`)) {
-                  useTripStore.getState().deleteItem(item.id);
-                }
+                deleteWithUndo('items', item.id, `"${item.title}"`);
               }}
             >
               <Trash2 size={18} />

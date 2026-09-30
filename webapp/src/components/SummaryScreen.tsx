@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
-import { MapPin, Sparkles, Loader, ArrowRight, Gauge, Ruler, Activity, Timer } from 'lucide-react';
+import { MapPin, Sparkles, Loader, ArrowRight, Gauge, Ruler, Activity, Timer, CalendarPlus } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import { getItemTone, getItemTypeMeta } from '../core/itemTypes';
+import { startNewItem } from '../store/itemActions';
 import Linkified from './Linkified';
-import { Badge, Card, ScreenHeader } from './ui';
+import { Badge, Button, Card, EmptyState, ScreenHeader } from './ui';
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -287,9 +288,19 @@ export default function SummaryScreen() {
 
       <main className="relative px-5 pb-[100px]">
         {dayGroups.length === 0 ? (
-          <div className="px-5 py-[60px] text-center text-label-secondary">
-            <p className="m-0 text-[15px]">No items in your itinerary yet.</p>
-          </div>
+          <Card className="mt-5">
+            <EmptyState
+              icon={<CalendarPlus size={32} />}
+              title="No itinerary items yet"
+              description="Start building your trip outline by adding your first stop, stay, meal, or activity."
+              action={(
+                <Button onClick={startNewItem}>
+                  <CalendarPlus size={18} />
+                  Add your first item
+                </Button>
+              )}
+            />
+          </Card>
         ) : (
           <div className="relative mt-5">
             

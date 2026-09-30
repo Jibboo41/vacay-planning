@@ -3,10 +3,11 @@ import { Check, CheckCircle2, CheckSquare, Circle, GripVertical, Pencil, Plus, T
 import { useTripStore } from '../store/useTripStore';
 import type { TodoItem } from '../core/models';
 import { cn } from '../lib/cn';
-import { Button, Card, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
+import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
+import { deleteWithUndo } from '../store/deleteWithUndo';
 
 export default function TodoScreen() {
-  const { todos, addTodo, updateTodo, toggleTodo, deleteTodo, reorderTodos } = useTripStore();
+  const { todos, addTodo, updateTodo, toggleTodo, reorderTodos } = useTripStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
@@ -181,9 +182,18 @@ export default function TodoScreen() {
 
         <div className="flex flex-col gap-2.5" onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
           {todos.length === 0 ? (
-            <Card padding="lg" className="flex flex-col items-center gap-4 text-center text-label-secondary">
-              <CheckSquare size={48} className="opacity-20" />
-              <p className="text-body">No tasks yet. Stay organized for your trip!</p>
+            <Card>
+              <EmptyState
+                icon={<CheckSquare size={32} />}
+                title="No tasks yet"
+                description="Keep pre-trip errands, reservations, and reminders organized in one checklist."
+                action={(
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus size={18} />
+                    Add a task
+                  </Button>
+                )}
+              />
             </Card>
           ) : (
             todos.map((todo, index) => {
@@ -282,7 +292,7 @@ export default function TodoScreen() {
                         <IconButton aria-label="Edit task" variant="ghost" size="sm" onClick={() => startEdit(todo)}>
                           <Pencil size={16} />
                         </IconButton>
-                        <IconButton aria-label="Delete task" variant="danger" size="sm" onClick={() => deleteTodo(todo.id)}>
+                        <IconButton aria-label="Delete task" variant="danger" size="sm" onClick={() => deleteWithUndo('todos', todo.id, `"${todo.text}"`)}>
                           <Trash2 size={16} />
                         </IconButton>
                       </>

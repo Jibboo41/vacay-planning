@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Thermometer, RefreshCw, AlertCircle, MapPin, Droplets, Snowflake, CloudSun, X } from 'lucide-react';
+import { Thermometer, RefreshCw, AlertCircle, MapPin, Droplets, Snowflake, CloudSun, X, Plus } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem, WeatherDay } from '../core/models';
 import { cn } from '../lib/cn';
-import { IconButton, Modal, ScreenHeader, Skeleton } from './ui';
+import { startNewItem } from '../store/itemActions';
+import { Button, Card, EmptyState, IconButton, Modal, ScreenHeader, Skeleton } from './ui';
 
 type DailyWeatherLocation = { date: string; lat: number; lon: number; name: string };
 type ItemWithCoordinates = ItineraryItem & {
@@ -206,10 +207,19 @@ export default function WeatherScreen() {
 
       <div className="px-4 pt-4 pb-[120px]">
         {dailyLocations.length === 0 ? (
-          <div className="flex flex-col items-center gap-4 px-5 py-[60px] text-center text-label-secondary">
-            <AlertCircle size={48} opacity={0.2} />
-            <p className="text-body">Add a location with coordinates to see the weather forecast.</p>
-          </div>
+          <Card>
+            <EmptyState
+              icon={<CloudSun size={32} />}
+              title={items.length === 0 ? 'No itinerary items yet' : 'No forecast locations yet'}
+              description={items.length === 0 ? 'Add your first itinerary item to start building a weather forecast.' : 'Add coordinates to a hotel, hike, or activity to see the weather forecast.'}
+              action={(
+                <Button onClick={startNewItem}>
+                  <Plus size={18} />
+                  {items.length === 0 ? 'Add your first item' : 'Add an itinerary item'}
+                </Button>
+              )}
+            />
+          </Card>
         ) : (
           <div className="flex flex-col gap-4">
             {error && (
