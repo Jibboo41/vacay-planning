@@ -1,4 +1,6 @@
-import { useRef, useState, type DragEvent, type TouchEvent } from 'react';
+import { useMemo, useState } from 'react';
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type Announcements, type DragEndEvent, type ScreenReaderInstructions } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { GripVertical, Pencil, Plus, StickyNote, Trash2 } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { TripNote } from '../core/models';
@@ -6,9 +8,10 @@ import { cn } from '../lib/cn';
 import Linkified from './Linkified';
 import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
 import { deleteWithUndo } from '../store/deleteWithUndo';
+import { SortableListItem } from './SortableList';
 
 export default function NotesScreen() {
-  const { generalNotes, addGeneralNote, updateGeneralNote } = useTripStore();
+  const { generalNotes, addGeneralNote, updateGeneralNote, reorderGeneralNotes } = useTripStore();
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
@@ -16,11 +19,11 @@ export default function NotesScreen() {
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
 
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const touchDragIndex = useRef<number | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleAdd = () => {
     if (!newTitle.trim() && !newContent.trim()) return;
@@ -47,63 +50,29 @@ export default function NotesScreen() {
     setEditingId(null);
   };
 
-  const handleDragStart = (e: DragEvent, index: number) => {
-    dragItem.current = index;
-    setDraggingIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  const announcements = useMemo<Announcements>(() => {
+    const getNoteLabel = (id: string | number) => {
+      const note = generalNotes.find((candidate) => candidate.id === id);
+      return note?.title || note?.content || 'note';
+    };
+    return {
+      onDragStart: ({ active }) => `Picked up ${getNoteLabel(active.id)}.`,
+      onDragOver: ({ active, over }) => over ? `${getNoteLabel(active.id)} is over ${getNoteLabel(over.id)}.` : undefined,
+      onDragEnd: ({ active, over }) => over ? `Moved ${getNoteLabel(active.id)} before ${getNoteLabel(over.id)}.` : `Dropped ${getNoteLabel(active.id)}.`,
+      onDragCancel: ({ active }) => `Reordering cancelled for ${getNoteLabel(active.id)}.`,
+    };
+  }, [generalNotes]);
 
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setOverIndex(index);
-  };
+  const screenReaderInstructions = useMemo<ScreenReaderInstructions>(() => ({
+    draggable: 'Press Space or Enter on the reorder button to pick up an item, use arrow keys to move it, then press Space or Enter to drop.',
+  }), []);
 
-  const handleDragEnd = () => {
-    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-      const ordered = [...generalNotes];
-      const [dragged] = ordered.splice(dragItem.current, 1);
-      ordered.splice(dragOverItem.current, 0, dragged);
-      useTripStore.getState().reorderGeneralNotes(ordered);
-    }
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
-  };
-
-  const handleGripTouchStart = (e: TouchEvent, index: number) => {
-    e.stopPropagation();
-    touchDragIndex.current = index;
-    setDraggingIndex(index);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (touchDragIndex.current === null) return;
-    if (e.cancelable) e.preventDefault();
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    const itemEl = target?.closest('[data-note-item]');
-
-    if (itemEl) {
-      const elements = Array.from(document.querySelectorAll('[data-note-item]'));
-      const newOver = elements.indexOf(itemEl);
-      if (newOver !== -1 && newOver !== overIndex) {
-        setOverIndex(newOver);
-        if ('vibrate' in navigator) navigator.vibrate(5);
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchDragIndex.current !== null && overIndex !== null && overIndex !== touchDragIndex.current) {
-      const ordered = [...generalNotes];
-      const [dragged] = ordered.splice(touchDragIndex.current, 1);
-      ordered.splice(overIndex, 0, dragged);
-      useTripStore.getState().reorderGeneralNotes(ordered);
-    }
-    touchDragIndex.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = generalNotes.findIndex((note) => note.id === active.id);
+    const newIndex = generalNotes.findIndex((note) => note.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    reorderGeneralNotes(arrayMove(generalNotes, oldIndex, newIndex));
   };
 
   return (
@@ -116,7 +85,7 @@ export default function NotesScreen() {
         </p>
       </div>
 
-      <div className={cn('px-6 pb-[120px]', draggingIndex !== null ? 'touch-none' : 'touch-auto')} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      <div className="px-6 pb-[120px]">
         {!showAddForm ? (
           <Button onClick={() => setShowAddForm(true)} block size="lg" className="mb-6">
             <Plus size={20} />
@@ -167,25 +136,22 @@ export default function NotesScreen() {
               />
             </Card>
           ) : (
-            generalNotes.map((note, index) => {
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} accessibility={{ announcements, screenReaderInstructions }}>
+              <SortableContext items={generalNotes.map((note) => note.id)} strategy={verticalListSortingStrategy}>
+                {generalNotes.map((note) => {
               const isEditing = editingId === note.id;
-              const isDragging = draggingIndex === index;
-              const isOver = overIndex === index;
 
               return (
+                <SortableListItem key={note.id} id={note.id} disabled={isEditing}>
+                  {({ attributes, isDragging, listeners, setActivatorNodeRef, setNodeRef, style }) => (
                 <Card
-                  key={note.id}
+                  ref={setNodeRef}
+                  style={style}
                   data-note-item
-                  draggable={!isEditing}
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnter={() => handleDragEnter(index)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDragEnd={handleDragEnd}
                   className={cn(
                     'flex flex-col gap-3 rounded-card border p-5 transition-all duration-150 ease-ios shadow-[0_4px_12px_rgba(0,0,0,0.1)]',
-                    isEditing ? 'border-sys-blue/40' : isOver ? 'border-sys-blue shadow-[0_8px_24px_rgba(10,132,255,0.2)]' : 'border-white/8',
-                    isDragging && 'opacity-40',
-                    isOver && draggingIndex !== null && (draggingIndex > index ? '-translate-y-1' : 'translate-y-1'),
+                    isEditing ? 'border-sys-blue/40' : 'border-white/8',
+                    isDragging && 'z-[2] scale-[1.02] opacity-40 shadow-[0_8px_24px_rgba(10,132,255,0.2)]',
                   )}
                 >
                   {isEditing ? (
@@ -210,7 +176,14 @@ export default function NotesScreen() {
                           <IconButton aria-label="Delete note" variant="danger" size="sm" onClick={() => deleteWithUndo('generalNotes', note.id, note.title ? `"${note.title}"` : 'note')}>
                             <Trash2 size={16} />
                           </IconButton>
-                          <button type="button" aria-label="Drag to reorder" className="drag-handle -ml-1 flex cursor-grab touch-none items-center border-0 bg-transparent px-1 py-2 text-label-tertiary" onTouchStart={(e) => handleGripTouchStart(e, index)}>
+                          <button
+                            ref={setActivatorNodeRef}
+                            type="button"
+                            aria-label={`Reorder ${note.title || 'note'}`}
+                            {...attributes}
+                            {...listeners}
+                            className="drag-handle -ml-1 flex cursor-grab touch-none items-center border-0 bg-transparent px-1 py-2 text-label-tertiary"
+                          >
                             <GripVertical size={18} />
                           </button>
                         </div>
@@ -224,8 +197,12 @@ export default function NotesScreen() {
                     </>
                   )}
                 </Card>
+                  )}
+                </SortableListItem>
               );
-            })
+                })}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>

@@ -30,6 +30,10 @@ function filterTypesForGroup(group: FilterGroup) {
   return ALL_FILTER_TYPES.filter((type) => ITEM_TYPES[type].filterGroup === group);
 }
 
+function getTimelineDragId(item: Pick<RenderedTimelineItem, 'id' | 'type' | '_isCheckout'>) {
+  return item.id + (item._isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
+}
+
 // ─── Draggable Card Wrapper ───────────────────────────────────────────────────
 
 interface DraggableCardProps {
@@ -44,6 +48,7 @@ interface DraggableCardProps {
   onDrop: (overId: string) => void;
   // iOS touch
   onGripTouchStart: (id: string) => void;
+  onGripKeyDown: (id: string, title: string, e: React.KeyboardEvent<HTMLButtonElement>) => void;
   groupPosition?: 'start' | 'middle' | 'end' | 'single';
   isHighlighted?: boolean;
 }
@@ -51,13 +56,14 @@ interface DraggableCardProps {
 function DraggableCard({
   item, isDragging, isDropTarget, onPress,
   onDragStart, onDragEnter, onDragEnd, onDrop,
-  onGripTouchStart, isCheckout, groupPosition, isHighlighted
+  onGripTouchStart, onGripKeyDown, isCheckout, groupPosition, isHighlighted
 }: DraggableCardProps & { isCheckout?: boolean }) {
   const dragId = item.id + (isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
   const gripHandler = (e: React.TouchEvent) => {
     e.preventDefault();
     onGripTouchStart(dragId);
   };
+  const gripKeyHandler = (e: React.KeyboardEvent<HTMLButtonElement>) => onGripKeyDown(dragId, item.title, e);
 
   return (
     <div
@@ -84,12 +90,20 @@ function DraggableCard({
       )}
 
       {item.type === 'note' ? (
-        <NoteCard item={item} onPress={onPress} onGripTouchStart={gripHandler} />
+        <NoteCard
+          item={item}
+          onPress={onPress}
+          onGripTouchStart={gripHandler}
+          onGripKeyDown={gripKeyHandler}
+          reorderGripId={dragId}
+        />
       ) : (
         <TimelineItem 
           item={item} 
           onPress={onPress} 
           onGripTouchStart={gripHandler} 
+          onGripKeyDown={gripKeyHandler}
+          reorderGripId={dragId}
           isCheckout={isCheckout} 
           groupPosition={groupPosition}
         />
@@ -110,6 +124,8 @@ export default function TimelineScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [pendingFocusItemId, setPendingFocusItemId] = useState<string | null>(null);
+  const [pendingGripFocus, setPendingGripFocus] = useState<{ dragId: string; title: string } | null>(null);
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('');
   const [headerHeight, setHeaderHeight] = useState(140);
   const [todayHeaderVisible, setTodayHeaderVisible] = useState(false);
   const isScrollingToDay = useRef(false);
@@ -170,6 +186,31 @@ export default function TimelineScreen() {
 
     return groups;
   }, [activeFilters, items, searchQuery]);
+
+  const findRenderedEntry = useCallback((dragId: string) => {
+    for (let groupIndex = 0; groupIndex < dayGroups.length; groupIndex += 1) {
+      const group = dayGroups[groupIndex];
+      const itemIndex = group.items.findIndex(item => getTimelineDragId(item) === dragId);
+      if (itemIndex !== -1) return { group, groupIndex, itemIndex };
+    }
+    return null;
+  }, [dayGroups]);
+
+  useEffect(() => {
+    if (!pendingGripFocus) return;
+    const frame = requestAnimationFrame(() => {
+      const grip = Array.from(document.querySelectorAll<HTMLElement>('[data-reorder-grip-id]'))
+        .find(el => el.dataset.reorderGripId === pendingGripFocus.dragId);
+      grip?.focus({ preventScroll: true });
+
+      const entry = findRenderedEntry(pendingGripFocus.dragId);
+      if (entry) {
+        setReorderAnnouncement(`Moved ${pendingGripFocus.title} to ${entry.group.label}, position ${entry.itemIndex + 1}`);
+      }
+      setPendingGripFocus(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [findRenderedEntry, pendingGripFocus]);
 
   const getScrollContainer = useCallback(() => {
     return document.querySelector('.split-left') || window;
@@ -461,6 +502,46 @@ export default function TimelineScreen() {
     handleDragEnd();
   };
 
+  const handleGripKeyDown = useCallback((dragId: string, title: string, e: React.KeyboardEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+
+    const entry = findRenderedEntry(dragId);
+    if (!entry) return;
+
+    const { group, groupIndex, itemIndex } = entry;
+    let moved = false;
+
+    if (e.key === 'ArrowUp') {
+      if (itemIndex > 0) {
+        reorderItems(dragId, getTimelineDragId(group.items[itemIndex - 1]), group.dateKey);
+        moved = true;
+      } else {
+        const previousGroup = dayGroups[groupIndex - 1];
+        if (previousGroup) {
+          reorderItems(dragId, null, previousGroup.dateKey, true);
+          moved = true;
+        }
+      }
+    } else if (itemIndex < group.items.length - 1) {
+      if (itemIndex === group.items.length - 2) {
+        reorderItems(dragId, null, group.dateKey, true);
+      } else {
+        reorderItems(dragId, getTimelineDragId(group.items[itemIndex + 2]), group.dateKey);
+      }
+      moved = true;
+    } else {
+      const nextGroup = dayGroups[groupIndex + 1];
+      if (nextGroup) {
+        reorderItems(dragId, null, nextGroup.dateKey, false);
+        moved = true;
+      }
+    }
+
+    if (moved) setPendingGripFocus({ dragId, title });
+  }, [dayGroups, findRenderedEntry, reorderItems]);
+
   // ── Touch drag (iOS Safari) ───────────────────────────────────────────────
   const startTouchDrag = useCallback((id: string) => {
     const ts = touchRef.current;
@@ -472,7 +553,7 @@ export default function TimelineScreen() {
     Object.assign(ghost.style, {
       position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`,
       zIndex: '999', pointerEvents: 'none', opacity: '0.88', transform: 'scale(1.04) rotate(1deg)',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.65)', margin: '0', transition: 'transform 0.12s, box-shadow 0.12s',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.65)', margin: '0', transition: prefersReducedMotion ? 'none' : 'transform 0.12s, box-shadow 0.12s',
       borderRadius: '16px', overflow: 'hidden',
     });
     document.body.appendChild(ghost);
@@ -547,7 +628,7 @@ export default function TimelineScreen() {
     };
     document.addEventListener('touchmove', ts.onMove, { passive: false });
     document.addEventListener('touchend',  ts.onEnd);
-  }, [items, reorderItems]);
+  }, [items, prefersReducedMotion, reorderItems]);
 
   useEffect(() => () => {
     const ts = touchRef.current;
@@ -682,7 +763,7 @@ export default function TimelineScreen() {
                     </Button>
                   </div>
                   {isWeatherRefreshing ? (
-                    <div className="spinning flex items-center opacity-60">
+                    <div className="spinning flex items-center opacity-60 motion-reduce:animate-none">
                       <RefreshCw className="size-3.5 text-sys-blue" />
                     </div>
                   ) : (high !== null && low !== null && (
@@ -732,6 +813,7 @@ export default function TimelineScreen() {
                     onDragEnd={handleDragEnd}
                     onDrop={handleDrop}
                     onGripTouchStart={startTouchDrag}
+                    onGripKeyDown={handleGripKeyDown}
                     isCheckout={item._isCheckout}
                     groupPosition={groupPosition}
                     isHighlighted={highlightedItemId === item.id}
@@ -756,6 +838,9 @@ export default function TimelineScreen() {
           );
         })}
       </main>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {reorderAnnouncement}
+      </div>
       {tripIncludesToday && !todayHeaderVisible && (
         <Button
           className="fixed bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-offset,0px)+76px)] left-1/2 z-[2600] -translate-x-1/2 rounded-full shadow-glow-blue"

@@ -19,11 +19,13 @@ interface TimelineItemProps {
   onPress: () => void;
   isDragging?: boolean;
   onGripTouchStart?: (e: React.TouchEvent) => void;
+  onGripKeyDown?: React.KeyboardEventHandler<HTMLButtonElement>;
+  reorderGripId?: string;
   isCheckout?: boolean;
   groupPosition?: 'start' | 'middle' | 'end' | 'single';
 }
 
-export default function TimelineItem({ item, onPress, onGripTouchStart, isCheckout = false, groupPosition }: TimelineItemProps) {
+export default function TimelineItem({ item, onPress, onGripTouchStart, onGripKeyDown, reorderGripId, isCheckout = false, groupPosition }: TimelineItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const detailsId = useId();
   const navigate = useNavigate();
@@ -170,9 +172,14 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
           <button
             type="button"
-            aria-label="Drag to reorder"
-            className="drag-handle text-label-tertiary"
+            aria-label={`Reorder ${item.title}. Use arrow keys to move`}
+            className="drag-handle flex min-h-11 min-w-11 items-center justify-center text-label-tertiary"
+            data-reorder-grip-id={reorderGripId}
             onClick={e => e.stopPropagation()}
+            onKeyDown={(e) => {
+              e.stopPropagation();
+              onGripKeyDown?.(e);
+            }}
             onTouchStart={onGripTouchStart}
           >
             <GripVertical size={16} />
@@ -184,7 +191,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         <div className={cn('mr-3 flex size-11 shrink-0 items-center justify-center rounded-control', tone.bgClass, tone.textClass)}>
           <div className="flex flex-col items-center justify-center">
             <Icon size={shortLabel ? 20 : 24} />
-            {shortLabel && <span className="-mt-0.5 text-[7px] font-black tracking-[0.5px]">{shortLabel}</span>}
+            {shortLabel && <span className="-mt-0.5 text-caption font-black tracking-[0.5px]">{shortLabel}</span>}
           </div>
         </div>
 
@@ -195,7 +202,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           {hasCoordinates ? (
             <button
               type="button"
-              className="flex w-full items-start overflow-hidden rounded-chip py-px transition-colors hover:bg-white/6 motion-reduce:transition-none"
+              className="flex min-h-11 w-full items-center overflow-hidden rounded-chip py-px transition-colors hover:bg-white/6 motion-reduce:transition-none"
               onClick={openLocation}
             >
               {locationContent}

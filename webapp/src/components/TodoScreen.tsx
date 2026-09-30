@@ -1,10 +1,13 @@
-import { useRef, useState, type DragEvent, type TouchEvent } from 'react';
+import { useMemo, useState } from 'react';
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type Announcements, type DragEndEvent, type ScreenReaderInstructions } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Check, CheckCircle2, CheckSquare, Circle, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { TodoItem } from '../core/models';
 import { cn } from '../lib/cn';
 import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
 import { deleteWithUndo } from '../store/deleteWithUndo';
+import { SortableListItem } from './SortableList';
 
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, toggleTodo, reorderTodos } = useTripStore();
@@ -17,11 +20,11 @@ export default function TodoScreen() {
   const [editDueDate, setEditDueDate] = useState('');
   const [editNotes, setEditNotes] = useState('');
 
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const touchDragIndex = useRef<number | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleAdd = () => {
     if (!newTodo.trim()) return;
@@ -48,63 +51,26 @@ export default function TodoScreen() {
     setEditingId(null);
   };
 
-  const handleDragStart = (e: DragEvent, index: number) => {
-    dragItem.current = index;
-    setDraggingIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  const announcements = useMemo<Announcements>(() => {
+    const getTodoLabel = (id: string | number) => todos.find((todo) => todo.id === id)?.text ?? 'task';
+    return {
+      onDragStart: ({ active }) => `Picked up ${getTodoLabel(active.id)}.`,
+      onDragOver: ({ active, over }) => over ? `${getTodoLabel(active.id)} is over ${getTodoLabel(over.id)}.` : undefined,
+      onDragEnd: ({ active, over }) => over ? `Moved ${getTodoLabel(active.id)} before ${getTodoLabel(over.id)}.` : `Dropped ${getTodoLabel(active.id)}.`,
+      onDragCancel: ({ active }) => `Reordering cancelled for ${getTodoLabel(active.id)}.`,
+    };
+  }, [todos]);
 
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setOverIndex(index);
-  };
+  const screenReaderInstructions = useMemo<ScreenReaderInstructions>(() => ({
+    draggable: 'Press Space or Enter on the reorder button to pick up an item, use arrow keys to move it, then press Space or Enter to drop.',
+  }), []);
 
-  const handleDragEnd = () => {
-    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-      const ordered = [...todos];
-      const [dragged] = ordered.splice(dragItem.current, 1);
-      ordered.splice(dragOverItem.current, 0, dragged);
-      reorderTodos(ordered);
-    }
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
-  };
-
-  const handleGripTouchStart = (e: TouchEvent, index: number) => {
-    e.stopPropagation();
-    touchDragIndex.current = index;
-    setDraggingIndex(index);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (touchDragIndex.current === null) return;
-    if (e.cancelable) e.preventDefault();
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    const itemEl = target?.closest('[data-todo-item]');
-
-    if (itemEl) {
-      const elements = Array.from(document.querySelectorAll('[data-todo-item]'));
-      const newOver = elements.indexOf(itemEl);
-      if (newOver !== -1 && newOver !== overIndex) {
-        setOverIndex(newOver);
-        if ('vibrate' in navigator) navigator.vibrate(5);
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchDragIndex.current !== null && overIndex !== null && overIndex !== touchDragIndex.current) {
-      const ordered = [...todos];
-      const [dragged] = ordered.splice(touchDragIndex.current, 1);
-      ordered.splice(overIndex, 0, dragged);
-      reorderTodos(ordered);
-    }
-    touchDragIndex.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = todos.findIndex((todo) => todo.id === active.id);
+    const newIndex = todos.findIndex((todo) => todo.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    reorderTodos(arrayMove(todos, oldIndex, newIndex));
   };
 
   const isOverdue = (todo: TodoItem) =>
@@ -115,7 +81,7 @@ export default function TodoScreen() {
   const completedCount = todos.filter((todo) => todo.completed).length;
 
   return (
-    <div className={cn('safe-area-inset min-h-dvh', draggingIndex !== null ? 'touch-none' : 'touch-auto')}>
+    <div className="safe-area-inset min-h-dvh">
       <ScreenHeader title="Things to Do" subtitle="TRIP CHECKLIST" />
 
       <div className="px-6 pb-3">
@@ -180,7 +146,7 @@ export default function TodoScreen() {
           </Card>
         )}
 
-        <div className="flex flex-col gap-2.5" onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+        <div className="flex flex-col gap-2.5">
           {todos.length === 0 ? (
             <Card>
               <EmptyState
@@ -196,32 +162,32 @@ export default function TodoScreen() {
               />
             </Card>
           ) : (
-            todos.map((todo, index) => {
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} accessibility={{ announcements, screenReaderInstructions }}>
+              <SortableContext items={todos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
+                {todos.map((todo) => {
               const isEditing = editingId === todo.id;
-              const isDragging = draggingIndex === index;
-              const isOver = overIndex === index && draggingIndex !== null && draggingIndex !== index;
 
               return (
+                <SortableListItem key={todo.id} id={todo.id} disabled={isEditing}>
+                  {({ attributes, isDragging, listeners, setActivatorNodeRef, setNodeRef, style }) => (
                 <Card
-                  key={todo.id}
+                  ref={setNodeRef}
+                  style={style}
                   data-todo-item
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnter={() => handleDragEnter(index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => e.preventDefault()}
                   className={cn(
                     'flex gap-3 rounded-2xl border p-3.5 px-3 transition-all duration-150 ease-ios',
                     isEditing ? 'items-start' : 'items-center',
-                    isOver ? 'border-sys-blue/40 bg-sys-blue/10' : 'border-white/8',
+                    'border-white/8',
                     isDragging && 'z-[2] -translate-y-1 scale-[1.02] opacity-40 shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
                   )}
                 >
                   <button
+                    ref={setActivatorNodeRef}
                     type="button"
-                    aria-label="Drag to reorder"
+                    aria-label={`Reorder ${todo.text}`}
+                    {...attributes}
+                    {...listeners}
                     className={cn('drag-handle shrink-0 cursor-grab touch-none text-label-tertiary', isEditing && 'pt-2.5')}
-                    onTouchStart={(e) => handleGripTouchStart(e, index)}
                   >
                     <GripVertical size={18} />
                   </button>
@@ -299,8 +265,12 @@ export default function TodoScreen() {
                     )}
                   </div>
                 </Card>
+                  )}
+                </SortableListItem>
               );
-            })
+                })}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>

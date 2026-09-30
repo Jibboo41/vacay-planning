@@ -107,7 +107,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                     <MapPin size={20} />
                   </div>
                   <div className="flex-1">
-                    <div className="text-[10px] font-black uppercase tracking-[0.05em] text-sys-blue">{dayLabel}</div>
+                    <div className="text-caption font-black uppercase tracking-[0.05em] text-sys-blue">{dayLabel}</div>
                     <div className="text-body font-bold text-label">{stop.title}</div>
                     <div className="text-caption text-label-secondary opacity-80">{stop.location.name}</div>
                   </div>
@@ -160,7 +160,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                             <Star size={12} className="fill-sys-purple" /> {res.rating}
                           </div>
                           {res.distance && (
-                            <div className="flex items-center gap-[3px] text-[11px] font-semibold text-label-secondary">
+                            <div className="flex items-center gap-[3px] text-caption font-semibold text-label-secondary">
                               <Navigation size={11} /> {res.distance}
                             </div>
                           )}
@@ -198,7 +198,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                     </p>
 
                     <div className="flex gap-1.5">
-                      <span className="rounded-md bg-white/6 px-2 py-0.5 text-[10px] font-extrabold text-label-tertiary">
+                      <span className="rounded-md bg-white/6 px-2 py-0.5 text-caption font-extrabold text-label-tertiary">
                         {res.cuisineType.toUpperCase()}
                       </span>
                     </div>

@@ -1,10 +1,13 @@
-import { useMemo, useRef, useState, type DragEvent, type TouchEvent } from 'react';
+import { useMemo, useState } from 'react';
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type Announcements, type DragEndEvent, type ScreenReaderInstructions } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Check, CheckCircle2, Circle, GripVertical, Luggage, Package, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { PackingItem } from '../core/models';
 import { cn } from '../lib/cn';
 import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader } from './ui';
 import { deleteWithUndo } from '../store/deleteWithUndo';
+import { SortableListItem } from './SortableList';
 
 type PackingCategory = PackingItem['category'];
 
@@ -17,11 +20,11 @@ export default function PackingScreen() {
   const [editText, setEditText] = useState('');
   const [editCategory, setEditCategory] = useState<PackingCategory>('Luggage');
 
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const touchDragIndex = useRef<number | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const categories: PackingCategory[] = ['Luggage', 'Carry-on', 'Other'];
 
@@ -47,60 +50,26 @@ export default function PackingScreen() {
     setEditingId(null);
   };
 
-  const handleDragStart = (e: DragEvent, index: number) => {
-    dragItem.current = index;
-    setDraggingIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  const announcements = useMemo<Announcements>(() => {
+    const getPackingLabel = (id: string | number) => packingItems.find((item) => item.id === id)?.text ?? 'packing item';
+    return {
+      onDragStart: ({ active }) => `Picked up ${getPackingLabel(active.id)}.`,
+      onDragOver: ({ active, over }) => over ? `${getPackingLabel(active.id)} is over ${getPackingLabel(over.id)}.` : undefined,
+      onDragEnd: ({ active, over }) => over ? `Moved ${getPackingLabel(active.id)} before ${getPackingLabel(over.id)}.` : `Dropped ${getPackingLabel(active.id)}.`,
+      onDragCancel: ({ active }) => `Reordering cancelled for ${getPackingLabel(active.id)}.`,
+    };
+  }, [packingItems]);
 
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setOverIndex(index);
-  };
+  const screenReaderInstructions = useMemo<ScreenReaderInstructions>(() => ({
+    draggable: 'Press Space or Enter on the reorder button to pick up an item, use arrow keys to move it, then press Space or Enter to drop.',
+  }), []);
 
-  const handleDragEnd = () => {
-    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-      const ordered = [...packingItems];
-      const [dragged] = ordered.splice(dragItem.current, 1);
-      ordered.splice(dragOverItem.current, 0, dragged);
-      reorderPackingItems(ordered);
-    }
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
-  };
-
-  const handleGripTouchStart = (e: TouchEvent, index: number) => {
-    e.stopPropagation();
-    touchDragIndex.current = index;
-    setDraggingIndex(index);
-  };
-
-  const handleTouchMove = (e: TouchEvent) => {
-    if (touchDragIndex.current === null) return;
-    if (e.cancelable) e.preventDefault();
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    const itemEl = target?.closest('[data-packing-item]');
-
-    if (itemEl) {
-      const elements = Array.from(document.querySelectorAll('[data-packing-item]'));
-      const newOver = elements.indexOf(itemEl);
-      if (newOver !== -1 && newOver !== overIndex) setOverIndex(newOver);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchDragIndex.current !== null && overIndex !== null && overIndex !== touchDragIndex.current) {
-      const ordered = [...packingItems];
-      const [dragged] = ordered.splice(touchDragIndex.current, 1);
-      ordered.splice(overIndex, 0, dragged);
-      reorderPackingItems(ordered);
-    }
-    touchDragIndex.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const oldIndex = packingItems.findIndex((item) => item.id === active.id);
+    const newIndex = packingItems.findIndex((item) => item.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    reorderPackingItems(arrayMove(packingItems, oldIndex, newIndex));
   };
 
   const completedCount = packingItems.filter((item) => item.completed).length;
@@ -134,7 +103,7 @@ export default function PackingScreen() {
   );
 
   return (
-    <div className={cn('safe-area-inset min-h-dvh', draggingIndex !== null ? 'touch-none' : 'touch-auto')}>
+    <div className="safe-area-inset min-h-dvh">
       <ScreenHeader title="Packing List" subtitle="GEAR & LUGGAGE" />
 
       <div className="px-6 pb-3">
@@ -182,7 +151,7 @@ export default function PackingScreen() {
           </Card>
         )}
 
-        <div className="flex flex-col gap-8" onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+        <div className="flex flex-col gap-8">
           {packingItems.length === 0 ? (
             <Card>
               <EmptyState
@@ -198,7 +167,9 @@ export default function PackingScreen() {
               />
             </Card>
           ) : (
-            categories.map((category) => {
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} accessibility={{ announcements, screenReaderInstructions }}>
+              <SortableContext items={categories.flatMap((category) => itemsByCategory[category].map((item) => item.id))} strategy={verticalListSortingStrategy}>
+                {categories.map((category) => {
               const items = itemsByCategory[category];
               if (items.length === 0) return null;
 
@@ -211,28 +182,30 @@ export default function PackingScreen() {
 
                   <div className="flex flex-col gap-2.5">
                     {items.map((item) => {
-                      const index = packingItems.findIndex((candidate) => candidate.id === item.id);
                       const isEditing = editingId === item.id;
-                      const isDragging = draggingIndex === index;
-                      const isOver = overIndex === index && draggingIndex !== null && draggingIndex !== index;
 
                       return (
+                        <SortableListItem key={item.id} id={item.id} disabled={isEditing}>
+                          {({ attributes, isDragging, listeners, setActivatorNodeRef, setNodeRef, style }) => (
                         <Card
-                          key={item.id}
+                          ref={setNodeRef}
+                          style={style}
                           data-packing-item
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, index)}
-                          onDragEnter={() => handleDragEnter(index)}
-                          onDragEnd={handleDragEnd}
-                          onDragOver={(e) => e.preventDefault()}
                           className={cn(
                             'flex gap-3 rounded-2xl border p-3.5 px-3 transition-all duration-150 ease-ios',
                             isEditing ? 'items-start' : 'items-center',
-                            isOver ? 'border-sys-blue/40 bg-sys-blue/10' : 'border-white/8',
+                            'border-white/8',
                             isDragging && 'z-[2] -translate-y-1 scale-[1.02] opacity-40 shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
                           )}
                         >
-                          <button type="button" aria-label="Drag to reorder" className={cn('drag-handle shrink-0 cursor-grab touch-none text-label-tertiary', isEditing && 'pt-2.5')} onTouchStart={(e) => handleGripTouchStart(e, index)}>
+                          <button
+                            ref={setActivatorNodeRef}
+                            type="button"
+                            aria-label={`Reorder ${item.text}`}
+                            {...attributes}
+                            {...listeners}
+                            className={cn('drag-handle shrink-0 cursor-grab touch-none text-label-tertiary', isEditing && 'pt-2.5')}
+                          >
                             <GripVertical size={18} />
                           </button>
 
@@ -286,12 +259,16 @@ export default function PackingScreen() {
                             )}
                           </div>
                         </Card>
+                          )}
+                        </SortableListItem>
                       );
                     })}
                   </div>
                 </div>
               );
-            })
+                })}
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>

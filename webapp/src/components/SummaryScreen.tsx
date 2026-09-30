@@ -351,7 +351,7 @@ export default function SummaryScreen() {
                       <div className="flex items-center gap-2 border-l border-white/10 pl-2">
                         <div className="flex flex-col items-end leading-none">
                           <span className="text-[13px] font-extrabold text-sys-orange">H: {Math.round(high)}°</span>
-                          <span className="text-[10px] font-bold text-sys-blue">L: {Math.round(low)}°</span>
+                          <span className="text-caption font-bold text-sys-blue">L: {Math.round(low)}°</span>
                         </div>
                       </div>
                     )}

@@ -779,7 +779,7 @@ export default function MapViewScreen() {
           
           <div className="flex items-center gap-2.5">
             <div className="h-0 w-7 shrink-0 border-t-2 border-dashed border-[rgba(180,180,200,0.4)]" />
-            <span className="text-[11px] font-semibold text-label-tertiary">Between Days</span>
+            <span className="text-caption font-semibold text-label-tertiary">Between Days</span>
           </div>
         </Card>
       )}

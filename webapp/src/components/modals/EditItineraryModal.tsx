@@ -326,7 +326,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                         onFocus={() => { if (!endDate && date) setEndDate(date); }}
                         onChange={e => setEndDate(e.target.value)}
                       />
-                      {endDate && <Button onClick={() => setEndDate('')} variant="ghost" size="sm" className="min-h-0 px-1 py-0 text-[10px] text-sys-blue">Clear</Button>}
+                      {endDate && <Button onClick={() => setEndDate('')} variant="ghost" size="sm" className="relative min-h-0 px-1.5 py-0.5 text-caption text-sys-blue before:absolute before:-inset-2.5 before:content-['']">Clear</Button>}
                     </div>
                   )}
                 </Field>
@@ -342,7 +342,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                         onFocus={() => { if (!endTime && time) setEndTime(time); }}
                         onChange={e => setEndTime(e.target.value)}
                       />
-                      {endTime && <Button onClick={() => setEndTime('')} variant="ghost" size="sm" className="min-h-0 px-1 py-0 text-[10px] text-sys-blue">Clear</Button>}
+                      {endTime && <Button onClick={() => setEndTime('')} variant="ghost" size="sm" className="relative min-h-0 px-1.5 py-0.5 text-caption text-sys-blue before:absolute before:-inset-2.5 before:content-['']">Clear</Button>}
                     </div>
                   )}
                 </Field>
@@ -434,7 +434,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                     placeholder="Search for place or address..."
                   />
                   {isSearching && (
-                    <div className="absolute right-3.5 top-10 text-[11px] font-semibold text-sys-blue">Searching...</div>
+                    <div className="absolute right-3.5 top-10 text-caption font-semibold text-sys-blue">Searching...</div>
                   )}
                   
                   {showSuggestions && suggestions.length > 0 && (

@@ -42,6 +42,12 @@
   .blob-2 { width: 600px; height: 600px; background: var(--blob-2); bottom: -40px; right: -120px; opacity: 0.35; } 
   .blob-3 { width: 380px; height: 380px; background: var(--blob-3); top: 35%; left: 10%; opacity: 0.20; }
 
+  /* Slow ambient drift; disabled under prefers-reduced-motion (see bottom of file). */
+  .blob-1 { animation: blob-drift 32s ease-in-out infinite alternate; }
+  .blob-2 { animation: blob-drift 38s ease-in-out -12s infinite alternate-reverse; }
+  .blob-3 { animation: blob-drift 44s ease-in-out -20s infinite alternate; }
+  .blob { transition: background 0.6s ease; }
+
   .day-timeline-strip {
     position: sticky;
     top: 0; /* Fallback */
@@ -607,4 +613,25 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.5; }
+}
+
+@keyframes blob-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(40px, -30px, 0) scale(1.06); }
+  100% { transform: translate3d(-30px, 25px, 0) scale(0.96); }
+}
+
+/* Respect the OS "reduce motion" setting: stop ambient/decorative motion and
+   collapse transitions. Functional state changes still apply instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none !important; transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
 }

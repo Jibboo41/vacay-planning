@@ -10,9 +10,11 @@ interface NoteCardProps {
   item: ItineraryItem;
   onPress: () => void;
   onGripTouchStart?: (e: React.TouchEvent) => void;
+  onGripKeyDown?: React.KeyboardEventHandler<HTMLButtonElement>;
+  reorderGripId?: string;
 }
 
-export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardProps) {
+export default function NoteCard({ item, onPress, onGripTouchStart, onGripKeyDown, reorderGripId }: NoteCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const detailsId = useId();
 
@@ -40,9 +42,14 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
         </button>
         <button
           type="button"
-          aria-label="Drag to reorder"
-          className="drag-handle text-label-tertiary"
+          aria-label={`Reorder ${item.title}. Use arrow keys to move`}
+          className="drag-handle flex min-h-11 min-w-11 items-center justify-center text-label-tertiary"
+          data-reorder-grip-id={reorderGripId}
           onClick={e => e.stopPropagation()}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            onGripKeyDown?.(e);
+          }}
           onTouchStart={onGripTouchStart}
         >
           <GripVertical size={16} />
