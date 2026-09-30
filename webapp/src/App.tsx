@@ -32,6 +32,7 @@ import { startNewItem } from './store/itemActions';
 import { useIsWide } from './hooks/useMediaQuery';
 import { DEFAULT_ROUTE, isDebugEnabled } from './app/routes';
 import TabBar from './components/TabBar';
+import PwaUpdater from './components/PwaUpdater';
 import SideRail from './components/layout/SideRail';
 import SplitPane from './components/layout/SplitPane';
 
@@ -272,6 +273,7 @@ function App() {
         <CommandPalette />
         <GlobalShortcuts />
         <Toaster />
+        <PwaUpdater />
 
         <MainLayout>
           <Routes>

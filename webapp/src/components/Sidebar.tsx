@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, LogOut, X, Sparkles, ArrowLeft, Terminal, ChevronDown, FileSpreadsheet } from 'lucide-react';
+import { Plus, LogOut, X, Sparkles, ArrowLeft, Terminal, ChevronDown, FileSpreadsheet, Share2 } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { APP_ROUTES, DEFAULT_ROUTE, isDebugEnabled } from '../app/routes';
 import { usePrefersReducedMotion } from '../hooks/useMediaQuery';
+import { isFeatureEnabled } from '../core/featureFlags';
+import ShareSheet from './ShareSheet';
 import { downloadTripExcel } from '../utils/exportUtils';
 import { ITEM_TYPES, type ItemTypeKey } from '../core/itemTypes';
 import { THEMES } from '../core/themes';
@@ -34,6 +36,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const reducedMotion = usePrefersReducedMotion();
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const sharingEnabled = isFeatureEnabled('sharing');
   const panelRef = useRef<HTMLElement>(null);
   useFocusTrap(panelRef, isOpen && !isAdding, onClose);
 
@@ -191,6 +195,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <FileSpreadsheet size={18} />
               <span>Export to Sheets</span>
             </Button>
+            {sharingEnabled && currentTripId && (
+              <Button
+                block
+                variant="glass"
+                className="mt-2.5 rounded-full py-3.5"
+                onClick={() => setIsShareOpen(true)}
+              >
+                <Share2 size={18} />
+                <span>Share Trip</span>
+              </Button>
+            )}
           </section>
 
           <section className="pt-6 pb-2.5">
@@ -280,6 +295,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>}
         </div>
       </aside>
+
+      {sharingEnabled && (
+        <ShareSheet
+          open={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          tripTitle={trips.find(t => t.id === currentTripId)?.title ?? 'this trip'}
+        />
+      )}
 
       <Modal open={isAdding} onClose={() => setIsAdding(false)} title="Plan New Trip" variant="center">
         <form onSubmit={handleAddTrip}>
