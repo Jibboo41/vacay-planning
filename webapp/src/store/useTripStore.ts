@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay } from '../core/models';
 import { fetchWeather } from '../data/weatherApi';
 import { getWallClockDayKey } from '../utils/dates';
+import { listTodoCategories, normalizeTodoCategory } from '../core/todoCategories';
 import {
   createUndoQueue,
   excludePending,
@@ -45,7 +46,6 @@ interface TripStore {
   generalNotes: import('../core/models').TripNote[];
   userId: string | null;
   loading: boolean;
-  isSidebarOpen: boolean;
   focusedLocation: { lat: number, lng: number } | null;
   theme: string;
   initialized: boolean;
@@ -61,7 +61,6 @@ interface TripStore {
   // Actions
   setUserId: (userId: string | null) => void;
   setLoading: (loading: boolean) => void;
-  setSidebarOpen: (open: boolean) => void;
   setFocusedLocation: (loc: { lat: number, lng: number } | null) => void;
   setTheme: (theme: string) => void;
   setTintedBackgrounds: (enabled: boolean) => void;
@@ -90,8 +89,8 @@ interface TripStore {
   reorderGeneralNotes: (newOrder: import('../core/models').TripNote[]) => Promise<void>;
 
   // Todo Actions
-  addTodo: (text: string, dueDate?: string, notes?: string) => Promise<void>;
-  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null; notes?: string | null }) => Promise<void>;
+  addTodo: (text: string, dueDate?: string, notes?: string, category?: string) => Promise<void>;
+  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null; notes?: string | null; category?: string | null }) => Promise<void>;
   toggleTodo: (id: string) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
   reorderTodos: (newOrder: import('../core/models').TodoItem[]) => Promise<void>;
@@ -209,7 +208,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
   generalNotes: [],
   userId: null,
   loading: true,
-  isSidebarOpen: false,
   focusedLocation: null,
   theme: localStorage.getItem('vacay_theme') || 'default',
   initialized: false,
@@ -221,7 +219,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
   pendingDeletes: [],
   selectedDayKey: null,
   hiddenDayFilters: [],
-  tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') === 'true',
+  // On by default; only an explicit opt-out turns the per-type card tint off.
+  tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') !== 'false',
   isWeatherRefreshing: false,
   debugLogs: [],
 
@@ -235,7 +234,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
-  setSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
   setFocusedLocation: (focusedLocation) => set({ focusedLocation }),
   toggleFilter: (type: string) => set((state) => ({
     activeFilters: state.activeFilters.includes(type)
@@ -614,7 +612,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     await writeTrip(currentTripId, { aiSummary: summary });
   },
 
-  addTodo: async (text, dueDate, notes) => {
+  addTodo: async (text, dueDate, notes, category) => {
     const { currentTripId, todos, initialized } = get();
     if (!currentTripId || !initialized) return;
     const newTodo: TodoItem = { 
@@ -623,7 +621,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       completed: false, 
       createdAt: Date.now(),
       dueDate: dueDate || undefined,
-      notes: notes || undefined
+      notes: notes || undefined,
+      category: normalizeTodoCategory(category, listTodoCategories(todos)),
     };
     const newTodos = [...todos, newTodo];
     set({ todos: newTodos });
@@ -647,7 +646,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
           ...t, 
           ...updates,
           dueDate: updates.dueDate === null ? undefined : (updates.dueDate ?? t.dueDate),
-          notes: updates.notes === null ? undefined : (updates.notes ?? t.notes)
+          notes: updates.notes === null ? undefined : (updates.notes ?? t.notes),
+          category: updates.category === undefined ? t.category : normalizeTodoCategory(updates.category, listTodoCategories(todos)),
         };
       }
       return t;

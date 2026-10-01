@@ -7,11 +7,11 @@ import CostTrackerScreen from './components/CostTrackerScreen';
 import WeatherScreen from './components/WeatherScreen';
 import NotesScreen from './components/NotesScreen';
 import PackingScreen from './components/PackingScreen';
+import SettingsScreen from './components/SettingsScreen';
 import DebugScreen from './components/DebugScreen';
 import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
 import GlobalControls from './components/GlobalControls';
-import Sidebar from './components/Sidebar';
 import GlobalModals from './components/modals/GlobalModals';
 import ErrorBoundary from './components/ErrorBoundary';
 import SyncIndicator from './components/SyncIndicator';
@@ -30,7 +30,7 @@ import { useUiStore } from './store/useUiStore';
 import { useHotkeys, isDialogOpen } from './hooks/useHotkeys';
 import { startNewItem } from './store/itemActions';
 import { useIsWide } from './hooks/useMediaQuery';
-import { DEFAULT_ROUTE, isDebugEnabled } from './app/routes';
+import { DEFAULT_ROUTE, SETTINGS_ROUTE, isDebugEnabled } from './app/routes';
 import TabBar from './components/TabBar';
 import PwaUpdater from './components/PwaUpdater';
 import SideRail from './components/layout/SideRail';
@@ -72,7 +72,7 @@ const NoTripState = () => (
     className="h-full px-10 py-20"
     icon={<Plane size={28} />}
     title="No Trip Active"
-    description="Select a trip from the sidebar or trip selector to view your itinerary."
+    description="Pick a trip in Settings or the trip selector to view your itinerary."
     action={
       <Link to="/trips" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
         Go to Trip Selector
@@ -166,11 +166,9 @@ function App() {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
   const currentTripId = useTripStore(s => s.currentTripId);
-  const isSidebarOpen = useTripStore(s => s.isSidebarOpen);
   const theme = useTripStore(s => s.theme);
   const setUserId = useTripStore(s => s.setUserId);
   const setLoading = useTripStore(s => s.setLoading);
-  const setSidebarOpen = useTripStore(s => s.setSidebarOpen);
   const syncTrips = useTripStore(s => s.syncTrips);
   
   const showBanner = useUiStore(s => s.showBanner);
@@ -263,10 +261,6 @@ function App() {
           </div>
         )}
 
-        {userId && (
-          <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
-        )}
-
         <SyncStatus />
         <AppBanner />
         <GlobalModals />
@@ -287,6 +281,7 @@ function App() {
             <Route path="/weather" element={<ProtectedRoute name="Weather">{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute name="Notes">{currentTripId ? <NotesScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/packing" element={<ProtectedRoute name="Packing">{currentTripId ? <PackingScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path={SETTINGS_ROUTE.path} element={<ProtectedRoute name="Settings"><SettingsScreen /></ProtectedRoute>} />
             {isDebugEnabled() && (
               <Route path="/debug" element={<ProtectedRoute name="Debug"><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
             )}

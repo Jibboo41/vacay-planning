@@ -1,16 +1,20 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { CalendarDays, Menu, Map, RefreshCw, Search, SearchX, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CalendarDays, Map, RefreshCw, SearchX, SlidersHorizontal } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import { useUiStore } from '../store/useUiStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import type { ItineraryItem } from '../core/models';
-import { FILTER_GROUPS, ITEM_TYPES, resolveItemType, type FilterGroup, type ItemTypeKey } from '../core/itemTypes';
+import { resolveItemType } from '../core/itemTypes';
+import { SETTINGS_ROUTE } from '../app/routes';
 import { cn } from '../lib/cn';
-import { Button, Chip, EmptyState, IconButton, Input } from './ui';
+import { Button, EmptyState } from './ui';
+import TimelineFilters from './TimelineFilters';
 import { getDayKey, getDayLabel, todayKey } from '../utils/dates';
 import { itemMatchesQuery } from '../utils/itinerary';
-import { usePrefersReducedMotion } from '../hooks/useMediaQuery';
+import { useIsWide, usePrefersReducedMotion } from '../hooks/useMediaQuery';
+import { describeTimelineFilters, ensureFiltersEnabled, resetTimelineFilters, useTimelineFilterStatus } from '../store/timelineFilters';
 import { isDialogOpen, useHotkeys } from '../hooks/useHotkeys';
 import { startNewItem } from '../store/itemActions';
 
@@ -23,12 +27,6 @@ interface DayGroup {
 }
 
 type RenderedTimelineItem = ItineraryItem & { _isCheckout?: boolean; _renderDate: string };
-
-const ALL_FILTER_TYPES = Object.keys(ITEM_TYPES) as ItemTypeKey[];
-
-function filterTypesForGroup(group: FilterGroup) {
-  return ALL_FILTER_TYPES.filter((type) => ITEM_TYPES[type].filterGroup === group);
-}
 
 function getTimelineDragId(item: Pick<RenderedTimelineItem, 'id' | 'type' | '_isCheckout'>) {
   return item.id + (item._isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
@@ -115,13 +113,17 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, toggleFilter, isWeatherRefreshing } = useTripStore();
+  const { items, currentTripId, trips, weather, reorderItems, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
   const { focusItemId, focusItem } = useUiStore();
+  const searchQuery = useUiStore(s => s.timelineQuery);
+  const setSearchQuery = useUiStore(s => s.setTimelineQuery);
+  // Mobile keeps the header compact: search & filters live in Settings (see TimelineFilters).
+  const isWide = useIsWide();
+  const filterStatus = useTimelineFilterStatus();
   const currentTrip = trips.find(t => t.id === currentTripId);
   const prefersReducedMotion = usePrefersReducedMotion();
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
   const [pendingFocusItemId, setPendingFocusItemId] = useState<string | null>(null);
   const [pendingGripFocus, setPendingGripFocus] = useState<{ dragId: string; title: string } | null>(null);
@@ -221,7 +223,7 @@ export default function TimelineScreen() {
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
-  }, [dayGroups.length, searchQuery, activeFilters]);
+  }, [dayGroups.length, searchQuery, activeFilters, isWide, filterStatus.isFiltered]);
 
   const today = todayKey();
   const tripIncludesToday = useMemo(() => {
@@ -236,26 +238,6 @@ export default function TimelineScreen() {
     setActiveDayKey(key);
     useTripStore.getState().setSelectedDayKey(key);
   }, []);
-
-  const ensureFiltersEnabled = useCallback((types: ItemTypeKey[]) => {
-    const current = useTripStore.getState().activeFilters;
-    types.forEach((type) => {
-      if (!current.includes(type)) toggleFilter(type);
-    });
-  }, [toggleFilter]);
-
-  const clearFilters = useCallback(() => {
-    setSearchQuery('');
-    ensureFiltersEnabled(ALL_FILTER_TYPES);
-  }, [ensureFiltersEnabled]);
-
-  const toggleFilterGroup = useCallback((group: FilterGroup) => {
-    const types = filterTypesForGroup(group);
-    const allSelected = types.every((type) => activeFilters.includes(type));
-    types.forEach((type) => {
-      if (allSelected ? activeFilters.includes(type) : !activeFilters.includes(type)) toggleFilter(type);
-    });
-  }, [activeFilters, toggleFilter]);
 
   const handleOpenMap = (group: DayGroup) => {
     // 1. Gather all items for this day that have valid lat/lng and are NOT flights.
@@ -465,7 +447,7 @@ export default function TimelineScreen() {
     if (!itemMatchesQuery(item, searchQuery)) window.setTimeout(() => setSearchQuery(''), 0);
     window.setTimeout(() => setPendingFocusItemId(focusItemId), 0);
     focusItem(null);
-  }, [activeFilters, ensureFiltersEnabled, focusItem, focusItemId, items, searchQuery]);
+  }, [activeFilters, focusItem, focusItemId, items, searchQuery, setSearchQuery]);
 
   useEffect(() => {
     if (!pendingFocusItemId) return;
@@ -647,59 +629,28 @@ export default function TimelineScreen() {
     <>
       <header ref={headerRef} className="screen-header flex-col items-stretch gap-0 pb-0 pt-[calc(4px+env(safe-area-inset-top))]">
         <div className="flex items-center gap-4 pb-0">
-          <IconButton
-            variant="ghost"
-            size="md"
-            className="header-icon-btn"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
-          >
-            <Menu size={24} />
-          </IconButton>
           <h1 className="page-title flex-1 truncate text-[1.7rem]">
             {currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-label-tertiary" />
-            <Input
-              aria-label="Search itinerary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search itinerary"
-              className="h-11 rounded-full pr-11 pl-9"
-            />
-            {searchQuery && (
-              <IconButton
-                aria-label="Clear search"
-                variant="ghost"
-                size="sm"
-                className="absolute top-1/2 right-1.5 -translate-y-1/2"
-                onClick={() => setSearchQuery('')}
-              >
-                <X size={16} />
-              </IconButton>
-            )}
+        {isWide ? (
+          <TimelineFilters className="mt-3" />
+        ) : filterStatus.isFiltered && (
+          <div className="mt-2 flex items-center gap-1 rounded-full border border-sys-blue/30 bg-sys-blue/10 py-0.5 pr-0.5 pl-3 text-footnote">
+            <SlidersHorizontal size={14} className="shrink-0 text-sys-blue" aria-hidden="true" />
+            <Link
+              to={`${SETTINGS_ROUTE.path}#timeline-filters`}
+              className="flex min-h-9 min-w-0 flex-1 items-center truncate rounded-full px-1.5 font-semibold text-label"
+              aria-label={`Timeline filtered: ${describeTimelineFilters(filterStatus)}. Edit in Settings`}
+            >
+              <span className="truncate">{describeTimelineFilters(filterStatus)}</span>
+            </Link>
+            <Button size="sm" variant="ghost" className="shrink-0 rounded-full text-sys-blue" onClick={resetTimelineFilters}>
+              Clear
+            </Button>
           </div>
-          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" aria-label="Itinerary type filters">
-            {FILTER_GROUPS.map((group) => {
-              const types = filterTypesForGroup(group.key);
-              const selected = types.every((type) => activeFilters.includes(type));
-              return (
-                <Chip
-                  key={group.key}
-                  selected={selected}
-                  aria-label={`Filter ${group.label}`}
-                  onClick={() => toggleFilterGroup(group.key)}
-                >
-                  {group.label}
-                </Chip>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         <div className="day-timeline-strip border-b-0 bg-transparent pb-1 backdrop-blur-none">
           <div className="day-pill-bar" ref={pillBarRef}>
@@ -730,7 +681,7 @@ export default function TimelineScreen() {
             icon={<SearchX size={30} />}
             title="No matching plans"
             description="Search and filters are hiding every itinerary item."
-            action={<Button onClick={clearFilters}>Clear filters</Button>}
+            action={<Button onClick={resetTimelineFilters}>Clear filters</Button>}
           />
         ) : dayGroups.map((group) => {
           const dayWeather = weather?.forecast.filter(f => f.date === group.dateKey);

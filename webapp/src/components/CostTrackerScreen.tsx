@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { Plus, Wallet, ShoppingBag, Utensils, Plane, Car, Menu, Bed, Activity, ChevronRight, Fuel, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Wallet, ShoppingBag, Utensils, Plane, Car, Bed, Activity, ChevronRight, Fuel, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { Expense } from '../core/models';
 import { getItemTypeMeta } from '../core/itemTypes';
 import { cn } from '../lib/cn';
-import { Button, Card, EmptyState, IconButton, Input, Select } from './ui';
+import { Button, Card, EmptyState, Input, Select } from './ui';
 
 const EXPENSE_CATEGORIES: Expense['category'][] = [
   'Car Rental', 'Flights', 'Gas', 'Dining', 'Lodging', 'Souvenirs', 'Other'
@@ -32,7 +32,7 @@ const CATEGORY_CLASSES: Record<Expense['category'], { text: string; bg: string; 
 };
 
 export default function CostTrackerScreen() {
-  const { expenses, items, addExpense, setEditingItem, setEditingExpense, setSidebarOpen } = useTripStore();
+  const { expenses, items, addExpense, setEditingItem, setEditingExpense } = useTripStore();
   const [showAdd, setShowAdd] = useState(false);
   const [showSummary, setShowSummary] = useState(true);
   const [newTitle, setNewTitle] = useState('');
@@ -101,9 +101,6 @@ export default function CostTrackerScreen() {
   return (
     <div className="safe-area-inset min-h-screen bg-transparent">
       <header className="screen-header">
-        <IconButton aria-label="Open sidebar" onClick={() => setSidebarOpen(true)}>
-          <Menu size={24} />
-        </IconButton>
         <div className="flex flex-1 flex-col">
           <h1 className="mb-1 text-footnote font-extrabold uppercase tracking-[0.1em] text-label-secondary">
             Trip Financials

@@ -9,14 +9,18 @@ All notable changes to the **Vacay Planning** project will be documented in this
 - **Layout**: desktop side rail + resizable/collapsible split view, mobile bottom tab bar, route config in `src/app/routes.ts`, view transitions.
 - **Platform**: installable PWA with update toast and map-tile caching; feature-flagged Share sheet scaffold.
 - **Tooling**: Vitest unit tests (`npm test`), `typecheck` script, GitHub Actions `webapp-ci.yml`.
+- **To-do categories**: tasks are grouped under General, Bookings, Documents, Money, Home, Shopping or custom categories (picker in the add/edit forms; dragging onto another category moves the task). Stored as an optional `category` on each to-do, so existing lists show under General.
 
 ### Changed
 - All screens and modals migrated off inline styles; real `<button>`/`<a>` elements, focus rings, keyboard reordering, reduced-motion support, ≥12px text and 44px targets.
 - `/debug` is only available in dev or with `localStorage['vacay:debug'] = '1'`.
 - Date helpers consolidated in `src/utils/dates.ts`.
+- **Settings** is now a screen (`/settings`) in the mobile tab bar and desktop side rail, replacing the hamburger drawer. On mobile the timeline's search box and type filters live there; the timeline shows a compact filter pill (with Clear) only while filters are active.
+- Mobile tab bar: Timeline, Map, Todo, Costs, More, Settings (Summary moved to More).
+- Tinted timeline cards are on by default (toggle in Settings → Appearance).
 
 ### Removed
-- Unused Vite scaffold assets and `App.css`; the view-switcher FAB (replaced by tab bar / side rail).
+- Unused Vite scaffold assets and `App.css`; the view-switcher FAB (replaced by tab bar / side rail); the `Sidebar` drawer and per-screen hamburger buttons (replaced by Settings).
 
 ## [1.32.0] - 2026-04-19
 ### Added

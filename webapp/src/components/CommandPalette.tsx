@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bug, Map as MapIcon, Plus, Search } from 'lucide-react';
-import { APP_ROUTES, isDebugEnabled } from '../app/routes';
+import { APP_ROUTES, SETTINGS_ROUTE, isDebugEnabled } from '../app/routes';
 import { getItemTypeMeta } from '../core/itemTypes';
 import { cn } from '../lib/cn';
 import { startNewItem } from '../store/itemActions';
@@ -65,6 +65,11 @@ function PaletteDialog({ onClose }: { onClose: () => void }) {
     cmds.push({
       id: 'route-trips', group: 'Screens', label: 'Go to All Trips', icon: <MapIcon size={18} />,
       keywords: 'trip selector list', run: () => navigate('/trips', { viewTransition: true }),
+    });
+    cmds.push({
+      id: 'route-settings', group: 'Screens', label: `Go to ${SETTINGS_ROUTE.label}`, icon: <SETTINGS_ROUTE.icon size={18} />,
+      keywords: 'preferences theme appearance filters tint export share sign out logout account',
+      run: () => navigate(SETTINGS_ROUTE.path, { viewTransition: true }),
     });
     if (isDebugEnabled()) {
       cmds.push({ id: 'route-debug', group: 'Screens', label: 'Open Debug', icon: <Bug size={18} />, run: () => navigate('/debug') });

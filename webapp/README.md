@@ -82,6 +82,11 @@ export default defineConfig([
 - **UI components** (`src/components/ui`): `Button`, `IconButton` (requires `aria-label`), `Chip`/`Badge`, `LinkChip`, `Card`, `Modal`/`Sheet`, `EmptyState`, `Skeleton`, `toast()`. Combine classes with `cn()` from `src/lib/cn.ts`.
 - `.tsx` files export components only (react-refresh lint); put helpers and cva variants in `.ts` files.
 
+## Navigation
+
+- Trip screens are defined once in `src/app/routes.ts` (`APP_ROUTES`); at most four are `primary` so the mobile tab bar (plus More and Settings) fits a 320px phone.
+- `SETTINGS_ROUTE` (`/settings`, `SettingsScreen`) holds trips, export/share, appearance and sign-out. On mobile it also hosts the timeline search & type filters (`TimelineFilters`, state in `src/store/timelineFilters.ts`); on desktop they stay inline in the timeline header.
+
 ## Keyboard shortcuts
 
 | Keys | Action |

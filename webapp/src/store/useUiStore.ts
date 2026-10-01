@@ -18,6 +18,9 @@ interface UiStore {
   focusItem: (id: string | null) => void;
   timelineCollapsed: boolean;
   setTimelineCollapsed: (collapsed: boolean) => void;
+  /** Timeline text search; shared so Settings can edit it on mobile. */
+  timelineQuery: string;
+  setTimelineQuery: (query: string) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -33,4 +36,6 @@ export const useUiStore = create<UiStore>((set) => ({
     localStorage.setItem('vacay:timeline-collapsed', timelineCollapsed ? '1' : '0');
     set({ timelineCollapsed });
   },
+  timelineQuery: '',
+  setTimelineQuery: (timelineQuery) => set({ timelineQuery }),
 }));

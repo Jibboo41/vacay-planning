@@ -1,9 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { Map as MapIcon, Menu, PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
-import { APP_ROUTES } from '../../app/routes';
+import { Map as MapIcon, PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
+import { APP_ROUTES, SETTINGS_ROUTE } from '../../app/routes';
 import { cn } from '../../lib/cn';
 import { usePrefersReducedMotion } from '../../hooks/useMediaQuery';
-import { useTripStore } from '../../store/useTripStore';
 import { useUiStore } from '../../store/useUiStore';
 
 const railItem = (active: boolean) =>
@@ -12,10 +11,10 @@ const railItem = (active: boolean) =>
     active ? 'bg-sys-blue/25 text-label' : 'text-label-secondary hover:bg-white/8 hover:text-label',
   );
 
-/** Desktop navigation rail driven by `APP_ROUTES`. */
+/** Desktop navigation rail driven by `APP_ROUTES`, plus Trips and Settings. */
 export default function SideRail({ showTimelineToggle }: { showTimelineToggle: boolean }) {
   const reducedMotion = usePrefersReducedMotion();
-  const setSidebarOpen = useTripStore((s) => s.setSidebarOpen);
+  const SettingsIcon = SETTINGS_ROUTE.icon;
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const collapsed = useUiStore((s) => s.timelineCollapsed);
   const setCollapsed = useUiStore((s) => s.setTimelineCollapsed);
@@ -26,9 +25,6 @@ export default function SideRail({ showTimelineToggle }: { showTimelineToggle: b
       aria-label="Primary"
       className="fixed inset-y-0 left-0 z-[2400] flex w-(--side-rail-w) flex-col items-center gap-1 overflow-y-auto border-r border-white/8 bg-surface/60 px-2 pt-[calc(env(safe-area-inset-top)+12px)] pb-4 backdrop-blur-[30px]"
     >
-      <button type="button" aria-label="Open sidebar" title="Menu" className={railItem(false)} onClick={() => setSidebarOpen(true)}>
-        <Menu size={22} aria-hidden="true" />
-      </button>
       <button
         type="button"
         aria-label={`Search (${isMac ? '⌘' : 'Ctrl+'}K)`}
@@ -55,6 +51,12 @@ export default function SideRail({ showTimelineToggle }: { showTimelineToggle: b
           <NavLink to="/trips" viewTransition={!reducedMotion} title="All trips" className={({ isActive }) => railItem(isActive)}>
             <MapIcon size={22} aria-hidden="true" />
             <span>Trips</span>
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to={SETTINGS_ROUTE.path} viewTransition={!reducedMotion} title={SETTINGS_ROUTE.description} className={({ isActive }) => railItem(isActive)}>
+            <SettingsIcon size={22} aria-hidden="true" />
+            <span>{SETTINGS_ROUTE.label}</span>
           </NavLink>
         </li>
       </ul>

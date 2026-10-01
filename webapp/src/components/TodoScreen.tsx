@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type Announcements, type DragEndEvent, type ScreenReaderInstructions } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Check, CheckCircle2, CheckSquare, Circle, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { TodoItem } from '../core/models';
+import { DEFAULT_TODO_CATEGORY, getTodoCategoryIcon, groupTodosByCategory, listTodoCategories, moveTodo, todoCategoryOf } from '../core/todoCategories';
 import { cn } from '../lib/cn';
 import { Button, Card, EmptyState, Field, IconButton, Input, ScreenHeader, TextArea } from './ui';
 import { deleteWithUndo } from '../store/deleteWithUndo';
 import { SortableListItem } from './SortableList';
+import TodoCategoryPicker from './TodoCategoryPicker';
 
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, toggleTodo, reorderTodos } = useTripStore();
@@ -15,10 +17,15 @@ export default function TodoScreen() {
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
   const [newNotes, setNewNotes] = useState('');
+  const [newCategory, setNewCategory] = useState(DEFAULT_TODO_CATEGORY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editCategory, setEditCategory] = useState(DEFAULT_TODO_CATEGORY);
+
+  const categoryOptions = useMemo(() => listTodoCategories(todos), [todos]);
+  const groups = useMemo(() => groupTodosByCategory(todos), [todos]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -28,7 +35,8 @@ export default function TodoScreen() {
 
   const handleAdd = () => {
     if (!newTodo.trim()) return;
-    addTodo(newTodo.trim(), newDueDate || undefined, newNotes.trim() || undefined);
+    // Keep the chosen category so several to-dos can be added to it in a row.
+    addTodo(newTodo.trim(), newDueDate || undefined, newNotes.trim() || undefined, newCategory);
     setNewTodo('');
     setNewDueDate('');
     setNewNotes('');
@@ -40,6 +48,7 @@ export default function TodoScreen() {
     setEditText(todo.text);
     setEditDueDate(todo.dueDate || '');
     setEditNotes(todo.notes || '');
+    setEditCategory(todoCategoryOf(todo));
   };
 
   const commitEdit = () => {
@@ -47,16 +56,18 @@ export default function TodoScreen() {
       setEditingId(null);
       return;
     }
-    updateTodo(editingId, { text: editText.trim(), dueDate: editDueDate || null, notes: editNotes.trim() || null });
+    updateTodo(editingId, { text: editText.trim(), dueDate: editDueDate || null, notes: editNotes.trim() || null, category: editCategory });
     setEditingId(null);
   };
 
   const announcements = useMemo<Announcements>(() => {
-    const getTodoLabel = (id: string | number) => todos.find((todo) => todo.id === id)?.text ?? 'task';
+    const find = (id: string | number) => todos.find((todo) => todo.id === id);
+    const getTodoLabel = (id: string | number) => find(id)?.text ?? 'task';
+    const getCategory = (id: string | number) => { const todo = find(id); return todo ? todoCategoryOf(todo) : DEFAULT_TODO_CATEGORY; };
     return {
-      onDragStart: ({ active }) => `Picked up ${getTodoLabel(active.id)}.`,
-      onDragOver: ({ active, over }) => over ? `${getTodoLabel(active.id)} is over ${getTodoLabel(over.id)}.` : undefined,
-      onDragEnd: ({ active, over }) => over ? `Moved ${getTodoLabel(active.id)} before ${getTodoLabel(over.id)}.` : `Dropped ${getTodoLabel(active.id)}.`,
+      onDragStart: ({ active }) => `Picked up ${getTodoLabel(active.id)} from ${getCategory(active.id)}.`,
+      onDragOver: ({ active, over }) => over ? `${getTodoLabel(active.id)} is over ${getTodoLabel(over.id)} in ${getCategory(over.id)}.` : undefined,
+      onDragEnd: ({ active, over }) => over ? `Moved ${getTodoLabel(active.id)} to ${getCategory(over.id)}, next to ${getTodoLabel(over.id)}.` : `Dropped ${getTodoLabel(active.id)}.`,
       onDragCancel: ({ active }) => `Reordering cancelled for ${getTodoLabel(active.id)}.`,
     };
   }, [todos]);
@@ -66,11 +77,9 @@ export default function TodoScreen() {
   }), []);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return;
-    const oldIndex = todos.findIndex((todo) => todo.id === active.id);
-    const newIndex = todos.findIndex((todo) => todo.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    reorderTodos(arrayMove(todos, oldIndex, newIndex));
+    if (!over) return;
+    const next = moveTodo(todos, String(active.id), String(over.id));
+    if (next) reorderTodos(next);
   };
 
   const isOverdue = (todo: TodoItem) =>
@@ -111,6 +120,11 @@ export default function TodoScreen() {
               )}
             </Field>
 
+            <div className="edit-field-group mb-0">
+              <span id="new-todo-category-label" className="edit-field-label">Category</span>
+              <TodoCategoryPicker labelId="new-todo-category-label" value={newCategory} onChange={setNewCategory} options={categoryOptions} />
+            </div>
+
             <Field label="Due Date (Optional)" className="mb-0">
               {(id) => (
                 <Input
@@ -146,7 +160,7 @@ export default function TodoScreen() {
           </Card>
         )}
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-7">
           {todos.length === 0 ? (
             <Card>
               <EmptyState
@@ -163,8 +177,22 @@ export default function TodoScreen() {
             </Card>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} accessibility={{ announcements, screenReaderInstructions }}>
-              <SortableContext items={todos.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
-                {todos.map((todo) => {
+              <SortableContext items={groups.flatMap((group) => group.todos.map((todo) => todo.id))} strategy={verticalListSortingStrategy}>
+                {groups.map((group, groupIndex) => {
+                  const CategoryIcon = getTodoCategoryIcon(group.category);
+                  const done = group.todos.filter((todo) => todo.completed).length;
+                  const headingId = `todo-category-${groupIndex}`;
+                  return (
+                    <section key={group.category.toLowerCase()} aria-labelledby={headingId}>
+                      <div className="mb-3 flex items-center gap-2 pl-1">
+                        <CategoryIcon size={14} className="text-sys-blue" aria-hidden="true" />
+                        <h2 id={headingId} className="m-0 flex-1 text-footnote font-extrabold uppercase tracking-[0.08em] text-label-secondary">{group.category}</h2>
+                        <span className="text-caption font-bold text-label-tertiary" aria-label={`${done} of ${group.todos.length} done`}>
+                          {done}/{group.todos.length}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                {group.todos.map((todo) => {
               const isEditing = editingId === todo.id;
 
               return (
@@ -227,6 +255,7 @@ export default function TodoScreen() {
                           )}
                         </div>
                         <TextArea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} placeholder="Add notes..." className="min-h-[50px]" />
+                        <TodoCategoryPicker compact value={editCategory} onChange={setEditCategory} options={categoryOptions} />
                       </div>
                     ) : (
                       <>
@@ -268,6 +297,10 @@ export default function TodoScreen() {
                   )}
                 </SortableListItem>
               );
+                })}
+                      </div>
+                    </section>
+                  );
                 })}
               </SortableContext>
             </DndContext>

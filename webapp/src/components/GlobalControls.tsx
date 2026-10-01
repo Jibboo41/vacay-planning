@@ -14,7 +14,7 @@ import EditItineraryModal from './modals/EditItineraryModal';
 import AiScoutModal from './modals/AiScoutModal';
 
 export default function GlobalControls() {
-  const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen, selectedDayKey, currentTripId } = useTripStore();
+  const { items, addItem, updateItem, editingItem, editingExpense, selectedDayKey, currentTripId } = useTripStore();
   const location = useLocation();
 
   const [isSparkleOpen, setIsSparkleOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function GlobalControls() {
   // The add menu appears on trip screens (from the shared route config), except the full-bleed map.
   const route = findRoute(location.pathname);
   const showAddFab = !!route && route.key !== 'map' && !!currentTripId;
-  const shouldHide = isSidebarOpen || !!editingItem || !!editingExpense || addVisible || addNoteVisible || editVisible;
+  const shouldHide = !!editingItem || !!editingExpense || addVisible || addNoteVisible || editVisible;
 
   const getEarliestDate = () => {
     if (items.length === 0) return new Date().toISOString();
