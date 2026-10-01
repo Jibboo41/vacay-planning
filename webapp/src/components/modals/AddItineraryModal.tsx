@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { X, Sparkles, Loader } from 'lucide-react';
+import { Sparkles, Loader } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
 import { parseItinerary } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
+import { Button, Field, Sheet, TextArea } from '../ui';
 
 interface AddItineraryModalProps {
   onClose: () => void;
@@ -24,10 +25,6 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
     setError(null);
     try {
       let items = await parseItinerary(emailText, tripTitle);
-      
-      // Year Sanitizer: If any items have missing/invalid years (usually defaults to 2001 or 1970 if yearless)
-      // or if we just want to ensure consistency with the current trip.
-      // Year Sanitizer: Robustly calculate the default year.
       const currentItems = useTripStore.getState().items;
       let defaultYear = new Date().getFullYear();
       
@@ -40,26 +37,18 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
       }
 
       items = items.map(item => {
-        // Advanced Date Recon: AI sometimes returns invalid years, missing years, or "MM-DD".
         const fixDate = (dateStr: string) => {
           if (!dateStr) return dateStr;
-          
-          // Try parsing. If it has a year >= 2000, it's likely fine.
           const d = new Date(dateStr.replace(/-/g, '/'));
           if (!isNaN(d.getFullYear()) && d.getFullYear() >= 2024) {
              return dateStr;
           }
 
-          // Case 1: "NaN-MM-DD..." or "0001-MM-DD..."
-          // Extract the parts after the first hyphen
           const parts = dateStr.split('-');
           if (parts.length >= 3) {
-            // Reconstruct: YYYY-MM-DD[T...]
             return `${defaultYear}-${parts[1]}-${parts[2]}`;
           }
 
-          // Case 2: "MM-DD" or unstructured
-          // Look for digits like XX-XX
           const match = dateStr.match(/(\d{1,2})[/-](\d{1,2})/);
           if (match) {
             const m = match[1].padStart(2, '0');
@@ -68,9 +57,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
             return `${defaultYear}-${m}-${dStr}T${timePart}`;
           }
 
-          // Case 3: Just the year is bad but it starts with hyphen? No.
-          // Let's use a very aggressive regex to find the FIRST M-D pattern
-          return dateStr.replace(/^.*?(\d{4}|\d{2})[-/](\d{1,2})[-/](\d{1,2})/, (_match, _y, m, d) => {
+          return dateStr.replace(/^.*?(\d{4}|\d{2})[-/](\d{1,2})[-/](\d{1,2})/, (_match: string, _year: string, m: string, d: string) => {
              return `${defaultYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
           });
         };
@@ -86,63 +73,55 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
 
       items.forEach(item => onAdd(item));
       onClose();
-    } catch (err) {
+    } catch {
       setError('Could not connect to backend. Please make sure the server is running.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const canParse = Boolean(emailText.trim());
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ height: '80vh', display: 'flex', flexDirection: 'column' }}>
-        <div className="modal-pull-indicator" />
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Add from Email</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="#FFF" /></button>
-        </div>
-
-        <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginBottom: '20px', flexShrink: 0 }}>
-          Paste a booking confirmation or itinerary email and we'll extract all the details automatically.
-        </p>
-
-        <textarea
-          placeholder="Paste email content here..."
-          value={emailText}
-          onChange={e => setEmailText(e.target.value)}
-          style={{
-            width: '100%', flex: 1, padding: '16px', borderRadius: '12px',
-            background: 'var(--sys-bg-elevated-2)', border: '1px solid var(--sys-separator)',
-            color: '#FFF', fontSize: '16px', resize: 'none', lineHeight: '1.5',
-            minHeight: '180px', marginBottom: '16px', outline: 'none'
-          }}
-        />
-
-        {error && (
-          <p style={{ fontSize: '13px', color: 'var(--sys-red)', marginBottom: '12px', flexShrink: 0 }}>{error}</p>
-        )}
-
-        <button
+    <Sheet
+      open
+      onClose={onClose}
+      title="Add from Email"
+      className="flex h-[80vh] flex-col"
+      bodyClassName="flex flex-1 flex-col"
+      footer={(
+        <Button
           onClick={handleParse}
-          disabled={isLoading || !emailText.trim()}
-          className={emailText.trim() ? "btn-glass-blue" : ""}
-          style={{
-            width: '100%', padding: '16px', borderRadius: '14px',
-            fontSize: '16px', fontWeight: 700,
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            opacity: isLoading ? 0.7 : (!emailText.trim() ? 0.5 : 1), marginBottom: '24px',
-            flexShrink: 0,
-            background: !emailText.trim() ? 'rgba(255, 255, 255, 0.05)' : undefined,
-            border: !emailText.trim() ? '1px solid rgba(255, 255, 255, 0.08)' : undefined,
-            color: !emailText.trim() ? 'var(--sys-label-secondary)' : '#fff',
-            boxShadow: !emailText.trim() ? 'none' : undefined
-          }}
+          disabled={isLoading || !canParse}
+          variant={canParse ? 'glass' : 'secondary'}
+          block
+          size="lg"
+          className={canParse ? 'btn-glass-blue disabled:opacity-70' : 'opacity-50'}
         >
-          {isLoading ? <Loader size={20} style={{ marginRight: '8px', animation: 'spin 1s linear infinite' }} /> : <Sparkles size={20} style={{ marginRight: '8px' }} />}
+          {isLoading ? <Loader size={20} className="animate-spin motion-reduce:animate-none" /> : <Sparkles size={20} />}
           {isLoading ? 'Parsing...' : 'Parse with AI'}
-        </button>
-      </div>
-    </div>
+        </Button>
+      )}
+    >
+      <p className="mb-5 shrink-0 text-[14px] leading-normal text-label-secondary">
+        Paste a booking confirmation or itinerary email and we'll extract all the details automatically.
+      </p>
+
+      <Field label="Email content" className="flex flex-1 flex-col">
+        {id => (
+          <TextArea
+            id={id}
+            placeholder="Paste email content here..."
+            value={emailText}
+            onChange={e => setEmailText(e.target.value)}
+            className="min-h-[180px] flex-1 resize-none rounded-control border-separator bg-surface-2 p-4 text-[16px] leading-normal text-label outline-none"
+          />
+        )}
+      </Field>
+
+      {error && (
+        <p className="mt-3 shrink-0 text-footnote text-sys-red">{error}</p>
+      )}
+    </Sheet>
   );
 }

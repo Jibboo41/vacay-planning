@@ -27,8 +27,8 @@
 - **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order. Fixed logic re-calculates paths instantly upon itinerary changes.
 
 ### 🔹 Travel Power Modules
-- **Todo System**: Trip checklists with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder via grip handle.
-- **Global Event Filtering**: Toggle visibility for specific categories (Flights, Hotels, Rentals, Activities, etc.) across both the Timeline and Map via the Sidebar to focus on specific trip segments.
+- **Todo System**: Trip checklists grouped by category (General, Bookings, Documents, Money, Home, Shopping, or your own), with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder (dropping onto another category moves the task there).
+- **Global Event Filtering**: Toggle visibility for specific categories (Flights, Hotels, Rentals, Activities, etc.) across both the Timeline and Map from the timeline's filter chips (desktop) or Settings (mobile) to focus on specific trip segments.
 - **Cost Tracker**: Comprehensive expense dashboard aggregating itinerary costs with paid/remaining split tracking and over-budget alerts.
 - **Weather Suite**: Integrated daily forecasts via Open-Meteo API with **5-year historical precipitation averages** (rainfall + snowfall in inches) and daily H/L aggregated across all stops.
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
@@ -52,7 +52,7 @@
 
 ### 🔹 Glass UI & Themes
 - **Glass Blue Buttons**: All primary actions use a frosted glass treatment instead of solid opaque blue.
-- **10 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk — each with gradient swatch previews in the sidebar.
+- **10 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk — each with gradient swatch previews in Settings.
 - **Ambient Background**: Three animated color blobs behind all content, colors driven by selected theme.
 
 ---

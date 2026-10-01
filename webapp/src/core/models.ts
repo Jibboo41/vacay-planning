@@ -77,6 +77,8 @@ export interface TodoItem {
   createdAt: number;
   dueDate?: string;
   notes?: string;
+  /** Free-form category; missing means "General" (see `core/todoCategories.ts`). */
+  category?: string;
 }
 
 export interface PackingItem {

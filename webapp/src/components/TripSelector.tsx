@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Trash2, Compass } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
+import type { ItineraryItem } from '../core/models';
+import { cn } from '../lib/cn';
+import { Button, Card, EmptyState, IconButton, Input, Modal } from './ui';
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
 
 const TripSelector: React.FC = () => {
   const trips = useTripStore(s => s.trips);
@@ -19,7 +26,9 @@ const TripSelector: React.FC = () => {
   
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [pendingDeleteTripId, setPendingDeleteTripId] = useState<string | null>(null);
   const renameTrip = useTripStore(s => s.renameTrip);
+  const pendingDeleteTrip = trips.find(trip => trip.id === pendingDeleteTripId);
 
   const handleStartRename = (e: React.MouseEvent, id: string, title: string) => {
     e.stopPropagation();
@@ -35,7 +44,7 @@ const TripSelector: React.FC = () => {
     setRenamingId(null);
   };
 
-  const getTripDates = (items: any[]) => {
+  const getTripDates = (items: ItineraryItem[]) => {
     if (!items || items.length === 0) return 'No dates set';
     
     const parse = (d: string) => {
@@ -70,9 +79,9 @@ const TripSelector: React.FC = () => {
       setNewTripTitle('');
       setIsAdding(false);
       navigate('/timeline');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to add trip:', err);
-      alert(err.message || 'Failed to create trip. Please try again.');
+      alert(getErrorMessage(err) || 'Failed to create trip. Please try again.');
     } finally {
       setIsCreating(false);
     }
@@ -86,17 +95,21 @@ const TripSelector: React.FC = () => {
 
   const handleDeleteTrip = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this trip?')) {
-      deleteTrip(id);
-    }
+    setPendingDeleteTripId(id);
+  };
+
+  const handleConfirmDeleteTrip = () => {
+    if (!pendingDeleteTripId) return;
+    deleteTrip(pendingDeleteTripId);
+    setPendingDeleteTripId(null);
   };
 
   const handleDuplicateTrip = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
        await duplicateTrip(id);
-    } catch (err: any) {
-       alert("Failed to duplicate trip: " + err.message);
+    } catch (err) {
+       alert("Failed to duplicate trip: " + getErrorMessage(err));
     }
   };
 
@@ -111,297 +124,161 @@ const TripSelector: React.FC = () => {
   }, [trips, currentTripId, setCurrentTrip]);
 
   return (
-    <div className="trip-selector-screen">
+    <div className="min-h-dvh bg-transparent text-label">
       <header className="screen-header">
-        <h1 style={{ flex: 1, fontSize: '2rem', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>My Trips</h1>
-        <button onClick={handleLogout} className="logout-btn" aria-label="Logout">
+        <h1 className="m-0 flex-1 text-[2rem] font-extrabold tracking-[-1px] text-label">My Trips</h1>
+        <IconButton onClick={handleLogout} variant="glass" size="md" round aria-label="Logout" className="text-label-tertiary">
           <LogOut size={18} />
-        </button>
+        </IconButton>
       </header>
 
-      <main className="trip-list-container">
-        <div className="trip-list">
+      <main className="px-6 pb-[120px] pt-6">
+        <div className="flex flex-col gap-4">
         {trips.length === 0 ? (
-          <div className="empty-state">
-            <p>No trips yet. Plan your first adventure!</p>
-          </div>
+          <Card className="mb-2">
+            <EmptyState
+              icon={<Compass size={32} />}
+              title="No trips yet"
+              description="Create a trip to start planning your itinerary, notes, costs, and packing list."
+              action={(
+                <Button onClick={() => setIsAdding(true)}>
+                  <Plus size={18} />
+                  Create your first trip
+                </Button>
+              )}
+            />
+          </Card>
         ) : (
           trips.map(trip => (
-            <div 
+            <Card
               key={trip.id} 
-              className={`trip-card ${currentTripId === trip.id ? 'active' : ''}`}
-              onClick={() => handleSelectTrip(trip.id)}
+              padding="lg"
+              className={cn(
+                'group flex cursor-default items-center justify-between overflow-hidden rounded-panel border bg-white/[0.03] shadow-[0_10px_40px_rgba(0,0,0,0.2)] backdrop-blur-2xl transition-all duration-[400ms] ease-ios after:pointer-events-none after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/5 after:to-transparent hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.07] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]',
+                currentTripId === trip.id ? 'border-sys-blue bg-sys-blue/6 shadow-[0_0_0_1px_var(--sys-blue),0_15px_45px_rgba(0,0,0,0.25)]' : 'border-white/8',
+              )}
             >
-              <div className="trip-info">
-                {renamingId === trip.id ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={e => e.stopPropagation()}>
-                    <input 
+              {renamingId === trip.id ? (
+                <div className="flex min-w-0 flex-1 items-center justify-between gap-4 text-left">
+                  <div className="min-w-0">
+                    <Input
                       autoFocus
-                      className="edit-field-input"
+                      className="m-0 h-11 w-full"
                       value={renameValue}
                       onChange={e => setRenameValue(e.target.value)}
                       onKeyDown={e => { if(e.key === 'Enter') handleSaveRename(e, trip.id); if(e.key === 'Escape') setRenamingId(null); }}
-                      style={{ height: '44px', margin: 0 }}
                     />
                   </div>
-                ) : (
-                  <>
-                    <h3>{trip.title}</h3>
-                    <div className="trip-meta">
-                      <span><Calendar size={14} /> {getTripDates(trip.items)}</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-4 border-0 bg-transparent p-0 text-left font-[inherit] text-inherit"
+                  onClick={() => handleSelectTrip(trip.id)}
+                >
+                  <div className="min-w-0">
+                    <h3 className="mb-2 mt-0 text-xl font-semibold text-label">{trip.title}</h3>
+                    <div className="flex items-center gap-3 text-[0.9rem] text-label-tertiary">
+                      <span className="flex items-center gap-1"><Calendar size={14} /> {getTripDates(trip.items)}</span>
                     </div>
-                  </>
-                )}
-              </div>
-              <div className="trip-actions">
+                  </div>
+                  <ChevronRight size={20} className="text-white/20 transition-colors group-hover:text-white/60" />
+                </button>
+              )}
+              <div className="flex items-center gap-1">
                 {!renamingId && (
                   <>
-                    <button 
+                    <IconButton
+                      aria-label="Rename trip"
                       onClick={(e) => handleStartRename(e, trip.id, trip.title)}
-                      className="duplicate-trip-btn"
+                      variant="ghost"
+                      size="sm"
+                      className="text-white/40 hover:text-label"
                       title="Rename"
                     >
                       <Pencil size={18} />
-                    </button>
-                    <button 
+                    </IconButton>
+                    <IconButton
+                      aria-label="Duplicate trip"
                       onClick={(e) => handleDuplicateTrip(e, trip.id)} 
-                      className="duplicate-trip-btn"
+                      variant="ghost"
+                      size="sm"
+                      className="text-white/40 hover:text-label"
                       title="Duplicate Trip"
                     >
                       <Copy size={18} />
-                    </button>
-                    <button 
+                    </IconButton>
+                    <IconButton
+                      aria-label="Delete trip"
                       onClick={(e) => handleDeleteTrip(e, trip.id)} 
-                      className="delete-trip-btn"
+                      variant="danger"
+                      size="sm"
+                      className="border-0 bg-transparent text-sys-red/40 hover:bg-sys-red/15 hover:text-sys-red"
                       title="Delete"
                     >
                       <Trash2 size={20} />
-                    </button>
+                    </IconButton>
                   </>
                 )}
-                <ChevronRight size={20} className="chevron" />
               </div>
-            </div>
+            </Card>
           ))
         )}
 
-        <button 
+        <Button 
           onClick={() => setIsAdding(true)} 
-          className="btn-glass-blue add-trip-btn-large"
+          className="mt-4 gap-3 rounded-card p-5 text-[1.1rem] transition-transform hover:-translate-y-0.5"
+          block
+          size="lg"
         >
           <Plus size={24} />
           <span>Plan New Trip</span>
-        </button>
+        </Button>
         </div>
       </main>
 
-      {isAdding && (
-        <div className="modal-overlay" onClick={() => setIsAdding(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2>New Trip</h2>
-            <form onSubmit={handleAddTrip}>
-              <input 
+      <Modal
+        open={isAdding}
+        onClose={() => setIsAdding(false)}
+        title="New Trip"
+        variant="center"
+        footer={(
+          <>
+            <Button variant="secondary" onClick={() => setIsAdding(false)} disabled={isCreating} className="flex-1">Cancel</Button>
+            <Button type="submit" form="new-trip-form" variant="primary" disabled={!newTripTitle.trim() || isCreating} className="flex-1">
+              {isCreating ? 'Creating...' : 'Create'}
+            </Button>
+          </>
+        )}
+      >
+            <form id="new-trip-form" onSubmit={handleAddTrip}>
+              <Input
                 autoFocus
                 type="text" 
                 placeholder="Trip Title (e.g., Japan Summer 2025)"
                 value={newTripTitle}
                 onChange={e => setNewTripTitle(e.target.value)}
-                style={{ fontSize: '16px' }}
+                className="text-[16px]"
               />
-              <div className="modal-actions">
-                <button type="button" onClick={() => setIsAdding(false)} disabled={isCreating}>Cancel</button>
-                <button type="submit" className="submit-btn" disabled={!newTripTitle.trim() || isCreating}>
-                  {isCreating ? 'Creating...' : 'Create'}
-                </button>
-              </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
 
-      <style>{`
-        .trip-selector-screen {
-          min-height: 100vh;
-          background: transparent;
-          color: white;
-          box-sizing: border-box;
-        }
-
-        .trip-list-container {
-          padding: 24px;
-          padding-bottom: 120px;
-        }
-
-        .logout-btn {
-          background: rgba(255, 255, 255, 0.1);
-          border: none; color: #888;
-          width: 40px; height: 40px;
-          border-radius: 20px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-        }
-
-        .trip-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .trip-card {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          padding: 24px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .trip-card::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
-          pointer-events: none;
-        }
-
-        .trip-card:hover {
-          background: rgba(255, 255, 255, 0.07);
-          transform: translateY(-4px);
-          border-color: rgba(255, 255, 255, 0.15);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .trip-card.active {
-          border-color: var(--sys-blue);
-          background: rgba(10, 132, 255, 0.06);
-          box-shadow: 0 0 0 1px var(--sys-blue), 0 15px 45px rgba(0, 0, 0, 0.25);
-        }
-
-        .trip-info h3 { margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 600; }
-        
-        .trip-meta {
-          display: flex;
-          gap: 12px;
-          color: #888;
-          font-size: 0.9rem;
-          align-items: center;
-        }
-
-        .trip-meta span { display: flex; align-items: center; gap: 4px; }
-
-        .trip-actions {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .duplicate-trip-btn {
-          background: transparent;
-          border: none;
-          color: rgba(255, 255, 255, 0.4);
-          padding: 8px;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-        .duplicate-trip-btn:hover {
-          color: #fff !important;
-          background: rgba(255, 255, 255, 0.1);
-        }
-
-        .delete-trip-btn {
-          background: transparent;
-          border: none;
-          color: rgba(255, 69, 58, 0.4);
-          padding: 8px;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-        .delete-trip-btn:hover {
-          color: #ff453a !important;
-          background: rgba(255, 69, 58, 0.15);
-        }
-
-        .chevron { color: rgba(255, 255, 255, 0.2); transition: color 0.2s; }
-        .trip-card:hover .chevron { color: rgba(255, 255, 255, 0.6); }
-
-        .add-trip-btn-large {
-          margin-top: 16px;
-          border-radius: 20px;
-          padding: 20px;
-          font-size: 1.1rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          transition: all 0.2s ease;
-        }
-
-        .add-trip-btn-large:hover { transform: translateY(-2px); }
-
-        .empty-state {
-          padding: 40px;
-          text-align: center;
-          color: #666;
-          border: 2px dashed rgba(255, 255, 255, 0.05);
-          border-radius: 24px;
-          margin-bottom: 24px;
-        }
-
-        .modal-overlay {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(5px);
-          display: flex; align-items: center; justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-        }
-
-        .modal-content {
-          background: #1c1c1e;
-          width: 100%;
-          max-width: 400px;
-          border-radius: 24px;
-          padding: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .modal-content h2 { margin: 0 0 20px 0; font-size: 1.5rem; }
-
-        .modal-content input {
-          width: 100%;
-          background: #2c2c2e;
-          border: none;
-          border-radius: 12px;
-          padding: 16px;
-          color: white;
-          font-size: 16px;
-          margin-bottom: 24px;
-          outline: none;
-        }
-
-        .modal-content input:focus { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
-
-        .modal-actions {
-          display: flex; gap: 12px;
-        }
-
-        .modal-actions button {
-          flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer;
-        }
-
-        .modal-actions button:first-child { background: #2c2c2e; color: #888; }
-        .submit-btn { background: white; color: black; }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-      `}</style>
+      <Modal
+        open={!!pendingDeleteTripId}
+        onClose={() => setPendingDeleteTripId(null)}
+        title="Delete trip?"
+        variant="center"
+        footer={(
+          <>
+            <Button variant="secondary" onClick={() => setPendingDeleteTripId(null)} className="flex-1">Cancel</Button>
+            <Button variant="danger" onClick={handleConfirmDeleteTrip} className="flex-1">Delete</Button>
+          </>
+        )}
+      >
+        <p className="text-body leading-[1.5] text-label-secondary">
+          This will permanently delete {pendingDeleteTrip ? <span className="font-bold text-label">&quot;{pendingDeleteTrip.title}&quot;</span> : 'this trip'} and all of its itinerary items, notes, costs, and lists.
+        </p>
+      </Modal>
     </div>
   );
 };

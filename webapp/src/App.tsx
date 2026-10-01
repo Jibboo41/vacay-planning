@@ -7,27 +7,54 @@ import CostTrackerScreen from './components/CostTrackerScreen';
 import WeatherScreen from './components/WeatherScreen';
 import NotesScreen from './components/NotesScreen';
 import PackingScreen from './components/PackingScreen';
+import SettingsScreen from './components/SettingsScreen';
 import DebugScreen from './components/DebugScreen';
 import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
 import GlobalControls from './components/GlobalControls';
-import Sidebar from './components/Sidebar';
 import GlobalModals from './components/modals/GlobalModals';
+import ErrorBoundary from './components/ErrorBoundary';
+import SyncIndicator from './components/SyncIndicator';
+import AppBanner from './components/AppBanner';
+import CommandPalette from './components/CommandPalette';
+import { ScreenSkeleton, TimelineSkeleton, TripListSkeleton } from './components/Skeletons';
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './core/firebase';
 import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useTripStore } from './store/useTripStore';
+import { Plane } from 'lucide-react';
+import { EmptyState, Toaster } from './components/ui';
+import { buttonVariants } from './components/ui/variants';
+import { useUiStore } from './store/useUiStore';
+import { useHotkeys, isDialogOpen } from './hooks/useHotkeys';
+import { startNewItem } from './store/itemActions';
+import { useIsWide } from './hooks/useMediaQuery';
+import { DEFAULT_ROUTE, SETTINGS_ROUTE, isDebugEnabled } from './app/routes';
+import TabBar from './components/TabBar';
+import PwaUpdater from './components/PwaUpdater';
+import SideRail from './components/layout/SideRail';
+import SplitPane from './components/layout/SplitPane';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const RouteSkeleton = () => {
+  const { pathname } = useLocation();
+  if (pathname === '/trips') return <TripListSkeleton />;
+  if (pathname === '/timeline') return <TimelineSkeleton />;
+  return <ScreenSkeleton />;
+};
+
+const ProtectedRoute = ({ children, name }: { children: React.ReactNode; name?: string }) => {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
   const initialized = useTripStore(s => s.initialized);
-  
-  if (loading || (userId && !initialized)) return null;
-  if (!userId) return <Navigate to="/login" replace />;
+  const { pathname } = useLocation();
 
-  return <>{children}</>;
+  // The splash covers the initial auth check; afterwards show skeletons while trips load.
+  if (loading) return null;
+  if (!userId) return <Navigate to="/login" replace />;
+  if (!initialized) return <RouteSkeleton />;
+
+  return <ErrorBoundary name={name} resetKey={pathname}>{children}</ErrorBoundary>;
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -41,74 +68,96 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const NoTripState = () => (
-  <div style={{ padding: '80px 40px', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ fontSize: '3rem', marginBottom: '20px' }}>✈️</div>
-    <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '10px', color: '#fff' }}>No Trip Active</h2>
-    <p style={{ color: 'var(--sys-label-secondary)', marginBottom: '30px', maxWidth: '300px' }}>Select a trip from the sidebar or trip selector to view your itinerary.</p>
-    <Link to="/trips" style={{ display: 'inline-flex', padding: '12px 24px', borderRadius: '12px', background: 'var(--sys-blue)', color: '#fff', fontWeight: 700, textDecoration: 'none' }}>
-      Go to Trip Selector
-    </Link>
-  </div>
+  <EmptyState
+    className="h-full px-10 py-20"
+    icon={<Plane size={28} />}
+    title="No Trip Active"
+    description="Pick a trip in Settings or the trip selector to view your itinerary."
+    action={
+      <Link to="/trips" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+        Go to Trip Selector
+      </Link>
+    }
+  />
 );
 
+/** Persistent sync pill, shown on trip screens only. */
 const SyncStatus = () => {
-  const saving = useTripStore(s => s.saving);
-  const error = useTripStore(s => s.lastSaveError);
-  
-  if (!saving && !error) return null;
-
+  const userId = useTripStore(s => s.userId);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const { pathname } = useLocation();
+  if (!userId || !currentTripId || pathname === '/login') return null;
   return (
-    <div style={{
-      position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)',
-      zIndex: 11000, display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '8px 16px', borderRadius: '100px',
-      background: error ? 'rgba(255, 59, 48, 0.95)' : 'rgba(0, 0, 0, 0.7)',
-      backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)',
-      color: '#fff', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.3)', pointerEvents: 'none',
-      transition: 'all 0.3s ease'
-    }}>
-      {error ? (
-        <><span>⚠️</span> <span>SYNC ERROR: {error}</span></>
-      ) : (
-        <>
-          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <span>SAVING TO CLOUD...</span>
-        </>
-      )}
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-offset,0px)+28px)] z-[2600] flex justify-center">
+      <SyncIndicator className="pointer-events-auto" />
     </div>
   );
 };
 
+/** Global shortcuts: ⌘K / Ctrl+K and "/" open the command palette, "N" adds an item. */
+const GlobalShortcuts = () => {
+  const userId = useTripStore(s => s.userId);
+  const setPaletteOpen = useUiStore(s => s.setPaletteOpen);
+  const paletteOpen = useUiStore(s => s.paletteOpen);
+  useHotkeys({
+    'mod+k': (e) => { e.preventDefault(); setPaletteOpen(!paletteOpen); },
+    '/': (e) => { if (isDialogOpen()) return; e.preventDefault(); setPaletteOpen(true); },
+    'n': (e) => {
+      if (isDialogOpen() || !useTripStore.getState().currentTripId) return;
+      e.preventDefault();
+      startNewItem();
+    },
+  }, !!userId);
+  return null;
+};
+
+/** Which navigation chrome is visible; mirrored to `<html data-nav>` so fixed UI can offset itself in CSS. */
+type NavMode = 'none' | 'bottom' | 'rail';
+
 function MainLayout({ children }: { children: React.ReactNode }) {
-  const { currentTripId } = useTripStore();
-  const location = useLocation();
-  const [isWide, setIsWide] = useState(window.innerWidth >= 1000);
+  const currentTripId = useTripStore(s => s.currentTripId);
+  const userId = useTripStore(s => s.userId);
+  const initialized = useTripStore(s => s.initialized);
+  const collapsed = useUiStore(s => s.timelineCollapsed);
+  const { pathname } = useLocation();
+  const isWide = useIsWide();
+
+  const showNav = !!userId && pathname !== '/login';
+  const navMode: NavMode = !showNav ? 'none' : isWide ? 'rail' : 'bottom';
 
   useEffect(() => {
-    const handleResize = () => setIsWide(window.innerWidth >= 1000);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    document.documentElement.dataset.nav = navMode;
+  }, [navMode]);
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/trips';
+  if (navMode === 'none') {
+    return <div className="flex min-h-dvh w-full flex-1 flex-col">{children}</div>;
+  }
 
-  if (!isAuthPage && isWide && currentTripId) {
+  if (navMode === 'bottom') {
     return (
-      <div className="split-layout">
-        <div className="split-left">
-          <TimelineScreen />
-        </div>
-        <div className="split-right">
-          {location.pathname === '/timeline' ? <MapViewScreen /> : children}
-        </div>
+      <div className="flex min-h-dvh w-full flex-1 flex-col pb-(--bottom-nav-offset)">
+        {children}
+        <TabBar />
       </div>
     );
   }
 
+  const split = !!currentTripId && initialized && pathname !== '/trips' && pathname !== '/debug';
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
-      {children}
+    <div className="flex min-h-dvh w-full flex-1 flex-col pl-(--side-rail-w)">
+      <SideRail showTimelineToggle={split} />
+      {split ? (
+        <SplitPane
+          leftLabel="Timeline"
+          collapsed={collapsed}
+          left={<ErrorBoundary name="Timeline" resetKey={currentTripId}><TimelineScreen /></ErrorBoundary>}
+          right={pathname === '/timeline' && !collapsed
+            ? <ErrorBoundary name="Map" resetKey={pathname}><MapViewScreen /></ErrorBoundary>
+            : children}
+        />
+      ) : (
+        <div className="flex min-h-dvh w-full flex-1 flex-col">{children}</div>
+      )}
     </div>
   );
 }
@@ -117,22 +166,25 @@ function App() {
   const userId = useTripStore(s => s.userId);
   const loading = useTripStore(s => s.loading);
   const currentTripId = useTripStore(s => s.currentTripId);
-  const isSidebarOpen = useTripStore(s => s.isSidebarOpen);
   const theme = useTripStore(s => s.theme);
-  const initialized = useTripStore(s => s.initialized);
   const setUserId = useTripStore(s => s.setUserId);
   const setLoading = useTripStore(s => s.setLoading);
-  const setSidebarOpen = useTripStore(s => s.setSidebarOpen);
   const syncTrips = useTripStore(s => s.syncTrips);
   
-  const [error, setError] = useState<string | null>(null);
+  const showBanner = useUiStore(s => s.showBanner);
+  const dismissBanner = useUiStore(s => s.dismissBanner);
+  const [listenAttempt, setListenAttempt] = useState(0);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     getRedirectResult(auth).then((result) => {
       if (result?.user) setUserId(result.user.uid);
     }).catch((err) => {
       console.error("Redirect login error:", err);
-      setError(`Auth Redirect Error: ${err.message}`);
+      showBanner({ id: 'auth', message: `Sign-in didn't complete: ${err.message}`, retry: () => window.location.assign('/login') });
     });
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
@@ -140,7 +192,8 @@ function App() {
       setLoading(false);
     }, (err) => {
       console.error("Auth state error:", err);
-      setError(`Auth State Error: ${err.message}`);
+      showBanner({ id: 'auth', message: `Authentication problem: ${err.message}`, retry: () => window.location.reload() });
+      setLoading(false);
     });
 
     const timeout = setTimeout(() => setLoading(false), 6000); 
@@ -149,7 +202,14 @@ function App() {
       unsubAuth();
       clearTimeout(timeout);
     };
-  }, [setUserId, setLoading]);
+  }, [setUserId, setLoading, showBanner]);
+
+  // Commit held (undo-able) deletes before the page goes away.
+  useEffect(() => {
+    const flush = () => { void useTripStore.getState().flushPendingDeletes(); };
+    window.addEventListener('pagehide', flush);
+    return () => window.removeEventListener('pagehide', flush);
+  }, []);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -164,94 +224,68 @@ function App() {
       const tripsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as any[];
+      })) as Parameters<typeof syncTrips>[0];
       syncTrips(tripsData);
-      setError(null);
+      dismissBanner('firestore');
     }, (err) => {
       console.error("Firestore Listen Error:", err);
+      const retry = () => setListenAttempt(n => n + 1);
       if (err.code === 'permission-denied') {
         setTimeout(() => {
           if (!auth.currentUser) {
-            setError(`Firestore Error: ${err.message}. Please try logging in again.`);
+            showBanner({ id: 'firestore', message: `Couldn't load your trips (${err.message}). Please try logging in again.`, retry: () => window.location.assign('/login') });
           }
         }, 2000);
       } else {
-        setError(`Firestore Error: ${err.message}`);
+        showBanner({ id: 'firestore', message: `Couldn't sync your trips: ${err.message}`, retry });
       }
     });
 
     return unsubSnap;
-  }, [syncTrips, loading, userId]);
+  }, [syncTrips, loading, userId, listenAttempt, showBanner, dismissBanner]);
 
-  if (error) {
-    return (
-      <div style={{
-        height: '100vh', padding: '40px', backgroundColor: '#300', color: '#ff453a',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', gap: '16px'
-      }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>⚠️ APP ERROR</h2>
-        <p style={{ maxWidth: '400px', fontSize: '0.8rem', opacity: 0.8 }}>{error}</p>
-        <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', backgroundColor: '#fff', color: '#000', borderRadius: '12px' }}>RELOAD</button>
-      </div>
-    );
-  }
-
-  const getThemeBlobs = (t: string) => {
-    switch (t) {
-      case 'sunset':     return ['#FF3B30', '#FF9F0A', '#FFD60A'];
-      case 'midnight':   return ['#5E5CE6', '#BF5AF2', '#32ADE6'];
-      case 'forest':     return ['#30D158', '#34C759', '#32ADE6'];
-      case 'aurora':     return ['#00F5A0', '#8B5CF6', '#06B6D4'];
-      case 'desert':     return ['#E2A57E', '#C9415A', '#EDCA7F'];
-      case 'ocean':      return ['#0EA5E9', '#0D9488', '#6366F1'];
-      case 'vulcan':     return ['#FF4500', '#FF8C00', '#FF2D55'];
-      case 'sakura':     return ['#FF85A2', '#D891EF', '#FFB6CE'];
-      case 'cyberpunk':  return ['#FF00AA', '#00FFEA', '#FFE600'];
-      case 'slate':      return ['#708090', '#708090', '#708090'];
-      case 'black':      return ['#000000', '#000000', '#000000'];
-      default:           return [undefined, undefined, undefined];
-    }
-  };
-  const [b1, b2, b3] = getThemeBlobs(theme);
 
   return (
     <BrowserRouter>
-      <div className="ambient-bg">
-        <div className="blob blob-1" style={b1 ? { background: b1 } : undefined} />
-        <div className="blob blob-2" style={b2 ? { background: b2 } : undefined} />
-        <div className="blob blob-3" style={b3 ? { background: b3 } : undefined} />
+      <div className="ambient-bg" aria-hidden="true">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
+        <div className="blob blob-3" />
       </div>
 
       <div className="app-content-root">
-        {(loading || (userId && !initialized)) && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: '#0f1014', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff', gap: '15px' }}>
-            <div style={{ fontSize: '2.5rem', animation: 'pulse 2s infinite' }}>✈️</div>
-            <div style={{ fontSize: '11px', letterSpacing: '0.2em', opacity: 0.8 }}>RESTORING TRIP...</div>
+        {loading && (
+          <div role="status" className="fixed inset-0 z-[10000] flex flex-col items-center justify-center gap-4 bg-app-bg text-white">
+            <div className="animate-pulse text-[2.5rem] motion-reduce:animate-none" aria-hidden="true">✈️</div>
+            <div className="text-caption tracking-[0.2em] opacity-80">SIGNING IN…</div>
           </div>
         )}
 
-        {userId && (
-          <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
-        )}
-
         <SyncStatus />
+        <AppBanner />
         <GlobalModals />
+        <CommandPalette />
+        <GlobalShortcuts />
+        <Toaster />
+        <PwaUpdater />
 
         <MainLayout>
           <Routes>
-            <Route path="/login" element={<PublicRoute><LoginScreen /></PublicRoute>} />
-            <Route path="/trips" element={<ProtectedRoute><TripSelector /></ProtectedRoute>} />
-            <Route path="/summary" element={<ProtectedRoute>{currentTripId ? <SummaryScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/timeline" element={<ProtectedRoute>{currentTripId ? <TimelineScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/map" element={<ProtectedRoute>{currentTripId ? <MapViewScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/todo" element={<ProtectedRoute>{currentTripId ? <TodoScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/costs" element={<ProtectedRoute>{currentTripId ? <CostTrackerScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/weather" element={<ProtectedRoute>{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/notes" element={<ProtectedRoute>{currentTripId ? <NotesScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/packing" element={<ProtectedRoute>{currentTripId ? <PackingScreen /> : <NoTripState />}</ProtectedRoute>} />
-            <Route path="/debug" element={<ProtectedRoute><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/timeline" replace />} />
+            <Route path="/login" element={<PublicRoute><ErrorBoundary name="Login"><LoginScreen /></ErrorBoundary></PublicRoute>} />
+            <Route path="/trips" element={<ProtectedRoute name="Trips"><TripSelector /></ProtectedRoute>} />
+            <Route path="/summary" element={<ProtectedRoute name="Summary">{currentTripId ? <SummaryScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/timeline" element={<ProtectedRoute name="Timeline">{currentTripId ? <TimelineScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/map" element={<ProtectedRoute name="Map">{currentTripId ? <MapViewScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/todo" element={<ProtectedRoute name="Todo">{currentTripId ? <TodoScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/costs" element={<ProtectedRoute name="Costs">{currentTripId ? <CostTrackerScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/weather" element={<ProtectedRoute name="Weather">{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/notes" element={<ProtectedRoute name="Notes">{currentTripId ? <NotesScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/packing" element={<ProtectedRoute name="Packing">{currentTripId ? <PackingScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path={SETTINGS_ROUTE.path} element={<ProtectedRoute name="Settings"><SettingsScreen /></ProtectedRoute>} />
+            {isDebugEnabled() && (
+              <Route path="/debug" element={<ProtectedRoute name="Debug"><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />
+            )}
+            <Route path="*" element={<Navigate to={DEFAULT_ROUTE} replace />} />
           </Routes>
         </MainLayout>
       </div>

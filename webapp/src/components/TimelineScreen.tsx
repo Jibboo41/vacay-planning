@@ -1,34 +1,35 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Menu, Map, RefreshCw } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { CalendarDays, Map, RefreshCw, SearchX, SlidersHorizontal } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
+import { useUiStore } from '../store/useUiStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import type { ItineraryItem } from '../core/models';
+import { resolveItemType } from '../core/itemTypes';
+import { SETTINGS_ROUTE } from '../app/routes';
+import { cn } from '../lib/cn';
+import { Button, EmptyState } from './ui';
+import TimelineFilters from './TimelineFilters';
+import { getDayKey, getDayLabel, todayKey } from '../utils/dates';
+import { itemMatchesQuery } from '../utils/itinerary';
+import { useIsWide, usePrefersReducedMotion } from '../hooks/useMediaQuery';
+import { describeTimelineFilters, ensureFiltersEnabled, resetTimelineFilters, useTimelineFilterStatus } from '../store/timelineFilters';
+import { isDialogOpen, useHotkeys } from '../hooks/useHotkeys';
+import { startNewItem } from '../store/itemActions';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 interface DayGroup {
   dateKey: string;
   label: string;
-  items: ItineraryItem[];
+  items: RenderedTimelineItem[];
 }
 
-function getDayKey(dateString: string) {
-  if (!dateString) return '';
-  // Force local interpretation by replacing dashes with slashes if no time present
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  if (isNaN(d.getTime())) return dateString.split('T')[0];
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+type RenderedTimelineItem = ItineraryItem & { _isCheckout?: boolean; _renderDate: string };
 
-function getDayLabel(dateString: string) {
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getMonth() + 1}/${d.getDate()}`;
+function getTimelineDragId(item: Pick<RenderedTimelineItem, 'id' | 'type' | '_isCheckout'>) {
+  return item.id + (item._isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
 }
 
 // ─── Draggable Card Wrapper ───────────────────────────────────────────────────
@@ -45,34 +46,40 @@ interface DraggableCardProps {
   onDrop: (overId: string) => void;
   // iOS touch
   onGripTouchStart: (id: string) => void;
+  onGripKeyDown: (id: string, title: string, e: React.KeyboardEvent<HTMLButtonElement>) => void;
   groupPosition?: 'start' | 'middle' | 'end' | 'single';
+  isHighlighted?: boolean;
 }
 
 function DraggableCard({
   item, isDragging, isDropTarget, onPress,
   onDragStart, onDragEnter, onDragEnd, onDrop,
-  onGripTouchStart, isCheckout, groupPosition
+  onGripTouchStart, onGripKeyDown, isCheckout, groupPosition, isHighlighted
 }: DraggableCardProps & { isCheckout?: boolean }) {
   const dragId = item.id + (isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
   const gripHandler = (e: React.TouchEvent) => {
     e.preventDefault();
     onGripTouchStart(dragId);
   };
+  const gripKeyHandler = (e: React.KeyboardEvent<HTMLButtonElement>) => onGripKeyDown(dragId, item.title, e);
 
   return (
     <div
       data-drag-id={dragId}
+      data-timeline-item
+      data-timeline-item-id={item.id}
+      tabIndex={0}
       draggable={true}
       onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; onDragStart(dragId); }}
       onDragEnter={e => { e.preventDefault(); onDragEnter(dragId); }}
       onDragOver={e => e.preventDefault()}
       onDrop={e => { e.preventDefault(); onDrop(dragId); }}
       onDragEnd={onDragEnd}
-      style={{
-        position: 'relative',
-        opacity: isDragging ? 0.35 : 1,
-        transition: 'opacity 0.15s ease',
-      }}
+      className={cn(
+        'relative transition-opacity duration-150 motion-reduce:transition-none',
+        isDragging && 'opacity-[0.35]',
+        isHighlighted && 'rounded-2xl ring-2 ring-sys-blue ring-offset-2 ring-offset-black/40',
+      )}
     >
       {isDropTarget && (
         <div className="drop-line-container">
@@ -81,12 +88,20 @@ function DraggableCard({
       )}
 
       {item.type === 'note' ? (
-        <NoteCard item={item} onPress={onPress} onGripTouchStart={gripHandler} />
+        <NoteCard
+          item={item}
+          onPress={onPress}
+          onGripTouchStart={gripHandler}
+          onGripKeyDown={gripKeyHandler}
+          reorderGripId={dragId}
+        />
       ) : (
         <TimelineItem 
           item={item} 
           onPress={onPress} 
           onGripTouchStart={gripHandler} 
+          onGripKeyDown={gripKeyHandler}
+          reorderGripId={dragId}
           isCheckout={isCheckout} 
           groupPosition={groupPosition}
         />
@@ -98,11 +113,25 @@ function DraggableCard({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function TimelineScreen() {
-  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
+  const { items, currentTripId, trips, weather, reorderItems, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
+  const { focusItemId, focusItem } = useUiStore();
+  const searchQuery = useUiStore(s => s.timelineQuery);
+  const setSearchQuery = useUiStore(s => s.setTimelineQuery);
+  // Mobile keeps the header compact: search & filters live in Settings (see TimelineFilters).
+  const isWide = useIsWide();
+  const filterStatus = useTimelineFilterStatus();
   const currentTrip = trips.find(t => t.id === currentTripId);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
+  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
+  const [pendingFocusItemId, setPendingFocusItemId] = useState<string | null>(null);
+  const [pendingGripFocus, setPendingGripFocus] = useState<{ dragId: string; title: string } | null>(null);
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('');
+  const [headerHeight, setHeaderHeight] = useState(140);
+  const [todayHeaderVisible, setTodayHeaderVisible] = useState(false);
   const isScrollingToDay = useRef(false);
+  const autoScrolledTripIds = useRef<Set<string>>(new Set());
 
   // Shared drag state (used by both HTML5 and touch paths)
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -121,44 +150,94 @@ export default function TimelineScreen() {
   }>({ draggingId: null, dropTargetId: null, ghost: null, onMove: null, onEnd: null });
 
   // ── Flatten, filter & sort items ───────────────────────────────────────────
-  const filtered = items.filter(i => activeFilters.includes(i.type));
+  const dayGroups = useMemo<DayGroup[]>(() => {
+    const filtered = items.filter(i => activeFilters.includes(resolveItemType(i)) && itemMatchesQuery(i, searchQuery));
+    const flattened: RenderedTimelineItem[] = [];
 
-  const flattened: (ItineraryItem & { _isCheckout?: boolean, _renderDate: string })[] = [];
-  filtered.forEach(item => {
-    flattened.push({ ...item, _renderDate: item.startDate });
-    const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
-    if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay) {
-      flattened.push({ ...item, _isCheckout: true, _renderDate: item.endDate! });
+    filtered.forEach(item => {
+      flattened.push({ ...item, _renderDate: item.startDate });
+      const isMultiDay = item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate);
+      if ((item.type === 'hotel' || item.type === 'rental-car') && isMultiDay && item.endDate) {
+        flattened.push({ ...item, _isCheckout: true, _renderDate: item.endDate });
+      }
+    });
+
+    flattened.sort((a, b) => {
+      const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
+      if (dayA !== dayB) return dayA.localeCompare(dayB);
+
+      // Independent sort orders: checkouts use endSortOrder
+      const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
+      const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
+
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a._renderDate.localeCompare(b._renderDate);
+    });
+
+    const groups: DayGroup[] = [];
+    const dayMap: Record<string, DayGroup> = {};
+
+    flattened.forEach(item => {
+      const key = getDayKey(item._renderDate);
+      if (!dayMap[key]) {
+        dayMap[key] = { dateKey: key, label: getDayLabel(item._renderDate, 'short'), items: [] };
+        groups.push(dayMap[key]);
+      }
+      dayMap[key].items.push(item);
+    });
+
+    return groups;
+  }, [activeFilters, items, searchQuery]);
+
+  const findRenderedEntry = useCallback((dragId: string) => {
+    for (let groupIndex = 0; groupIndex < dayGroups.length; groupIndex += 1) {
+      const group = dayGroups[groupIndex];
+      const itemIndex = group.items.findIndex(item => getTimelineDragId(item) === dragId);
+      if (itemIndex !== -1) return { group, groupIndex, itemIndex };
     }
-  });
+    return null;
+  }, [dayGroups]);
 
-  flattened.sort((a, b) => {
-    const dayA = getDayKey(a._renderDate), dayB = getDayKey(b._renderDate);
-    if (dayA !== dayB) return dayA.localeCompare(dayB);
-    
-    // Independent sort orders: checkouts use endSortOrder
-    const aOrder = a._isCheckout ? (a.endSortOrder ?? a.sortOrder ?? 0) : (a.sortOrder ?? 0);
-    const bOrder = b._isCheckout ? (b.endSortOrder ?? b.sortOrder ?? 0) : (b.sortOrder ?? 0);
-    
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    return a._renderDate.localeCompare(b._renderDate);
-  });
+  useEffect(() => {
+    if (!pendingGripFocus) return;
+    const frame = requestAnimationFrame(() => {
+      const grip = Array.from(document.querySelectorAll<HTMLElement>('[data-reorder-grip-id]'))
+        .find(el => el.dataset.reorderGripId === pendingGripFocus.dragId);
+      grip?.focus({ preventScroll: true });
 
-  const dayGroups: DayGroup[] = [];
-  const dayMap: Record<string, DayGroup> = {};
+      const entry = findRenderedEntry(pendingGripFocus.dragId);
+      if (entry) {
+        setReorderAnnouncement(`Moved ${pendingGripFocus.title} to ${entry.group.label}, position ${entry.itemIndex + 1}`);
+      }
+      setPendingGripFocus(null);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [findRenderedEntry, pendingGripFocus]);
 
-  flattened.forEach(item => {
-    const key = getDayKey(item._renderDate);
-    if (!dayMap[key]) {
-      dayMap[key] = { dateKey: key, label: getDayLabel(item._renderDate), items: [] };
-      dayGroups.push(dayMap[key]);
-    }
-    dayMap[key].items.push(item);
-  });
-
-  const getScrollContainer = () => {
+  const getScrollContainer = useCallback(() => {
     return document.querySelector('.split-left') || window;
-  };
+  }, []);
+
+  useEffect(() => {
+    const update = () => setHeaderHeight(headerRef.current?.offsetHeight ?? 140);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [dayGroups.length, searchQuery, activeFilters, isWide, filterStatus.isFiltered]);
+
+  const today = todayKey();
+  const tripIncludesToday = useMemo(() => {
+    if (items.length === 0) return false;
+    const keys = items.flatMap((item) => [getDayKey(item.startDate), item.endDate ? getDayKey(item.endDate) : getDayKey(item.startDate)]).filter(Boolean);
+    if (keys.length === 0) return false;
+    keys.sort();
+    return today >= keys[0] && today <= keys[keys.length - 1] && dayGroups.some((group) => group.dateKey === today);
+  }, [dayGroups, items, today]);
+
+  const setActiveDay = useCallback((key: string) => {
+    setActiveDayKey(key);
+    useTripStore.getState().setSelectedDayKey(key);
+  }, []);
 
   const handleOpenMap = (group: DayGroup) => {
     // 1. Gather all items for this day that have valid lat/lng and are NOT flights.
@@ -179,7 +258,7 @@ export default function TimelineScreen() {
       return group.dateKey >= startK && group.dateKey <= endK;
     });
 
-    let stops = [...drivingItems];
+    let stops: ItineraryItem[] = [...drivingItems];
     if (activeStay) {
       const startK = getDayKey(activeStay.startDate);
       const endK = activeStay.endDate ? getDayKey(activeStay.endDate) : startK;
@@ -234,7 +313,7 @@ export default function TimelineScreen() {
     const container = getScrollContainer();
     const options = {
       root: container === window ? null : (container as Element),
-      rootMargin: '-120px 0px -80% 0px', // Adjusted for double-height header
+      rootMargin: `-${headerHeight + 8}px 0px -80% 0px`,
       threshold: [0, 1]
     };
 
@@ -247,7 +326,7 @@ export default function TimelineScreen() {
       if (visible.length > 0) {
         const key = visible[0].target.getAttribute('data-day-key');
         if (key && key !== activeDayKey) {
-          setActiveDayKey(key);
+          setActiveDay(key);
           const pill = pillRefs.current[key];
           const bar = pillBarRef.current;
           if (pill && bar) {
@@ -267,13 +346,13 @@ export default function TimelineScreen() {
     return () => {
       observer.disconnect();
     };
-  }, [dayGroups, activeDayKey]);
+  }, [dayGroups, activeDayKey, getScrollContainer, headerHeight, setActiveDay]);
 
-  const scrollToDay = (key: string) => {
+  const scrollToDay = useCallback((key: string, behavior: ScrollBehavior = 'smooth') => {
     const el = dayRefs.current[key];
     if (el) {
       isScrollingToDay.current = true;
-      setActiveDayKey(key);
+      setActiveDay(key);
       
       const container = getScrollContainer();
       const fullHeaderHeight = headerRef.current?.offsetHeight ?? 140;
@@ -285,11 +364,11 @@ export default function TimelineScreen() {
 
       if (container === window) {
         targetTop = el.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: targetTop, behavior: 'smooth' });
+        window.scrollTo({ top: targetTop, behavior });
       } else {
         const cEl = container as HTMLElement;
         targetTop = el.offsetTop - offset;
-        cEl.scrollTo({ top: targetTop, behavior: 'smooth' });
+        cEl.scrollTo({ top: targetTop, behavior });
       }
 
       // Briefly disable observer
@@ -297,7 +376,88 @@ export default function TimelineScreen() {
         isScrollingToDay.current = false;
       }, 1000);
     }
-  };
+  }, [getScrollContainer, setActiveDay]);
+
+  useEffect(() => {
+    if (!currentTripId || !tripIncludesToday || autoScrolledTripIds.current.has(currentTripId)) return;
+    autoScrolledTripIds.current.add(currentTripId);
+    requestAnimationFrame(() => scrollToDay(today, prefersReducedMotion ? 'auto' : 'smooth'));
+  }, [currentTripId, prefersReducedMotion, scrollToDay, today, tripIncludesToday]);
+
+  useEffect(() => {
+    if (!tripIncludesToday) return;
+    const el = dayRefs.current[today];
+    if (!el) return;
+    const container = getScrollContainer();
+    const observer = new IntersectionObserver(
+      ([entry]) => setTodayHeaderVisible(entry.isIntersecting),
+      {
+        root: container === window ? null : (container as Element),
+        rootMargin: `-${headerHeight}px 0px -70% 0px`,
+        threshold: 0,
+      },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [getScrollContainer, headerHeight, today, tripIncludesToday]);
+
+  const focusTimelineItem = useCallback((id: string, behavior: ScrollBehavior = 'smooth') => {
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-timeline-item]'));
+    const card = cards.find((el) => el.dataset.timelineItemId === id);
+    if (!card) return false;
+    card.scrollIntoView({ block: 'nearest', behavior });
+    card.focus({ preventScroll: true });
+    setHighlightedItemId(id);
+    window.setTimeout(() => setHighlightedItemId((current) => current === id ? null : current), 1500);
+    return true;
+  }, []);
+
+  const moveTimelineFocus = useCallback((delta: 1 | -1) => {
+    if (isDialogOpen()) return;
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-timeline-item]'));
+    if (cards.length === 0) return;
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement.closest<HTMLElement>('[data-timeline-item]') : null;
+    const index = active ? cards.indexOf(active) : -1;
+    const nextIndex = index === -1 ? (delta > 0 ? 0 : cards.length - 1) : Math.min(cards.length - 1, Math.max(0, index + delta));
+    const card = cards[nextIndex];
+    card.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    card.focus({ preventScroll: true });
+  }, [prefersReducedMotion]);
+
+  useHotkeys({
+    j: (e) => {
+      e.preventDefault();
+      moveTimelineFocus(1);
+    },
+    k: (e) => {
+      e.preventDefault();
+      moveTimelineFocus(-1);
+    },
+  });
+
+  useEffect(() => {
+    if (!focusItemId) return;
+    const item = items.find((candidate) => candidate.id === focusItemId);
+    if (!item) {
+      focusItem(null);
+      return;
+    }
+    const type = resolveItemType(item);
+    if (!activeFilters.includes(type)) ensureFiltersEnabled([type]);
+    if (!itemMatchesQuery(item, searchQuery)) window.setTimeout(() => setSearchQuery(''), 0);
+    window.setTimeout(() => setPendingFocusItemId(focusItemId), 0);
+    focusItem(null);
+  }, [activeFilters, focusItem, focusItemId, items, searchQuery, setSearchQuery]);
+
+  useEffect(() => {
+    if (!pendingFocusItemId) return;
+    const frame = requestAnimationFrame(() => {
+      if (focusTimelineItem(pendingFocusItemId, prefersReducedMotion ? 'auto' : 'smooth')) {
+        setPendingFocusItemId(null);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [dayGroups, focusTimelineItem, pendingFocusItemId, prefersReducedMotion]);
 
   // ── HTML5 drag handlers (desktop) ─────────────────────────────────────────
   const handleDragStart = (id: string) => setDraggingId(id);
@@ -324,6 +484,46 @@ export default function TimelineScreen() {
     handleDragEnd();
   };
 
+  const handleGripKeyDown = useCallback((dragId: string, title: string, e: React.KeyboardEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+    e.preventDefault();
+
+    const entry = findRenderedEntry(dragId);
+    if (!entry) return;
+
+    const { group, groupIndex, itemIndex } = entry;
+    let moved = false;
+
+    if (e.key === 'ArrowUp') {
+      if (itemIndex > 0) {
+        reorderItems(dragId, getTimelineDragId(group.items[itemIndex - 1]), group.dateKey);
+        moved = true;
+      } else {
+        const previousGroup = dayGroups[groupIndex - 1];
+        if (previousGroup) {
+          reorderItems(dragId, null, previousGroup.dateKey, true);
+          moved = true;
+        }
+      }
+    } else if (itemIndex < group.items.length - 1) {
+      if (itemIndex === group.items.length - 2) {
+        reorderItems(dragId, null, group.dateKey, true);
+      } else {
+        reorderItems(dragId, getTimelineDragId(group.items[itemIndex + 2]), group.dateKey);
+      }
+      moved = true;
+    } else {
+      const nextGroup = dayGroups[groupIndex + 1];
+      if (nextGroup) {
+        reorderItems(dragId, null, nextGroup.dateKey, false);
+        moved = true;
+      }
+    }
+
+    if (moved) setPendingGripFocus({ dragId, title });
+  }, [dayGroups, findRenderedEntry, reorderItems]);
+
   // ── Touch drag (iOS Safari) ───────────────────────────────────────────────
   const startTouchDrag = useCallback((id: string) => {
     const ts = touchRef.current;
@@ -335,7 +535,7 @@ export default function TimelineScreen() {
     Object.assign(ghost.style, {
       position: 'fixed', left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`,
       zIndex: '999', pointerEvents: 'none', opacity: '0.88', transform: 'scale(1.04) rotate(1deg)',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.65)', margin: '0', transition: 'transform 0.12s, box-shadow 0.12s',
+      boxShadow: '0 20px 60px rgba(0,0,0,0.65)', margin: '0', transition: prefersReducedMotion ? 'none' : 'transform 0.12s, box-shadow 0.12s',
       borderRadius: '16px', overflow: 'hidden',
     });
     document.body.appendChild(ghost);
@@ -410,7 +610,7 @@ export default function TimelineScreen() {
     };
     document.addEventListener('touchmove', ts.onMove, { passive: false });
     document.addEventListener('touchend',  ts.onEnd);
-  }, [items, reorderItems]);
+  }, [items, prefersReducedMotion, reorderItems]);
 
   useEffect(() => () => {
     const ts = touchRef.current;
@@ -427,27 +627,38 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <header ref={headerRef} className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
-          <button 
-            className="header-icon-btn"
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Open sidebar"
-          >
-            <Menu size={24} />
-          </button>
-          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.7rem' }}>
+      <header ref={headerRef} className="screen-header flex-col items-stretch gap-0 pb-0 pt-[calc(4px+env(safe-area-inset-top))]">
+        <div className="flex items-center gap-4 pb-0">
+          <h1 className="page-title flex-1 truncate text-[1.7rem]">
             {currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
-        <div className="day-timeline-strip" style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '0 0 4px 0' }}>
+        {isWide ? (
+          <TimelineFilters className="mt-3" />
+        ) : filterStatus.isFiltered && (
+          <div className="mt-2 flex items-center gap-1 rounded-full border border-sys-blue/30 bg-sys-blue/10 py-0.5 pr-0.5 pl-3 text-footnote">
+            <SlidersHorizontal size={14} className="shrink-0 text-sys-blue" aria-hidden="true" />
+            <Link
+              to={`${SETTINGS_ROUTE.path}#timeline-filters`}
+              className="flex min-h-9 min-w-0 flex-1 items-center truncate rounded-full px-1.5 font-semibold text-label"
+              aria-label={`Timeline filtered: ${describeTimelineFilters(filterStatus)}. Edit in Settings`}
+            >
+              <span className="truncate">{describeTimelineFilters(filterStatus)}</span>
+            </Link>
+            <Button size="sm" variant="ghost" className="shrink-0 rounded-full text-sys-blue" onClick={resetTimelineFilters}>
+              Clear
+            </Button>
+          </div>
+        )}
+
+        <div className="day-timeline-strip border-b-0 bg-transparent pb-1 backdrop-blur-none">
           <div className="day-pill-bar" ref={pillBarRef}>
             {dayGroups.map((group) => (
               <button
                 key={group.dateKey}
                 ref={el => { pillRefs.current[group.dateKey] = el; }}
-                className={`day-pill ${activeDayKey === group.dateKey ? 'day-pill--active' : ''}`}
+                className={cn('day-pill', activeDayKey === group.dateKey && 'day-pill--active')}
                 onClick={() => scrollToDay(group.dateKey)}
               >
                 {group.label}
@@ -458,7 +669,21 @@ export default function TimelineScreen() {
       </header>
 
       <main className="timeline-main">
-        {dayGroups.map((group) => {
+        {items.length === 0 ? (
+          <EmptyState
+            icon={<CalendarDays size={30} />}
+            title="No plans yet"
+            description={<>Add your first itinerary item, or use the ✨ menu to parse plans with AI.</>}
+            action={<Button onClick={startNewItem}>Add first item</Button>}
+          />
+        ) : dayGroups.length === 0 ? (
+          <EmptyState
+            icon={<SearchX size={30} />}
+            title="No matching plans"
+            description="Search and filters are hiding every itinerary item."
+            action={<Button onClick={resetTimelineFilters}>Clear filters</Button>}
+          />
+        ) : dayGroups.map((group) => {
           const dayWeather = weather?.forecast.filter(f => f.date === group.dateKey);
           let high: number | null = null;
           let low: number | null = null;
@@ -470,47 +695,51 @@ export default function TimelineScreen() {
 
           return (
               <div key={group.dateKey}>
-                <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  className="day-section-header sticky z-30 flex items-center justify-between border-b border-white/8 bg-black/20 backdrop-blur-2xl supports-[backdrop-filter]:bg-black/10"
+                  style={{ top: headerHeight }}
+                  data-day-key={group.dateKey}
+                  ref={el => { dayRefs.current[group.dateKey] = el; }}
+                >
+                  <div className="flex items-center gap-3">
                     <span className="day-section-label">{group.label}</span>
-                    <button 
+                    <Button
+                      size="sm"
                       onClick={() => handleOpenMap(group)}
-                      className="btn-glass-blue"
-                      style={{ padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', border: '1px solid rgba(10,132,255,0.3)', background: 'rgba(10,132,255,0.1)' }}
+                      className="border-sys-blue/30 bg-sys-blue/10 text-caption"
                       title="Open Directions in Google Maps"
                     >
                       <Map size={14} />
-                      <span style={{ fontWeight: 700 }}>Map Day</span>
-                    </button>
+                      <span className="font-bold">Map Day</span>
+                    </Button>
                   </div>
                   {isWeatherRefreshing ? (
-                    <div className="spinning" style={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
-                      <RefreshCw size={14} color="var(--sys-blue)" />
+                    <div className="spinning flex items-center opacity-60 motion-reduce:animate-none">
+                      <RefreshCw className="size-3.5 text-sys-blue" />
                     </div>
                   ) : (high !== null && low !== null && (
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
-                      <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
+                    <span className="text-footnote font-bold tracking-wide text-label-secondary">
+                      <span className="text-sys-orange">H: {high}°</span> <span className="text-sys-blue">L: {low}°</span>
                     </span>
                   ))}
                 </div>
 
                 <div
-                  className="start-day-drop-zone"
+                  className="start-day-drop-zone relative z-[5] -mt-1 -mb-4 h-6"
                   data-drag-id={`start-of-${group.dateKey}`}
                   onDragEnter={() => handleDragEnter(`start-of-${group.dateKey}`)}
                   onDragOver={e => e.preventDefault()}
                   onDrop={() => handleDrop(`start-of-${group.dateKey}`)}
-                  style={{ height: '24px', marginBottom: '-16px', marginTop: '-4px', position: 'relative', zIndex: 5 }}
                 >
                   {dropTargetId === `start-of-${group.dateKey}` && (
-                    <div className="drop-line-container" style={{ top: '8px' }}>
+                    <div className="drop-line-container top-2">
                       <div className="drop-line" />
                     </div>
                   )}
                 </div>
 
               {group.items.map((item, idx) => {
-                const dragId = item.id + ((item as any)._isCheckout ? '-checkout' : '');
+                const dragId = item.id + (item._isCheckout ? (item.type === 'rental-car' ? '-return' : '-checkout') : '');
                 const prev = group.items[idx - 1];
                 const next = group.items[idx + 1];
                 const hasGroup = !!item.groupId;
@@ -535,8 +764,10 @@ export default function TimelineScreen() {
                     onDragEnd={handleDragEnd}
                     onDrop={handleDrop}
                     onGripTouchStart={startTouchDrag}
-                    isCheckout={(item as any)._isCheckout}
+                    onGripKeyDown={handleGripKeyDown}
+                    isCheckout={item._isCheckout}
                     groupPosition={groupPosition}
+                    isHighlighted={highlightedItemId === item.id}
                   />
                 );
               })}
@@ -550,7 +781,7 @@ export default function TimelineScreen() {
               >
                 {dropTargetId === `end-of-${group.dateKey}` && (
                   <div className="drop-line-container">
-                    <div className="drop-line" style={{ top: '8px' }} />
+                    <div className="drop-line top-2" />
                   </div>
                 )}
               </div>
@@ -558,6 +789,17 @@ export default function TimelineScreen() {
           );
         })}
       </main>
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {reorderAnnouncement}
+      </div>
+      {tripIncludesToday && !todayHeaderVisible && (
+        <Button
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+var(--bottom-nav-offset,0px)+76px)] left-1/2 z-[2600] -translate-x-1/2 rounded-full shadow-glow-blue"
+          onClick={() => scrollToDay(today, prefersReducedMotion ? 'auto' : 'smooth')}
+        >
+          Today
+        </Button>
+      )}
     </>
   );
 }

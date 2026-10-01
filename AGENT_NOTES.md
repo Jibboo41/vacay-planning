@@ -116,9 +116,9 @@ vacay-planning/
 │   │   │   ├── WeatherScreen.tsx   # Weather forecast (historical 5yr avg + live)
 │   │   │   ├── CostTrackerScreen.tsx # Financial overview & expense tracking
 │   │   │   ├── SummaryScreen.tsx   # AI-generated trip outline
-│   │   │   ├── TodoScreen.tsx      # Task list with due dates, inline edit, drag reorder
+│   │   │   ├── TodoScreen.tsx      # Task list grouped by category (core/todoCategories.ts), due dates, inline edit, drag reorder
 │   │   │   ├── GlobalControls.tsx  # FAB menus (Sparkle=add, Right=nav)
-│   │   │   ├── Sidebar.tsx         # Trip switcher & theme selector (gradient swatches)
+│   │   │   ├── SettingsScreen.tsx  # /settings: timeline search & filters, trip switcher, export, themes, sign out
 │   │   │   └── modals/
 │   │   │       ├── EditItineraryModal.tsx   # Edit any itinerary item
 │   │   │       ├── EditManualExpenseModal.tsx # Edit manual expenses
@@ -239,8 +239,8 @@ Themes are set via `useTripStore.setTheme(key)` and stored in `localStorage` as 
 | `sakura` | Sakura | Pink, Lavender, Blush |
 | `cyberpunk` | Cyberpunk | Magenta, Cyan, Yellow |
 
-The **Sidebar** theme picker renders these as gradient gradient-swatch tiles (emoji + name + active glow ring).
-Adding a new theme: add a case to `getThemeBlobs`, add a row to the Sidebar array.
+The **Settings** theme picker renders these as gradient-swatch tiles (icon + name + active glow ring).
+Adding a new theme: add a `[data-theme]` block in `src/styles/themes.css` and a row to `THEMES` in `src/core/themes.ts`.
 
 ---
 
@@ -324,7 +324,7 @@ If `paidAmount > amount` → shown in red as over-budget.
 - ⚠️ **Map View**: The Sparkle FAB is conditionally HIDDEN on the Map view to avoid legend overlap.
 
 **Global Filtering**: 
-- Accessible via the **Sidebar** -> "Filter Views".
+- Accessible via the timeline header chips (desktop) or **Settings** -> "Search & filter timeline" (mobile).
 - Toggles visibility for: `flight`, `hotel`, `rental-car`, `activity`, `hiking`, `food`, `note`, `transit`.
 - Applied globally to both **Timeline** (pre-grouping) and **Map** (marker/route filtering).
 

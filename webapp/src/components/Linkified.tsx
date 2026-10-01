@@ -12,25 +12,20 @@ export default function Linkified({ text }: { text: string }) {
   return (
     <>
       {parts.map((part, i) => {
-        if (URL_REGEX.test(part)) {
+        if (/^https?:\/\//.test(part)) {
           return (
-            <span
+            <a
               key={i}
-              role="link"
-              onClick={e => {
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="cursor-pointer break-all text-sys-blue underline"
+              onClick={(e) => {
                 e.stopPropagation();
-                const win = window.top || window;
-                win.open(part, '_blank', 'noopener,noreferrer');
-              }}
-              style={{
-                color: 'var(--sys-blue)',
-                textDecoration: 'underline',
-                wordBreak: 'break-all',
-                cursor: 'pointer'
               }}
             >
               {part}
-            </span>
+            </a>
           );
         }
         
