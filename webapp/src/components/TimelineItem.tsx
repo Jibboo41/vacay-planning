@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2, Globe } from 'lucide-react';
+import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2, Globe, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -88,7 +88,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       role="button"
       tabIndex={0}
       style={{
-        borderLeft: `4px solid ${theme.color}`,
+        border: item.isStarred ? '1px solid rgba(255, 215, 0, 0.5)' : undefined,
+        borderLeft: item.isStarred ? '4px solid #FFD700' : `4px solid ${theme.color}`,
+        boxShadow: item.isStarred ? '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : undefined,
         backgroundColor: tintedBackgrounds ? theme.bg : undefined,
         overflow: 'hidden',
         maxHeight: isExpanded ? '1000px' : '200px',
@@ -201,9 +203,21 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         {/* Title + location — flex:1, full width */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           {item.type !== 'note' && (
-            <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {item.title}
-            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+                {item.title}
+              </h3>
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  useTripStore.getState().updateItem(item.id, { isStarred: !item.isStarred });
+                }}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', flexShrink: 0 }}
+                title={item.isStarred ? "Remove preferred activity star" : "Mark as preferred activity for the day"}
+              >
+                <Star size={16} fill={item.isStarred ? '#FFD700' : 'none'} color={item.isStarred ? '#FFD700' : 'var(--sys-label-tertiary)'} />
+              </div>
+            </div>
           )}
           <div
             style={{

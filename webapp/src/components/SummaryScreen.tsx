@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car, ArrowRight, Gauge, Ruler, Activity, Timer } from 'lucide-react';
+import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils, StickyNote, CalendarClock, MapPin, Sparkles, Loader, Car, ArrowRight, Gauge, Ruler, Activity, Timer, Star } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
@@ -114,8 +114,9 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
             {timeText}
           </div>
         )}
-        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#FFF', margin: '0' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#FFF', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
           {item._segments ? `${item._segments.length} Flight segments` : item.title}
+          {item.isStarred && <Star size={14} fill="#FFD700" color="#FFD700" />}
         </h3>
         
         {item._segments ? (

@@ -61,6 +61,8 @@ export interface ItineraryItem {
   paidAmount?: number;
   /** ID to group multiple flight legs or related items */
   groupId?: string;
+  /** Whether the item is starred as a preferred activity */
+  isStarred?: boolean;
 }
 
 export interface TripNote {

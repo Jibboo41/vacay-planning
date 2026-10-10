@@ -116,7 +116,11 @@ function FitBounds({ positions }: { positions: [number, number][] }) {
     // Permanent fix for the "snap-back" issue:
     // 1. If we've already done an initial fit, don't do it again automatically
     // 2. If a specific location is being flown to, absolutely skip fitting
-    if (hasInitialFit.current || focusedLocation) return;
+    if (focusedLocation) {
+      hasInitialFit.current = true;
+      return;
+    }
+    if (hasInitialFit.current) return;
 
     if (!positions.length) return;
     if (positions.length === 1) { 
