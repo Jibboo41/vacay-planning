@@ -30,7 +30,7 @@ export default function NoteCard({ item, onPress, onGripTouchStart, onGripKeyDow
           type="button"
           aria-expanded={isExpanded}
           aria-controls={detailsId}
-          className="-ml-2 flex min-h-11 min-w-0 flex-1 items-center rounded-control px-2 text-left transition-colors hover:bg-white/6 motion-reduce:transition-none"
+          className="-my-3 -ml-2 flex min-h-11 min-w-0 flex-1 items-center rounded-control px-2 text-left transition-colors hover:bg-white/6 motion-reduce:transition-none"
           onClick={() => setIsExpanded(v => !v)}
         >
           <span className="truncate rounded-chip bg-white/5 px-2 py-0.5 text-caption font-extrabold tracking-wide text-label-secondary">

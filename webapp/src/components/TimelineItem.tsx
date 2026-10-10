@@ -107,7 +107,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, onGripKe
         <button
           type="button"
           className={cn(
-            '-ml-2 flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-control px-2 text-left transition-colors hover:bg-white/6 motion-reduce:transition-none',
+            '-my-3 -ml-2 flex min-h-11 min-w-0 flex-1 items-center gap-2.5 rounded-control px-2 text-left transition-colors hover:bg-white/6 motion-reduce:transition-none',
             !canExpand && 'cursor-default hover:bg-transparent',
           )}
           aria-expanded={canExpand ? isExpanded : undefined}
@@ -202,7 +202,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, onGripKe
           {hasCoordinates ? (
             <button
               type="button"
-              className="flex min-h-11 w-full items-center overflow-hidden rounded-chip py-px transition-colors hover:bg-white/6 motion-reduce:transition-none"
+              className="-my-1 flex min-h-11 w-full items-center overflow-hidden rounded-chip py-px transition-colors hover:bg-white/6 motion-reduce:transition-none"
               onClick={openLocation}
             >
               {locationContent}
