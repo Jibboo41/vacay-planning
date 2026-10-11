@@ -7,8 +7,8 @@
 ## 🌟 Key Features
 
 ### 🔹 Modern Nav Controls
-- **Responsive Navigation**: A mobile bottom tab bar and desktop side rail keep every screen and the timeline Add action in one predictable navigation system.
-- **iOS-Inspired Aesthetics**: Glassmorphic navigation, a full-width current-trip banner, and a balanced resizable desktop split-view.
+- **Minimalist Layout**: Icon-only floating menus (Sparkle Menu and View Switcher) for a clean, distraction-free aesthetic.
+- **iOS-Inspired Aesthetics**: 60px glassmorphic buttons with spring-curved transitions and balanced 50/50 desktop split-view.
 
 ### 🔹 AI Itinerary Ingestion
 - **Email Parser**: Paste raw booking confirmations and Gemini 2.5 Flash will digest, categorize, and intelligently map them into your timeline.
@@ -18,19 +18,18 @@
 
 ### 🔹 Dynamic Trip Outlining
 - **Trip Synopsis**: Generate a beautifully written AI summary of your entire journey's vibe and destination trajectory with one click.
-- **Balanced Desktop Split**: A resizable two-pane layout sits below a full-width trip banner, with independently scrolling Timeline and detail views.
+- **Balanced Desktop Split**: A 50/50 grid layout provides equal real-estate for the Timeline and Map on desktop screens.
 - **Advanced Reordering**: Full drag-and-drop support for all items, including hotel check-outs and rental car returns, automatically recalculating routes and stay durations.
 
 ### 🔹 Leaflet Destination Mapping
 - **Interactive Map**: Visualize your stops on a reactive vector map.
-- **Unobstructed Controls**: Timeline creation actions open from the shared navigation menu instead of floating over map or itinerary content.
+- **Dynamic Control**: The left-side Sparkle menu automatically hides in the map view to provide an unobstructed view of the map legend and navigation markers.
 - **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order. Fixed logic re-calculates paths instantly upon itinerary changes.
 
 ### 🔹 Travel Power Modules
-- **Todo System**: Trip checklists grouped by category (General, Bookings, Documents, Money, Home, Shopping, or your own), with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder (dropping onto another category moves the task there).
-- **Global Event Filtering**: Toggle visibility for specific categories (Flights, Hotels, Rentals, Activities, etc.) across both the Timeline and Map from the timeline's filter chips (desktop) or Settings (mobile) to focus on specific trip segments.
+- **Todo System**: Trip checklists with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder via grip handle.
+- **Global Event Filtering**: Toggle visibility for specific categories (Flights, Hotels, Rentals, Activities, etc.) across both the Timeline and Map via the Sidebar to focus on specific trip segments.
 - **Cost Tracker**: Comprehensive expense dashboard aggregating itinerary costs with paid/remaining split tracking and over-budget alerts.
-- **Credit Card Strategy**: Track rewards categories, cashback rates, foreign transaction fees, and trip-specific card notes to choose the best card for each purchase.
 - **Weather Suite**: Integrated daily forecasts via Open-Meteo API with **5-year historical precipitation averages** (rainfall + snowfall in inches) and daily H/L aggregated across all stops.
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
 
@@ -53,7 +52,7 @@
 
 ### 🔹 Glass UI & Themes
 - **Glass Blue Buttons**: All primary actions use a frosted glass treatment instead of solid opaque blue.
-- **10 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk — each with gradient swatch previews in Settings.
+- **10 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk — each with gradient swatch previews in the sidebar.
 - **Ambient Background**: Three animated color blobs behind all content, colors driven by selected theme.
 
 ---
@@ -123,7 +122,7 @@ flowchart TD
 ```
 
 ### Global UI Routing Diagram
-The application uses a shared responsive navigation shell that routes between trip screens and opens contextual timeline-creation dialogs.
+The application centers around an abstract floating control module which manipulates overarching global routing and spawns contextual editing modalities.
 
 ```mermaid
 stateDiagram-v2
@@ -144,16 +143,15 @@ stateDiagram-v2
     end note
   }
   
-  ActiveTrip --> Navigation : Bottom tabs or side rail
-  Navigation --> Timeline
-  Navigation --> Todo
-  Navigation --> Costs
-  Navigation --> Cards
-  Navigation --> Weather
-  Navigation --> AddMenu
-  AddMenu --> AddNoteModal
-  AddMenu --> ParseAIModal
-  AddMenu --> EditActivityModal
+  ActiveTrip --> GlobalControls : App.tsx Overlay
+  GlobalControls --> SparkleMenu : Hover Trigger
+  GlobalControls --> ViewSwitcher : Navigation Trigger
+  ViewSwitcher --> Todo
+  ViewSwitcher --> Costs
+  ViewSwitcher --> Weather
+  SparkleMenu --> AddNoteModal
+  SparkleMenu --> ParseAIModal
+  SparkleMenu --> EditActivityModal
 ```
 
 ---

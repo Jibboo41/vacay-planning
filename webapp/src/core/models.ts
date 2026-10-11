@@ -79,7 +79,7 @@ export interface TodoItem {
   createdAt: number;
   dueDate?: string;
   notes?: string;
-  /** Free-form category; missing means "General" (see `core/todoCategories.ts`). */
+  /** Free-form category; missing means "General". */
   category?: string;
 }
 

@@ -1,17 +1,8 @@
 import { create } from 'zustand';
 import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay, CreditCard } from '../core/models';
 import { fetchWeather } from '../data/weatherApi';
-import { getWallClockDayKey } from '../utils/dates';
-import { listTodoCategories, normalizeTodoCategory } from '../core/todoCategories';
-import {
-  createUndoQueue,
-  excludePending,
-  removeById,
-  restoreAt,
-  type PendingDelete,
-  type UndoCollection,
-} from './undoDelete';
 import { db, auth } from '../core/firebase';
+import { listTodoCategories, normalizeTodoCategory } from '../core/todoCategories';
 import { 
   collection, 
   addDoc, 
@@ -50,6 +41,7 @@ interface TripStore {
   cardNotes: string;
   userId: string | null;
   loading: boolean;
+  isSidebarOpen: boolean;
   focusedLocation: { lat: number, lng: number } | null;
   theme: string;
   initialized: boolean;
@@ -65,6 +57,7 @@ interface TripStore {
   // Actions
   setUserId: (userId: string | null) => void;
   setLoading: (loading: boolean) => void;
+  setSidebarOpen: (open: boolean) => void;
   setFocusedLocation: (loc: { lat: number, lng: number } | null) => void;
   setTheme: (theme: string) => void;
   setTintedBackgrounds: (enabled: boolean) => void;
@@ -92,19 +85,6 @@ interface TripStore {
   deleteGeneralNote: (id: string) => Promise<void>;
   reorderGeneralNotes: (newOrder: import('../core/models').TripNote[]) => Promise<void>;
 
-  // Credit Card Actions
-  addCreditCard: (
-    name: string,
-    categories: CreditCard['categories'],
-    cashback: CreditCard['cashback'],
-    noForeignTxFee: boolean,
-    specialOffers?: string,
-    notes?: string,
-  ) => Promise<void>;
-  updateCreditCard: (id: string, updates: Partial<CreditCard>) => Promise<void>;
-  deleteCreditCard: (id: string) => Promise<void>;
-  updateCardNotes: (notes: string) => Promise<void>;
-
   // Todo Actions
   addTodo: (text: string, dueDate?: string, notes?: string, category?: string) => Promise<void>;
   updateTodo: (id: string, updates: { text?: string; dueDate?: string | null; notes?: string | null; category?: string | null }) => Promise<void>;
@@ -129,89 +109,48 @@ interface TripStore {
   refreshWeather: () => Promise<void>;
 
   // Debug
-  debugLogs: { timestamp: number; category: string; message: string; data?: unknown }[];
-  addDebugLog: (category: string, message: string, data?: unknown) => void;
+  debugLogs: { timestamp: number; category: string; message: string; data?: any }[];
+  addDebugLog: (category: string, message: string, data?: any) => void;
   clearDebugLogs: () => void;
 
-  // Undo-able deletes
-  pendingDeletes: PendingDelete[];
-  /** Optimistically remove an entity and hold the delete for undo. Returns the pending key (or null). */
-  softDelete: (collection: UndoCollection, id: string, label?: string) => string | null;
-  undoDelete: (key: string) => Promise<void>;
-  flushPendingDeletes: () => Promise<void>;
-
-  /** Re-write the current trip's local collections (used by the sync indicator "Retry"). */
-  retrySave: () => Promise<void>;
-
-  /** The day currently focused in the timeline (used to prefill new items). */
-  selectedDayKey: string | null;
-  setSelectedDayKey: (dayKey: string | null) => void;
+  // Credit Card Actions
+  addCreditCard: (name: string, categories: ('Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other' | 'Groceries')[], cashback: { [category: string]: number }, noForeignTxFee: boolean, specialOffers?: string, notes?: string) => Promise<void>;
+  updateCreditCard: (id: string, updates: Partial<CreditCard>) => Promise<void>;
+  deleteCreditCard: (id: string) => Promise<void>;
+  updateCardNotes: (notes: string) => Promise<void>;
 
   // Sync
   syncTrips: (trips: Trip[]) => void;
 }
 
-
-
-
-function errorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
+function getDayKey(dateStr: string) {
+  if (!dateStr) return '';
+  // Standardize parsing to local time: Remove 'Z' if present, replace T with space for reliable local parsing
+  const clean = dateStr.replace('Z', '').replace('T', ' ').replace(/-/g, '/');
+  const d = new Date(clean);
+  if (isNaN(d.getTime())) return dateStr.split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 
-let inflightWrites = 0;
-
-/**
- * Persist a partial trip update, tracking `saving` / `lastSaveError` for the sync indicator.
- * Errors are recorded and re-thrown so callers keep their existing behaviour.
- */
-async function writeTrip(tripId: string, data: Record<string, unknown>) {
-  inflightWrites++;
-  useTripStore.setState({ saving: true });
-  try {
-    await updateDoc(doc(db, "trips", tripId), data);
-    useTripStore.setState({ lastSaveError: null });
-  } catch (err) {
-    useTripStore.setState({ lastSaveError: errorMessage(err) });
-    throw err;
-  } finally {
-    inflightWrites = Math.max(0, inflightWrites - 1);
-    if (inflightWrites === 0) useTripStore.setState({ saving: false });
-  }
-}
 
 /** Recursively remove all "undefined" values from an object for Firestore compatibility */
-function scrubData<T>(obj: T): T {
+function scrubData(obj: any): any {
   if (Array.isArray(obj)) {
-    return obj.map(scrubData) as T;
+    return obj.map(scrubData);
   }
   if (obj !== null && typeof obj === 'object') {
     return Object.fromEntries(
       Object.entries(obj)
         .filter(([, v]) => v !== undefined)
         .map(([k, v]) => [k, scrubData(v)])
-    ) as T;
+    );
   }
   return obj;
 }
-
-type EntityWithId = { id: string };
-
-const undoQueue = createUndoQueue({
-  onCommit: async (p) => {
-    const state = useTripStore.getState();
-    const list: EntityWithId[] = p.tripId === state.currentTripId
-      ? (state[p.collection] as EntityWithId[])
-      : ((state.trips.find((t) => t.id === p.tripId)?.[p.collection] as EntityWithId[] | undefined) ?? []).filter((e) => e.id !== p.id);
-    try {
-      await writeTrip(p.tripId, { [p.collection]: scrubData(list) });
-    } catch (err) {
-      console.error("Delete failed:", err);
-    } finally {
-      useTripStore.setState((s) => ({ pendingDeletes: s.pendingDeletes.filter((d) => d.key !== p.key) }));
-    }
-  },
-});
 
 export const useTripStore = create<TripStore>((set, get) => ({
   trips: [],
@@ -227,6 +166,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   cardNotes: '',
   userId: null,
   loading: true,
+  isSidebarOpen: false,
   focusedLocation: null,
   theme: localStorage.getItem('vacay_theme') || 'default',
   initialized: false,
@@ -234,12 +174,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
   lastSaveError: null,
   editingItem: null,
   editingExpense: null,
-  activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'transit', 'note', 'unknown'],
-  pendingDeletes: [],
-  selectedDayKey: null,
+  activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
   hiddenDayFilters: [],
-  // On by default; only an explicit opt-out turns the per-type card tint off.
-  tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') !== 'false',
+  tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') === 'true',
   isWeatherRefreshing: false,
   debugLogs: [],
 
@@ -253,6 +190,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
+  setSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
   setFocusedLocation: (focusedLocation) => set({ focusedLocation }),
   toggleFilter: (type: string) => set((state) => ({
     activeFilters: state.activeFilters.includes(type)
@@ -265,53 +203,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
       : [...state.hiddenDayFilters, dateKey]
   })),
   clearDebugLogs: () => set({ debugLogs: [] }),
-  setSelectedDayKey: (selectedDayKey) => set({ selectedDayKey }),
-
-  softDelete: (collectionKey, id, label = 'Item') => {
-    const { currentTripId, initialized } = get();
-    if (!currentTripId || !initialized) return null;
-    const current = get()[collectionKey] as EntityWithId[];
-    const { list, entity, index } = removeById(current, id);
-    if (!entity) return null;
-    const pending: PendingDelete = {
-      key: `${collectionKey}:${id}:${Date.now()}`,
-      collection: collectionKey,
-      id,
-      entity,
-      index,
-      tripId: currentTripId,
-      label,
-    };
-    set((s) => ({ [collectionKey]: list, pendingDeletes: [...s.pendingDeletes, pending] }) as Partial<TripStore>);
-    undoQueue.schedule(pending);
-    return pending.key;
-  },
-
-  undoDelete: async (key) => {
-    const p = undoQueue.undo(key);
-    set((s) => ({ pendingDeletes: s.pendingDeletes.filter((d) => d.key !== key) }));
-    if (!p || p.tripId !== get().currentTripId) return;
-    const restored = restoreAt(get()[p.collection] as EntityWithId[], p.entity as EntityWithId, p.index);
-    set({ [p.collection]: restored } as Partial<TripStore>);
-    // Always persist: another write may have saved the list without this entity meanwhile.
-    try {
-      await writeTrip(p.tripId, { [p.collection]: scrubData(restored) });
-    } catch (err) {
-      console.error("Undo failed:", err);
-    }
-  },
-
-  flushPendingDeletes: () => undoQueue.flush(),
-
-  retrySave: async () => {
-    const { currentTripId, items, todos, packingItems, expenses, generalNotes, creditCards, cardNotes, initialized } = get();
-    if (!currentTripId || !initialized) return;
-    try {
-      await writeTrip(currentTripId, scrubData({ items, todos, packingItems, expenses, generalNotes, creditCards, cardNotes }));
-    } catch (err) {
-      console.error("Retry failed:", err);
-    }
-  },
 
   setTheme: (theme) => {
     localStorage.setItem('vacay_theme', theme);
@@ -324,8 +215,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   syncTrips: (trips) => {
-    const { initialized, currentTripId, items: currentItems, pendingDeletes } = get();
-    const hidePending = <T extends EntityWithId>(list: T[], key: UndoCollection) => excludePending(list, pendingDeletes, key, currentTripId);
+    const { initialized, currentTripId, items: currentItems } = get();
     
     // Handle empty trip state (new users or all trips deleted)
     if (trips.length === 0) {
@@ -367,14 +257,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
     }
 
     // Normalize item types (e.g. 'hike' -> 'hiking') to prevent UI reversion
-    const newItems = hidePending(currentTrip?.items || [], 'items').map(item => ({
+    const newItems = (currentTrip?.items || []).map(item => ({
       ...item,
       type: (item.type as string) === 'hike' ? 'hiking' : item.type
     }));
 
     // If we're already initialized and the data is magically empty, ignore it 
     // unless the user intentionally deleted the trip (which we handle elsewhere).
-    if (initialized && newItems.length === 0 && currentItems.length > 0 && !pendingDeletes.some(p => p.collection === 'items')) {
+    if (initialized && newItems.length === 0 && currentItems.length > 0) {
        console.warn("Sync: Snapshot returned empty items for active trip. Ignoring.");
        set({ trips: sorted });
        return;
@@ -383,11 +273,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
     set({ 
       trips: sorted,
       items: newItems,
-      todos: hidePending(currentTrip?.todos || [], 'todos'),
-      packingItems: hidePending(currentTrip?.packingItems || [], 'packingItems'),
-      expenses: hidePending(currentTrip?.expenses || [], 'expenses'),
+      todos: currentTrip?.todos || [],
+      packingItems: currentTrip?.packingItems || [],
+      expenses: currentTrip?.expenses || [],
       weather: currentTrip?.weather || null,
-      generalNotes: hidePending(currentTrip?.generalNotes || [], 'generalNotes'),
+      generalNotes: currentTrip?.generalNotes || [],
       creditCards: currentTrip?.creditCards || [],
       cardNotes: currentTrip?.cardNotes || '',
       currentTripAiSummary: currentTrip?.aiSummary || null,
@@ -397,8 +287,6 @@ export const useTripStore = create<TripStore>((set, get) => ({
   },
 
   setCurrentTrip: (tripId) => {
-    // Commit any held deletes for the previous trip before switching.
-    if (get().pendingDeletes.length) void undoQueue.flush();
     const { trips } = get();
     const trip = trips.find(t => t.id === tripId);
     set({ 
@@ -440,7 +328,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   renameTrip: async (tripId, newTitle) => {
     const { trips } = get();
-    await writeTrip(tripId, { title: newTitle });
+    await updateDoc(doc(db, "trips", tripId), { title: newTitle });
     set({ 
       trips: trips.map(t => t.id === tripId ? { ...t, title: newTitle } : t)
     });
@@ -457,7 +345,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       createdAt: Date.now()
     };
     // Remove the ID if it's inside the data block
-    delete (newTrip as Partial<Trip>).id;
+    delete (newTrip as any).id;
 
     const docRef = await addDoc(collection(db, "trips"), newTrip);
     return docRef.id;
@@ -474,14 +362,15 @@ export const useTripStore = create<TripStore>((set, get) => ({
     };
     const newItems = [...items, normalizedItem];
     
-    set({ items: newItems });
+    set({ items: newItems, saving: true, lastSaveError: null });
     try {
-      await writeTrip(currentTripId, { items: scrubData(newItems) });
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
+      set({ saving: false });
       // Auto-trigger weather refresh for new items
       get().refreshWeather();
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Save failed:", err);
-      set({ lastSaveError: errorMessage(err) });
+      set({ saving: false, lastSaveError: err.message });
     }
   },
 
@@ -494,15 +383,16 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (finalUpdates.type === 'hike') finalUpdates.type = 'hiking';
 
     const newItems = items.map(item => item.id === id ? { ...item, ...finalUpdates } : item);
-    set({ items: newItems });
+    set({ items: newItems, saving: true, lastSaveError: null });
     
     try {
-      await writeTrip(currentTripId, { items: scrubData(newItems) });
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
+      set({ saving: false });
       // Auto-trigger weather refresh when items are updated (dates/locations might change)
       get().refreshWeather();
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Update failed:", err);
-      set({ lastSaveError: errorMessage(err) });
+      set({ saving: false, lastSaveError: err.message });
     }
   },
 
@@ -512,7 +402,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const newItems = items.filter(item => item.id !== id);
     set({ items: newItems });
     try {
-      await writeTrip(currentTripId, { items: scrubData(newItems) });
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
     } catch (err) {
       console.error("Delete failed:", err);
     }
@@ -529,12 +419,12 @@ export const useTripStore = create<TripStore>((set, get) => ({
       startDate: dayKey,
       location: { name: '', address: '', latitude: null, longitude: null },
     };
-    const dayItems = items.filter(i => getWallClockDayKey(i.startDate) === dayKey);
+    const dayItems = items.filter(i => getDayKey(i.startDate) === dayKey);
     note.sortOrder = dayItems.length * 10;
     const newItems = [...items, note];
     set({ items: newItems });
     try {
-      await writeTrip(currentTripId, { items: scrubData(newItems) });
+      await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
     } catch (err) {
       console.error("Add note failed:", err);
     }
@@ -568,8 +458,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       const getDayEventWrappers = (dayKey: string) => {
         const wrappers: { id: string, item: ItineraryItem, isCheckout: boolean }[] = [];
         remaining.forEach(item => {
-          const startKey = getWallClockDayKey(item.startDate);
-          const endKey = item.endDate ? getWallClockDayKey(item.endDate) : startKey;
+          const startKey = getDayKey(item.startDate);
+          const endKey = item.endDate ? getDayKey(item.endDate) : startKey;
           const isHotel = item.type === 'hotel' || item.type === 'rental-car';
 
           if (startKey === dayKey) {
@@ -587,7 +477,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       };
 
       const targetDayWrappers = getDayEventWrappers(newDayKey);
-      const overIdx = overId ? targetDayWrappers.findIndex(w => w.id === overId) : (atBottom ? targetDayWrappers.length : 0);
+      let overIdx = overId ? targetDayWrappers.findIndex(w => w.id === overId) : (atBottom ? targetDayWrappers.length : 0);
       
       // Insert moved item wrapper for calculation
       targetDayWrappers.splice(overIdx === -1 ? targetDayWrappers.length : overIdx, 0, { 
@@ -621,7 +511,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       set({ items: finalItems });
       if (get().initialized) {
         try {
-          await writeTrip(currentTripId, { items: scrubData(finalItems) });
+          await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(finalItems) });
           // Auto-trigger weather refresh when items are moved
           get().refreshWeather();
         } catch (err) {
@@ -634,7 +524,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ currentTripAiSummary: summary });
-    await writeTrip(currentTripId, { aiSummary: summary });
+    await updateDoc(doc(db, "trips", currentTripId), { aiSummary: summary });
   },
 
   addTodo: async (text, dueDate, notes, category) => {
@@ -647,11 +537,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
       createdAt: Date.now(),
       dueDate: dueDate || undefined,
       notes: notes || undefined,
-      category: normalizeTodoCategory(category, listTodoCategories(todos)),
+      category: normalizeTodoCategory(category, listTodoCategories(todos))
     };
     const newTodos = [...todos, newTodo];
     set({ todos: newTodos });
-    await writeTrip(currentTripId, { todos: scrubData(newTodos) });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   toggleTodo: async (id) => {
@@ -659,7 +549,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newTodos = todos.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
     set({ todos: newTodos });
-    await writeTrip(currentTripId, { todos: scrubData(newTodos) });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   updateTodo: async (id, updates) => {
@@ -672,20 +562,22 @@ export const useTripStore = create<TripStore>((set, get) => ({
           ...updates,
           dueDate: updates.dueDate === null ? undefined : (updates.dueDate ?? t.dueDate),
           notes: updates.notes === null ? undefined : (updates.notes ?? t.notes),
-          category: updates.category === undefined ? t.category : normalizeTodoCategory(updates.category, listTodoCategories(todos)),
+          category: updates.category === undefined
+            ? t.category
+            : normalizeTodoCategory(updates.category, listTodoCategories(todos))
         };
       }
       return t;
     });
     set({ todos: newTodos });
-    await writeTrip(currentTripId, { todos: scrubData(newTodos) });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   reorderTodos: async (newOrder) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ todos: newOrder });
-    await writeTrip(currentTripId, { todos: scrubData(newOrder) });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newOrder) });
   },
 
   deleteTodo: async (id) => {
@@ -693,7 +585,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newTodos = todos.filter(t => t.id !== id);
     set({ todos: newTodos });
-    await writeTrip(currentTripId, { todos: scrubData(newTodos) });
+    await updateDoc(doc(db, "trips", currentTripId), { todos: scrubData(newTodos) });
   },
 
   addExpense: async (expenseData) => {
@@ -707,7 +599,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     };
     const newExpenses = [...expenses, newExpense];
     set({ expenses: newExpenses });
-    await writeTrip(currentTripId, { expenses: scrubData(newExpenses) });
+    await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
   },
 
   updateExpense: async (id, updates) => {
@@ -715,7 +607,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newExpenses = expenses.map(e => e.id === id ? { ...e, ...updates } : e);
     set({ expenses: newExpenses });
-    await writeTrip(currentTripId, { expenses: scrubData(newExpenses) });
+    await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
   },
 
   deleteExpense: async (id) => {
@@ -723,7 +615,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newExpenses = expenses.filter(e => e.id !== id);
     set({ expenses: newExpenses });
-    await writeTrip(currentTripId, { expenses: scrubData(newExpenses) });
+    await updateDoc(doc(db, "trips", currentTripId), { expenses: scrubData(newExpenses) });
   },
 
   addPackingItem: async (text, category) => {
@@ -738,7 +630,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     };
     const newItems = [...packingItems, newItem];
     set({ packingItems: newItems });
-    await writeTrip(currentTripId, { packingItems: scrubData(newItems) });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
   },
 
   togglePackingItem: async (id) => {
@@ -746,7 +638,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newItems = packingItems.map(p => p.id === id ? { ...p, completed: !p.completed } : p);
     set({ packingItems: newItems });
-    await writeTrip(currentTripId, { packingItems: scrubData(newItems) });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
   },
 
   updatePackingItem: async (id, updates) => {
@@ -754,14 +646,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newItems = packingItems.map(p => p.id === id ? { ...p, ...updates } : p);
     set({ packingItems: newItems });
-    await writeTrip(currentTripId, { packingItems: scrubData(newItems) });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
   },
 
   reorderPackingItems: async (newOrder) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ packingItems: newOrder });
-    await writeTrip(currentTripId, { packingItems: scrubData(newOrder) });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newOrder) });
   },
 
   deletePackingItem: async (id) => {
@@ -769,14 +661,14 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newItems = packingItems.filter(p => p.id !== id);
     set({ packingItems: newItems });
-    await writeTrip(currentTripId, { packingItems: scrubData(newItems) });
+    await updateDoc(doc(db, "trips", currentTripId), { packingItems: scrubData(newItems) });
   },
 
   updateWeather: async (weather) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ weather });
-    await writeTrip(currentTripId, { weather: scrubData(weather) });
+    await updateDoc(doc(db, "trips", currentTripId), { weather: scrubData(weather) });
   },
 
   refreshWeather: async () => {
@@ -801,7 +693,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       while (curr <= endDate) {
         const dateKey = curr.toISOString().split('T')[0];
         const dayItems = items.filter((i: ItineraryItem) => 
-          (getWallClockDayKey(i.startDate) === dateKey || (i.endDate && getWallClockDayKey(i.endDate) === dateKey)) &&
+          (getDayKey(i.startDate) === dateKey || (i.endDate && getDayKey(i.endDate) === dateKey)) &&
           (i.type === 'hotel' || i.type === 'hiking' || i.type === 'activity') &&
           i.location.latitude !== null && i.location.longitude !== null
         );
@@ -813,11 +705,11 @@ export const useTripStore = create<TripStore>((set, get) => ({
             }
           });
         } else {
-          const activeHotel = items.find((i: ItineraryItem) => i.type === 'hotel' && i.location.latitude !== null && getWallClockDayKey(i.startDate) <= dateKey && i.endDate && getWallClockDayKey(i.endDate) >= dateKey);
+          const activeHotel = items.find((i: ItineraryItem) => i.type === 'hotel' && i.location.latitude !== null && getDayKey(i.startDate) <= dateKey && i.endDate && getDayKey(i.endDate) >= dateKey);
           if (activeHotel) {
             dayLocations.push({ date: dateKey, lat: activeHotel.location.latitude!, lon: activeHotel.location.longitude!, name: activeHotel.location.name || 'Hotel' });
           } else {
-            const prev = sorted.filter((i: ItineraryItem) => getWallClockDayKey(i.startDate) < dateKey && i.location.latitude !== null);
+            const prev = sorted.filter((i: ItineraryItem) => getDayKey(i.startDate) < dateKey && i.location.latitude !== null);
             if (prev.length) {
               const last = prev[prev.length - 1];
               dayLocations.push({ date: dateKey, lat: last.location.latitude!, lon: last.location.longitude!, name: last.location.name || 'Last Known' });
@@ -875,7 +767,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     };
     const newNotes = [...generalNotes, newNote];
     set({ generalNotes: newNotes });
-    await writeTrip(currentTripId, { generalNotes: scrubData(newNotes) });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
   },
 
   updateGeneralNote: async (id, updates) => {
@@ -883,7 +775,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newNotes = generalNotes.map(n => n.id === id ? { ...n, ...updates } : n);
     set({ generalNotes: newNotes });
-    await writeTrip(currentTripId, { generalNotes: scrubData(newNotes) });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
   },
 
   deleteGeneralNote: async (id) => {
@@ -891,53 +783,53 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!currentTripId) return;
     const newNotes = generalNotes.filter(n => n.id !== id);
     set({ generalNotes: newNotes });
-    await writeTrip(currentTripId, { generalNotes: scrubData(newNotes) });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newNotes) });
   },
 
   reorderGeneralNotes: async (newOrder) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ generalNotes: newOrder });
-    await writeTrip(currentTripId, { generalNotes: scrubData(newOrder) });
+    await updateDoc(doc(db, "trips", currentTripId), { generalNotes: scrubData(newOrder) });
   },
 
   addCreditCard: async (name, categories, cashback, noForeignTxFee, specialOffers, notes) => {
     const { currentTripId, creditCards, initialized } = get();
     if (!currentTripId || !initialized) return;
-    const newCard: CreditCard = {
+    const newCard = {
       id: `card-${Date.now()}`,
       name,
       categories,
       cashback,
       noForeignTxFee,
       specialOffers: specialOffers || '',
-      notes: notes || '',
+      notes: notes || ''
     };
     const newCards = [...creditCards, newCard];
     set({ creditCards: newCards });
-    await writeTrip(currentTripId, { creditCards: scrubData(newCards) });
+    await updateDoc(doc(db, "trips", currentTripId), { creditCards: scrubData(newCards) });
   },
 
   updateCreditCard: async (id, updates) => {
     const { currentTripId, creditCards } = get();
     if (!currentTripId) return;
-    const newCards = creditCards.map((card) => card.id === id ? { ...card, ...updates } : card);
+    const newCards = creditCards.map(c => c.id === id ? { ...c, ...updates } : c);
     set({ creditCards: newCards });
-    await writeTrip(currentTripId, { creditCards: scrubData(newCards) });
+    await updateDoc(doc(db, "trips", currentTripId), { creditCards: scrubData(newCards) });
   },
 
   deleteCreditCard: async (id) => {
     const { currentTripId, creditCards } = get();
     if (!currentTripId) return;
-    const newCards = creditCards.filter((card) => card.id !== id);
+    const newCards = creditCards.filter(c => c.id !== id);
     set({ creditCards: newCards });
-    await writeTrip(currentTripId, { creditCards: scrubData(newCards) });
+    await updateDoc(doc(db, "trips", currentTripId), { creditCards: scrubData(newCards) });
   },
 
   updateCardNotes: async (notes) => {
     const { currentTripId } = get();
     if (!currentTripId) return;
     set({ cardNotes: notes });
-    await writeTrip(currentTripId, { cardNotes: notes });
-  },
+    await updateDoc(doc(db, "trips", currentTripId), { cardNotes: notes });
+  }
 }));

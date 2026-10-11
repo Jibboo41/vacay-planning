@@ -3,22 +3,24 @@ import { useTripStore } from '../store/useTripStore';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Loader, X, RefreshCw, ArrowRight, MapPin, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import type { ItineraryItem } from '../core/models';
-import { ITEM_TYPES, getItemTypeMeta } from '../core/itemTypes';
-import { startNewItem } from '../store/itemActions';
-import { Badge, Button, Card, EmptyState, IconButton, ScreenHeader } from './ui';
-import { buttonVariants } from './ui/variants';
+import { Menu, Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
 
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
-const CHECKOUT_MARKER_HEX = ITEM_TYPES.hotel.endTone?.hex ?? '#FF453A';
+const TYPE_COLORS: Record<string, string> = {
+  flight:   '#0A84FF',
+  hotel:    '#FF9F0A', // Back to Orange for distinction
+  activity: '#64D2FF', // Brighter Sky Blue
+  hiking:   '#30D158',
+  transit:  '#5E5CE6',
+  food:     '#BF5AF2', // Purple for meals
+  note:     '#8E8E93', // Gray for notes
+  unknown:  '#8E8E93',
+};
 
 const TYPE_EMOJI: Record<string, string> = {
   flight:   '🛫',
   hotel:    '🏨',
-  'rental-car': '🚗',
   activity: '🏔️',
   hiking:   '🥾',
   transit:  '🚆',
@@ -29,38 +31,8 @@ const TYPE_EMOJI: Record<string, string> = {
 
 const DAY_PALETTE = ['#0A84FF', '#30D158', '#FF9F0A', '#BF5AF2', '#FF6B6B', '#64D2FF'];
 
-type Coordinates = [number, number];
-
-interface RouteStop extends ItineraryItem {
-  _renderDate?: string;
-  _isBase?: boolean;
-  _isCheckout?: boolean;
-  _isVirtual?: boolean;
-  _isFlightTakeoff?: boolean;
-}
-
-interface MappableItem extends RouteStop {
-  _renderDate: string;
-}
-
-interface FlightLanding {
-  lat: number;
-  lng: number;
-  name: string;
-}
-
-interface FlightLandingSearch {
-  id: string;
-  title: string;
-  description?: string;
-}
-
-function getMarkerColor(type: ItineraryItem['type'], isCheckout?: boolean) {
-  return isCheckout ? CHECKOUT_MARKER_HEX : getItemTypeMeta({ type }).mapHex;
-}
-
-function makeMarkerIcon(type: ItineraryItem['type'], isCheckout?: boolean) {
-  const color = getMarkerColor(type, isCheckout);
+function makeMarkerIcon(type: string, isCheckout?: boolean) {
+  const color = isCheckout ? '#FF453A' : (TYPE_COLORS[type] ?? TYPE_COLORS.unknown);
   const emoji = TYPE_EMOJI[type]  ?? TYPE_EMOJI.unknown;
   
   return L.divIcon({
@@ -109,7 +81,7 @@ function getDayKey(dateStr: string) { return dateStr.split('T')[0]; }
 
 interface RouteSegment {
   type: 'driving' | 'flight';
-  coords: Coordinates[];
+  coords: [number, number][];
 }
 
 interface DayRoute {
@@ -119,10 +91,7 @@ interface DayRoute {
   distance: number; 
 }
 
-async function fetchOSRMRoute(
-  stops: { location: { latitude: number | null; longitude: number | null } }[],
-  signal?: AbortSignal
-): Promise<Coordinates[]> {
+async function fetchOSRMRoute(stops: any[], signal?: AbortSignal): Promise<[number, number][]> {
   const waypoints = stops
     .map(s => `${s.location.longitude!},${s.location.latitude!}`)
     .join(';');
@@ -132,13 +101,13 @@ async function fetchOSRMRoute(
   const res = await fetch(url, { signal });
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes?.[0]) throw new Error('OSRM no route');
-  return (data.routes[0].geometry.coordinates as Coordinates[]).map(
+  return (data.routes[0].geometry.coordinates as [number, number][]).map(
     ([lng, lat]) => [lat, lng]
   );
 }
 
 
-function FitBounds({ positions }: { positions: Coordinates[] }) {
+function FitBounds({ positions }: { positions: [number, number][] }) {
   const map = useMap();
   const { focusedLocation } = useTripStore();
   const hasInitialFit = useRef(false);
@@ -209,9 +178,8 @@ function ResizeHandler() {
         try {
           // Robust safety check: ensure map is initialized, has a container, and is not in the middle of being destroyed
           const container = map.getContainer();
-          const leafletMap = map as unknown as { _loaded?: boolean; _panes?: unknown };
-          const isLoaded = leafletMap._loaded;
-          const hasPanes = leafletMap._panes;
+          const isLoaded = (map as any)._loaded;
+          const hasPanes = (map as any)._panes;
 
           if (isLoaded && hasPanes && container && container.offsetWidth > 0) {
             map.invalidateSize({ animate: false });
@@ -238,10 +206,10 @@ function ResizeHandler() {
 }
 
 export default function MapViewScreen() {
-  const { items, activeFilters, hiddenDayFilters, toggleDayFilter } = useTripStore();
+  const { items, setSidebarOpen, activeFilters, hiddenDayFilters, toggleDayFilter } = useTripStore();
 
   const mappable = useMemo(() => {
-    const list: MappableItem[] = [];
+    const list: any[] = [];
     items.forEach(item => {
       const hasCoords = typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number';
       if (!hasCoords) return;
@@ -290,10 +258,8 @@ export default function MapViewScreen() {
   const [dayRoutes, setDayRoutes] = useState<DayRoute[]>([]);
   const [routeStatus, setRouteStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const routeCache = useRef<Map<string, RouteSegment[]>>(new Map());
-  const [flightLandings, setFlightLandings] = useState<Record<string, FlightLanding>>({});
+  const [flightLandings, setFlightLandings] = useState<Record<string, { lat: number, lng: number, name: string }>>({});
   const [refreshTick, setRefreshTick] = useState(0);
-  const effectiveDayRoutes = mappable.length < 2 ? [] : dayRoutes;
-  const effectiveRouteStatus = mappable.length < 2 ? 'done' : routeStatus;
 
   const handleRefresh = () => {
     routeCache.current.clear();
@@ -301,22 +267,19 @@ export default function MapViewScreen() {
     setRefreshTick(prev => prev + 1);
   };
 
-  const flightsNeedingLanding = useMemo<FlightLandingSearch[]>(() => (
-    items
-      .filter(i => i.type === 'flight' && i.location.latitude && !flightLandings[i.id])
-      .map(({ id, title, description }) => ({ id, title, description }))
-  ), [items, flightLandings]);
-
   // ─── Geocode Landing Airports ─────────────────────────────────────────────
   useEffect(() => {
-    if (flightsNeedingLanding.length === 0) return;
-    let isCancelled = false;
+    const flights = items.filter(i => i.type === 'flight' && i.location.latitude);
+    if (flights.length === 0) return;
 
     const parseAndGeocode = async () => {
       const { addDebugLog } = useTripStore.getState();
-      const newLandings: Record<string, FlightLanding> = {};
+      const newLandings: Record<string, { lat: number, lng: number, name: string }> = { ...flightLandings };
+      let changed = false;
 
-      for (const f of flightsNeedingLanding) {
+      for (const f of flights) {
+        if (newLandings[f.id]) continue;
+
         // Simple regex for IATA codes or "to [City]"
         const title = f.title + " " + (f.description || "");
         // Match "to JFK", "to London", "to San Francisco", etc.
@@ -342,24 +305,19 @@ export default function MapViewScreen() {
                 lng: parseFloat(data[0].lon),
                 name: data[0].display_name.split(',')[0]
               };
+              changed = true;
             }
-          } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            addDebugLog('Directions', `Landing geocode failed: ${f.title}`, { error: message });
-          }
+          } catch (e) {}
         }
       }
-      if (!isCancelled && Object.keys(newLandings).length > 0) {
-        setFlightLandings(prev => ({ ...prev, ...newLandings }));
-      }
+      if (changed) setFlightLandings(newLandings);
     };
 
     parseAndGeocode();
-    return () => { isCancelled = true; };
-  }, [flightsNeedingLanding, refreshTick]);
+  }, [items, refreshTick]);
 
-  const allPositions: Coordinates[] = useMemo(() => {
-    const pos: Coordinates[] = mappable.map(i => [i.location.latitude!, i.location.longitude!]);
+  const allPositions: [number, number][] = useMemo(() => {
+    const pos: [number, number][] = mappable.map(i => [i.location.latitude!, i.location.longitude!]);
     // Add flight landing points to bounds only if the parent flight is visible
     Object.entries(flightLandings).forEach(([id, l]) => {
       if (mappable.some(m => m.id === id)) {
@@ -372,7 +330,7 @@ export default function MapViewScreen() {
   const center: [number, number] = allPositions[0] ?? [48.7596, -113.787];
 
   const byDayMap = useMemo(() => {
-    const map = new Map<string, MappableItem[]>();
+    const map = new Map<string, any[]>();
     for (const item of mappable) {
       const key = getDayKey(item._renderDate);
       if (!map.has(key)) map.set(key, []);
@@ -396,14 +354,16 @@ export default function MapViewScreen() {
 
   useEffect(() => {
     if (mappable.length < 2) {
+      setDayRoutes([]);
+      setRouteStatus('done');
       return;
     }
     
     let isMounted = true;
     const { addDebugLog } = useTripStore.getState();
+    setRouteStatus('loading');
 
     const fetchAllRoutes = async () => {
-      setRouteStatus('loading');
       try {
         const results: DayRoute[] = [];
         const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -474,7 +434,7 @@ export default function MapViewScreen() {
               const next = stops[j+1];
               
               if (start.type === 'flight') {
-                const startPos: Coordinates = [start.location.latitude!, start.location.longitude!];
+                const startPos: [number, number] = [start.location.latitude!, start.location.longitude!];
                 
                 if (start._isFlightTakeoff && flightLandings[start.id]) {
                   const landing = flightLandings[start.id];
@@ -488,7 +448,7 @@ export default function MapViewScreen() {
                         next
                       ], controller.signal);
                       segments.push({ type: 'driving', coords: transitionCoords });
-                    } catch {
+                    } catch (e) {
                       segments.push({ type: 'driving', coords: [[landing.lat, landing.lng], [next.location.latitude!, next.location.longitude!]] });
                     }
                   }
@@ -497,15 +457,15 @@ export default function MapViewScreen() {
                 }
               } else if (next) {
                 // Normal driving segment with internal retry
-                let drivingCoords: Coordinates[] | null = null;
+                let drivingCoords: [number, number][] | null = null;
                 let lastErr = '';
 
                 for (let attempt = 1; attempt <= 2; attempt++) {
                   try {
                     drivingCoords = await fetchOSRMRoute([start, next], controller.signal);
                     break;
-                  } catch (error) {
-                    lastErr = error instanceof Error ? error.message : String(error);
+                  } catch (e: any) {
+                    lastErr = e.message;
                     if (attempt < 2) await sleep(500);
                   }
                 }
@@ -522,9 +482,8 @@ export default function MapViewScreen() {
             clearTimeout(timeoutId);
             routeCache.current.set(cacheKey, segments);
             results.push({ dayKey: key, color, segments, distance: 0 });
-          } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            addDebugLog('Directions', `Day ${key} failed: ${message}`);
+          } catch (err: any) {
+            addDebugLog('Directions', `Day ${key} failed: ${err.message}`);
             results.push({ dayKey: key, color, segments: [], distance: 0 });
           }
         }
@@ -533,7 +492,7 @@ export default function MapViewScreen() {
           setDayRoutes(results);
           setRouteStatus('done');
         }
-      } catch {
+      } catch (err: any) {
         if (isMounted) setRouteStatus('error');
       }
     };
@@ -543,7 +502,7 @@ export default function MapViewScreen() {
     return () => { isMounted = false; };
   }, [dayKeys, byDayMap, mappable.length, allTripDayKeys, flightLandings, items, refreshTick]);
 
-  const crossDayLines: Coordinates[][] = [];
+  const crossDayLines: [number, number][][] = [];
   for (let i = 0; i < dayKeys.length - 1; i++) {
     const dayI = byDayMap.get(dayKeys[i]);
     const dayNext = byDayMap.get(dayKeys[i + 1]);
@@ -559,63 +518,38 @@ export default function MapViewScreen() {
     }
   }
 
-  const hasItemsWithCoordinates = items.some(item => typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number');
-  const shouldShowEmptyState = items.length === 0 || !hasItemsWithCoordinates;
-
-  if (shouldShowEmptyState) {
-    return (
-      <div className="relative z-10 flex h-dvh w-full flex-col overflow-hidden">
-        <ScreenHeader
-          title="Destinations"
-          subtitle="No mapped stops"
-          className="absolute inset-x-0 top-0 z-[1000] bg-app-bg/45"
-        />
-        <div className="flex flex-1 items-center justify-center px-6 pt-[120px] pb-[120px]">
-          <Card className="w-full max-w-md">
-            <EmptyState
-              icon={<MapPin size={32} />}
-              title={items.length === 0 ? 'No itinerary items yet' : 'No mapped locations yet'}
-              description={items.length === 0 ? 'Add your first itinerary item to start mapping your trip.' : 'Your itinerary items do not have coordinates yet. Add or update locations from the timeline to show them on the map.'}
-              action={items.length === 0 ? (
-                <Button onClick={startNewItem}>
-                  <Plus size={18} />
-                  Add your first item
-                </Button>
-              ) : (
-                <Link to="/timeline" className={buttonVariants()}>
-                  Go to timeline
-                </Link>
-              )}
-            />
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative z-10 flex h-dvh w-full flex-col overflow-hidden">
-      <ScreenHeader
-        title="Destinations"
-        subtitle={`${mappable.length} stop${mappable.length !== 1 ? 's' : ''} · ${dayKeys.length} day${dayKeys.length !== 1 ? 's' : ''}`}
-        className="absolute inset-x-0 top-0 z-[1000] bg-app-bg/45"
-        actions={(
-          <IconButton
-            aria-label="Refresh routes"
-            variant="primary"
-            className="rounded-[14px]"
-            onClick={handleRefresh}
-            disabled={effectiveRouteStatus === 'loading'}
-          >
-            <RefreshCw size={20} className={effectiveRouteStatus === 'loading' ? 'animate-spin' : ''} />
-          </IconButton>
-        )}
-      />
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', zIndex: 10, overflow: 'hidden' }}>
+      <div className="screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15, 16, 20, 0.45)' }}>
+        <button 
+          className="header-icon-btn legacy-menu-button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open sidebar"
+        >
+          <Menu size={24} />
+        </button>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
+            Destinations
+          </h1>
+          <p style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
+            {mappable.length} stop{mappable.length !== 1 ? 's' : ''} · {dayKeys.length} day{dayKeys.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <button 
+          className="header-icon-btn btn-glass-blue"
+          style={{ borderRadius: '14px', marginLeft: 'auto' }}
+          onClick={handleRefresh}
+          disabled={routeStatus === 'loading'}
+        >
+          <RefreshCw size={20} className={routeStatus === 'loading' ? 'spinning' : ''} />
+        </button>
+      </div>
 
       <MapContainer
         center={center}
         zoom={10}
-        className="w-full flex-1"
+        style={{ flex: 1, width: '100%' }}
         zoomControl={false}
       >
         <TileLayer
@@ -628,7 +562,7 @@ export default function MapViewScreen() {
         <MapController />
         <ResizeHandler />
 
-        {effectiveDayRoutes.map(route =>
+        {dayRoutes.map(route =>
           route.segments.map((seg, sIdx) => (
             <Polyline
               key={`${route.dayKey}-${sIdx}`}
@@ -665,16 +599,23 @@ export default function MapViewScreen() {
             icon={makeMarkerIcon(item.type, item._isCheckout)}
           >
             <Popup className="custom-popup">
-              <div className="flex min-w-[200px] flex-col gap-0.5">
-                <Badge tone="custom" className={`mb-1.5 bg-transparent px-0 py-0 ${getItemTypeMeta(item).textClass}`}>
+              <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <p style={{ 
+                  fontSize: '11px', 
+                  color: TYPE_COLORS[item.type] || 'var(--sys-blue)', 
+                  fontWeight: 900, 
+                  letterSpacing: '0.08em', 
+                  marginBottom: '6px', 
+                  textTransform: 'uppercase' 
+                }}>
                   {new Date(item._renderDate.replace('T', ' ').replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                   {item._isCheckout ? ' • CHECK-OUT' : ''}
-                </Badge>
-                <p className="mb-1 text-[16px] font-extrabold tracking-[-0.3px] text-label">
+                </p>
+                <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '4px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
                   {item.title} {item._isCheckout ? '(Checkout)' : ''}
                 </p>
                 {item.location.address && (
-                  <p className="mb-3.5 text-[13px] font-medium leading-[1.5] text-label-secondary">
+                  <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginBottom: '14px', lineHeight: 1.5, fontWeight: 500 }}>
                     {item.location.address}
                   </p>
                 )}
@@ -682,7 +623,14 @@ export default function MapViewScreen() {
                   href={mapsUrl(item.location.latitude!, item.location.longitude!, item.title)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-glass-blue flex items-center justify-center gap-2 rounded-xl border border-sys-blue/65 bg-sys-blue/50 px-4 py-2.5 text-[13px] font-bold text-white no-underline"
+                  className="btn-glass-blue"
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
+                    fontWeight: 700, textDecoration: 'none', gap: '8px',
+                    background: 'rgba(10, 132, 255, 0.5)', border: '1px solid rgba(10, 132, 255, 0.65)',
+                    color: '#ffffff'
+                  }}
                 >
                   <span>{isIOS() ? ' Maps' : 'Google Maps'}</span>
                    <ArrowRight size={14} />
@@ -720,18 +668,26 @@ export default function MapViewScreen() {
               })}
             >
               <Popup className="custom-popup">
-                <div className="flex min-w-[180px] flex-col gap-1">
-                  <Badge tone="neutral" className="mb-0.5 bg-transparent px-0 py-0">
+                <div style={{ minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <p style={{ fontWeight: 900, color: 'var(--sys-label-secondary)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
                     Destination
-                  </Badge>
-                  <p className="mb-3 text-[16px] font-extrabold tracking-[-0.3px] text-label">
+                  </p>
+                  <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '12px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
                     {landing.name}
                   </p>
                   <a
                     href={mapsUrl(landing.lat, landing.lng, landing.name)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-glass-blue flex items-center justify-center rounded-xl border-sys-blue/65 bg-sys-blue/50 px-4 py-2.5 text-[13px] font-bold text-white no-underline"
+                    className="btn-glass-blue"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
+                      fontWeight: 700, textDecoration: 'none', 
+                      background: 'rgba(10, 132, 255, 0.5)',
+                      borderColor: 'rgba(10, 132, 255, 0.65)',
+                      color: '#ffffff'
+                    }}
                   >
                     Open in Maps
                   </a>
@@ -742,50 +698,80 @@ export default function MapViewScreen() {
         })}
       </MapContainer>
 
-      {effectiveRouteStatus === 'loading' && (
-        <Card className="absolute bottom-[calc(24px+env(safe-area-inset-bottom))] left-1/2 z-[2000] flex -translate-x-1/2 items-center gap-2.5 whitespace-nowrap border-[1.5px] border-sys-blue/40 bg-sys-blue/20 px-6 py-3 text-[13px] font-bold text-white shadow-glow-blue backdrop-blur-xl">
-          <Loader size={18} className="animate-spin" />
+      {routeStatus === 'loading' && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(10, 132, 255, 0.2)', backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          color: '#fff', fontSize: '13px', fontWeight: 700,
+          padding: '12px 24px', borderRadius: '24px',
+          zIndex: 2000, whiteSpace: 'nowrap',
+          boxShadow: '0 8px 32px rgba(10, 132, 255, 0.25)',
+          border: '1.5px solid rgba(10, 132, 255, 0.4)',
+          display: 'flex', alignItems: 'center', gap: '10px'
+        }}>
+          <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} />
           <span>Syncing regional routes…</span>
-        </Card>
+        </div>
       )}
 
-      {effectiveRouteStatus === 'error' && (
-        <Card className="absolute bottom-[calc(24px+env(safe-area-inset-bottom))] left-1/2 z-[2000] flex -translate-x-1/2 items-center gap-2.5 whitespace-nowrap border-[1.5px] border-sys-red/40 bg-sys-red/20 px-6 py-3 text-[13px] font-bold text-white shadow-[0_8px_32px_rgba(255,69,58,0.25)] backdrop-blur-xl">
-          <IconButton aria-label="Dismiss route error" variant="ghost" size="sm" onClick={() => setRouteStatus('done')}>
-            <X size={18} />
-          </IconButton>
+      {routeStatus === 'error' && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(255, 59, 48, 0.2)', backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          color: '#fff', fontSize: '13px', fontWeight: 700,
+          padding: '12px 24px', borderRadius: '24px',
+          zIndex: 2000, whiteSpace: 'nowrap',
+          boxShadow: '0 8px 32px rgba(255, 59, 48, 0.25)',
+          border: '1.5px solid rgba(255, 59, 48, 0.4)',
+          display: 'flex', alignItems: 'center', gap: '10px'
+        }}>
+          <X size={18} onClick={() => setRouteStatus('done')} style={{ cursor: 'pointer' }} />
           <span>Route calculation failed. Check logs.</span>
-        </Card>
+        </div>
       )}
 
-      {effectiveRouteStatus === 'done' && (
-        <Card className="absolute bottom-[calc(24px+env(safe-area-inset-bottom))] left-4 z-[1000] flex max-h-[40vh] flex-col gap-2 overflow-y-auto rounded-[18px] border-white/10 bg-black/70 px-3.5 py-3 shadow-2xl backdrop-blur-xl">
-          <Badge tone="neutral" className="mb-0.5 bg-transparent px-0 py-0">VISIBILITY BY DAY</Badge>
+      {routeStatus === 'done' && (
+        <div style={{
+          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          left: '16px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)', borderRadius: '18px',
+          padding: '12px 14px', zIndex: 1000, display: 'flex', flexDirection: 'column',
+          gap: '8px', border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)', maxHeight: '40vh', overflowY: 'auto'
+        }}>
+          <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em', marginBottom: '2px' }}>VISIBILITY BY DAY</div>
           
           {allTripDayKeys.map((key, i) => {
             const isHidden = hiddenDayFilters.includes(key);
             const d = new Date(`${key}T12:00:00`);
             const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
             return (
-              <button
-                type="button"
+              <div 
                 key={key} 
                 onClick={() => toggleDayFilter(key)}
-                className={`flex cursor-pointer items-center gap-2.5 transition-all duration-200 ${isHidden ? 'opacity-35' : 'opacity-100'}`}
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: '10px', 
+                  cursor: 'pointer', opacity: isHidden ? 0.35 : 1,
+                  transition: 'all 0.2s ease'
+                }}
               >
-                <div className="h-1.5 w-7 shrink-0 rounded-[3px]" style={{ backgroundColor: DAY_PALETTE[i % DAY_PALETTE.length] }} />
-                <span className="text-[12px] font-semibold text-white">{label}</span>
-              </button>
+                <div style={{ width: '28px', height: '6px', borderRadius: '3px', background: DAY_PALETTE[i % DAY_PALETTE.length], flexShrink: 0 }} />
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600 }}>{label}</span>
+              </div>
             );
           })}
 
-          <div className="my-1 h-px bg-white/10" />
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
           
-          <div className="flex items-center gap-2.5">
-            <div className="h-0 w-7 shrink-0 border-t-2 border-dashed border-[rgba(180,180,200,0.4)]" />
-            <span className="text-caption font-semibold text-label-tertiary">Between Days</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '28px', height: '0', borderTop: '2px dashed rgba(180, 180, 200, 0.4)', flexShrink: 0 }} />
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--sys-label-tertiary)' }}>Between Days</span>
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );

@@ -1,33 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Plus, X } from 'lucide-react';
-import { getTodoCategoryIcon, MAX_TODO_CATEGORY_LENGTH, normalizeTodoCategory, DEFAULT_TODO_CATEGORY } from '../core/todoCategories';
-import { cn } from '../lib/cn';
-import { Chip, IconButton, Input } from './ui';
+import {
+  DEFAULT_TODO_CATEGORY,
+  getTodoCategoryIcon,
+  MAX_TODO_CATEGORY_LENGTH,
+  normalizeTodoCategory,
+} from '../core/todoCategories';
 
 interface TodoCategoryPickerProps {
-  /** Display category (e.g. "General"). */
   value: string;
   onChange: (category: string) => void;
-  /** From `listTodoCategories()`. */
   options: string[];
   compact?: boolean;
   labelId?: string;
 }
 
-/** Single-select category chips plus an inline "New" field for custom categories. */
-export default function TodoCategoryPicker({ value, onChange, options, compact = false, labelId }: TodoCategoryPickerProps) {
+export default function TodoCategoryPicker({
+  value,
+  onChange,
+  options,
+  compact = false,
+  labelId,
+}: TodoCategoryPickerProps) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
   const previousValueRef = useRef(value);
   const selectedChipRef = useRef<HTMLButtonElement>(null);
   const newChipRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<'selected' | 'new' | null>(null);
-  const all = options.some((o) => o.toLowerCase() === value.toLowerCase()) ? options : [...options, value];
-  const chipClass = compact ? 'min-h-8 px-2.5 text-caption' : 'min-h-10';
+  const allOptions = options.some(option => option.toLowerCase() === value.toLowerCase())
+    ? options
+    : [...options, value];
 
   useEffect(() => {
     if (adding || !returnFocusRef.current) return;
-    const target = returnFocusRef.current === 'selected' ? selectedChipRef.current : newChipRef.current;
+    const target = returnFocusRef.current === 'selected'
+      ? selectedChipRef.current
+      : newChipRef.current;
     returnFocusRef.current = null;
     target?.focus();
   }, [adding, value]);
@@ -40,20 +49,13 @@ export default function TodoCategoryPicker({ value, onChange, options, compact =
     setAdding(false);
   };
 
-  const beginAdding = () => {
-    previousValueRef.current = value;
-    setAdding(true);
-  };
-
   const updateDraft = (nextDraft: string) => {
     setDraft(nextDraft);
-    const category = normalizeTodoCategory(nextDraft, options);
-    onChange(category ?? previousValueRef.current);
+    onChange(normalizeTodoCategory(nextDraft, options) ?? previousValueRef.current);
   };
 
   const commit = () => {
-    const name = normalizeTodoCategory(draft, options) ?? DEFAULT_TODO_CATEGORY;
-    onChange(name);
+    onChange(normalizeTodoCategory(draft, options) ?? DEFAULT_TODO_CATEGORY);
     setDraft('');
     returnFocusRef.current = 'selected';
     setAdding(false);
@@ -66,51 +68,119 @@ export default function TodoCategoryPicker({ value, onChange, options, compact =
     setAdding(false);
   };
 
+  const chipStyle = (selected: boolean): React.CSSProperties => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    minHeight: compact ? '32px' : '38px',
+    padding: compact ? '6px 9px' : '8px 12px',
+    borderRadius: '999px',
+    border: selected
+      ? '1px solid rgba(10,132,255,0.65)'
+      : '1px solid rgba(255,255,255,0.12)',
+    background: selected ? 'rgba(10,132,255,0.18)' : 'rgba(255,255,255,0.06)',
+    color: selected ? '#fff' : 'var(--sys-label-secondary)',
+    fontSize: compact ? '11px' : '12px',
+    fontWeight: 700,
+    cursor: 'pointer',
+  });
+
   return (
-    <div role="group" aria-labelledby={labelId} aria-label={labelId ? undefined : 'Category'} className="flex flex-wrap items-center gap-2">
-      {all.map((category) => {
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      aria-label={labelId ? undefined : 'Category'}
+      style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}
+    >
+      {allOptions.map(category => {
         const Icon = getTodoCategoryIcon(category);
         const selected = category.toLowerCase() === value.toLowerCase();
+
         return (
-          <Chip
+          <button
             key={category}
             ref={selected ? selectedChipRef : undefined}
-            selected={selected}
+            type="button"
+            aria-pressed={selected}
             onClick={() => select(category)}
-            className={cn(chipClass, selected && 'border-sys-blue/50 bg-sys-blue/20')}
+            style={chipStyle(selected)}
           >
             <Icon size={compact ? 13 : 15} aria-hidden="true" />
             {category}
-          </Chip>
+          </button>
         );
       })}
+
       {adding ? (
-        <div className="flex min-w-0 basis-full items-center gap-1.5">
-          <Input
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexBasis: '100%' }}>
+          <input
             autoFocus
             aria-label="New category name"
             placeholder="e.g. Hiking prep"
             maxLength={MAX_TODO_CATEGORY_LENGTH}
             value={draft}
-            onChange={(e) => updateDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') { e.preventDefault(); commit(); }
-              if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); }
+            onChange={event => updateDraft(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                commit();
+              }
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                cancel();
+              }
             }}
-            className={cn('m-0 min-w-0 flex-1', compact ? 'h-9 text-footnote' : 'h-10')}
+            style={{
+              minWidth: 0,
+              flex: 1,
+              height: compact ? '36px' : '40px',
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '10px',
+              padding: '8px 10px',
+              color: '#fff',
+              fontSize: compact ? '12px' : '14px',
+              outline: 'none',
+            }}
           />
-          <IconButton aria-label="Add category" variant="primary" size="sm" onClick={commit} disabled={!draft.trim()}>
+          <button
+            type="button"
+            aria-label="Add category"
+            onClick={commit}
+            disabled={!draft.trim()}
+            style={{
+              ...chipStyle(true),
+              width: compact ? '34px' : '38px',
+              justifyContent: 'center',
+              padding: 0,
+              opacity: draft.trim() ? 1 : 0.45,
+            }}
+          >
             <Check size={16} />
-          </IconButton>
-          <IconButton aria-label="Cancel new category" variant="ghost" size="sm" onClick={cancel}>
+          </button>
+          <button
+            type="button"
+            aria-label="Cancel new category"
+            onClick={cancel}
+            style={{ ...chipStyle(false), width: compact ? '34px' : '38px', justifyContent: 'center', padding: 0 }}
+          >
             <X size={16} />
-          </IconButton>
+          </button>
         </div>
       ) : (
-        <Chip ref={newChipRef} aria-pressed={undefined} onClick={beginAdding} className={cn(chipClass, 'border-dashed border-white/20')}>
+        <button
+          ref={newChipRef}
+          type="button"
+          onClick={() => {
+            previousValueRef.current = value;
+            setAdding(true);
+          }}
+          style={{ ...chipStyle(false), borderStyle: 'dashed' }}
+        >
           <Plus size={compact ? 13 : 15} aria-hidden="true" />
           New
-        </Chip>
+        </button>
       )}
     </div>
   );

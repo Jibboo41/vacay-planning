@@ -1,11 +1,10 @@
-import { useState, useMemo, type FormEvent, type ReactNode } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Plus, Trash2, Edit3, Globe, Tag, Utensils, Plane, 
-  Car, Bed, Activity, Fuel, ShoppingBag, X, Star, CreditCard as CardIcon, ShoppingCart
+  Car, Bed, Activity, Fuel, ShoppingBag, Menu, X, Star, CreditCard as CardIcon, ShoppingCart
 } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { CreditCard } from '../core/models';
-import { ScreenHeader } from './ui';
 
 type FinanceCategory = 'Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other' | 'Groceries';
 
@@ -13,7 +12,7 @@ const CATEGORIES: FinanceCategory[] = [
   'Gas', 'Dining', 'Groceries', 'Lodging', 'Souvenirs', 'Car Rental', 'Flights', 'Other'
 ];
 
-const CATEGORY_ICONS: Record<FinanceCategory, ReactNode> = {
+const CATEGORY_ICONS: Record<FinanceCategory, any> = {
   'Car Rental': <Car size={16} />,
   'Flights': <Plane size={16} />,
   'Gas': <Fuel size={16} />,
@@ -36,7 +35,7 @@ const CATEGORY_COLORS: Record<FinanceCategory, string> = {
 };
 
 export default function CreditCardsScreen() {
-  const { creditCards, cardNotes, addCreditCard, updateCreditCard, deleteCreditCard, updateCardNotes } = useTripStore();
+  const { creditCards, cardNotes, addCreditCard, updateCreditCard, deleteCreditCard, updateCardNotes, setSidebarOpen } = useTripStore();
   const [activeTab, setActiveTab] = useState<'guide' | 'no-ftf' | 'manage'>('guide');
   const [showModal, setShowModal] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null);
@@ -130,7 +129,7 @@ export default function CreditCardsScreen() {
     setShowModal(true);
   };
 
-  const handleSave = async (e: FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cardName.trim()) return;
 
@@ -227,8 +226,17 @@ export default function CreditCardsScreen() {
   const currentMap = activeTab === 'no-ftf' ? bestNoFtfCardsMap : bestCardsMap;
 
   return (
-    <div className="flex min-h-full flex-col">
-      <ScreenHeader title="Credit Cards" subtitle="OPTIMIZE REWARDS" />
+    <div className="safe-area-inset" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <header className="screen-header">
+        <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
+          <Menu size={24} />
+        </button>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <h1 className="page-title" style={{ margin: 0 }}>Credit Cards</h1>
+          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>OPTIMIZE REWARDS</div>
+        </div>
+      </header>
 
       {/* Tabs / Segmented Control */}
       <div style={{ padding: '0 24px 16px 24px' }}>
@@ -295,7 +303,7 @@ export default function CreditCardsScreen() {
         </div>
       </div>
 
-      <div style={{ padding: '0 24px 120px 24px', flex: 1 }}>
+      <div style={{ padding: '0 24px 120px 24px', flex: 1, overflowY: 'auto' }}>
         {/* Notes & Strategy Section */}
         {(activeTab === 'guide' || activeTab === 'no-ftf') && (
           <div style={{
