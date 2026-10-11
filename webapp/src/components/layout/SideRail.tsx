@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import { Map as MapIcon, PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
-import { APP_ROUTES, SETTINGS_ROUTE } from '../../app/routes';
+import { APP_ROUTES, SETTINGS_ROUTE, isAppRoute, withTimelineAddAction } from '../../app/routes';
 import { cn } from '../../lib/cn';
 import { usePrefersReducedMotion } from '../../hooks/useMediaQuery';
+import { useTripStore } from '../../store/useTripStore';
 import { useUiStore } from '../../store/useUiStore';
 
 const railItem = (active: boolean) =>
@@ -16,6 +17,9 @@ export default function SideRail({ showTimelineToggle }: { showTimelineToggle: b
   const reducedMotion = usePrefersReducedMotion();
   const SettingsIcon = SETTINGS_ROUTE.icon;
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
+  const addMenuOpen = useUiStore((s) => s.addMenuOpen);
+  const setAddMenuOpen = useUiStore((s) => s.setAddMenuOpen);
+  const hasTrip = useTripStore((s) => !!s.currentTripId);
   const collapsed = useUiStore((s) => s.timelineCollapsed);
   const setCollapsed = useUiStore((s) => s.setTimelineCollapsed);
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -36,13 +40,32 @@ export default function SideRail({ showTimelineToggle }: { showTimelineToggle: b
       </button>
       <div className="my-1 h-px w-8 bg-white/10" aria-hidden="true" />
       <ul className="flex w-full flex-col gap-1">
-        {APP_ROUTES.map((r) => {
-          const Icon = r.icon;
+        {withTimelineAddAction(APP_ROUTES).map((item) => {
+          const Icon = item.icon;
+          if (!isAppRoute(item)) {
+            return (
+              <li key={item.key}>
+                <button
+                  type="button"
+                  className={cn(railItem(addMenuOpen), 'disabled:cursor-default disabled:opacity-40')}
+                  title={hasTrip ? item.description : 'Select a trip before adding an item'}
+                  aria-label={item.description}
+                  aria-haspopup="dialog"
+                  aria-expanded={addMenuOpen}
+                  disabled={!hasTrip}
+                  onClick={() => setAddMenuOpen(true)}
+                >
+                  <Icon size={22} aria-hidden="true" />
+                  <span>{item.label}</span>
+                </button>
+              </li>
+            );
+          }
           return (
-            <li key={r.key}>
-              <NavLink to={r.path} viewTransition={!reducedMotion} title={r.description} className={({ isActive }) => railItem(isActive)}>
+            <li key={item.key}>
+              <NavLink to={item.path} viewTransition={!reducedMotion} title={item.description} className={({ isActive }) => railItem(isActive)}>
                 <Icon size={22} aria-hidden="true" />
-                <span>{r.label}</span>
+                <span>{item.label}</span>
               </NavLink>
             </li>
           );

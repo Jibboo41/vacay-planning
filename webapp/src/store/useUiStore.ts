@@ -10,6 +10,8 @@ export interface AppBanner {
 interface UiStore {
   paletteOpen: boolean;
   setPaletteOpen: (open: boolean) => void;
+  addMenuOpen: boolean;
+  setAddMenuOpen: (open: boolean) => void;
   banner: AppBanner | null;
   showBanner: (banner: AppBanner) => void;
   dismissBanner: (id?: string) => void;
@@ -26,6 +28,8 @@ interface UiStore {
 export const useUiStore = create<UiStore>((set) => ({
   paletteOpen: false,
   setPaletteOpen: (paletteOpen) => set({ paletteOpen }),
+  addMenuOpen: false,
+  setAddMenuOpen: (addMenuOpen) => set({ addMenuOpen }),
   banner: null,
   showBanner: (banner) => set({ banner }),
   dismissBanner: (id) => set((s) => (!id || s.banner?.id === id ? { banner: null } : s)),

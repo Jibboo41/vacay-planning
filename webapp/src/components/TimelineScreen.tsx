@@ -630,7 +630,7 @@ export default function TimelineScreen() {
       <header ref={headerRef} className="screen-header flex-col items-stretch gap-0 pb-0 pt-[calc(4px+env(safe-area-inset-top))]">
         <div className="flex items-center gap-4 pb-0">
           <h1 className="page-title flex-1 truncate text-[1.7rem]">
-            {currentTrip?.title || 'Itinerary'}
+            {isWide ? 'Timeline' : currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
@@ -673,7 +673,7 @@ export default function TimelineScreen() {
           <EmptyState
             icon={<CalendarDays size={30} />}
             title="No plans yet"
-            description={<>Add your first itinerary item, or use the ✨ menu to parse plans with AI.</>}
+            description="Add your first itinerary item, or use the Add menu to parse plans with AI."
             action={<Button onClick={startNewItem}>Add first item</Button>}
           />
         ) : dayGroups.length === 0 ? (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Map as MapIcon, MoreHorizontal, Search } from 'lucide-react';
-import { APP_ROUTES, SETTINGS_ROUTE, findRoute } from '../app/routes';
+import { APP_ROUTES, SETTINGS_ROUTE, findRoute, isAppRoute, withTimelineAddAction } from '../app/routes';
 import { cn } from '../lib/cn';
 import { usePrefersReducedMotion } from '../hooks/useMediaQuery';
 import { useTripStore } from '../store/useTripStore';
@@ -11,7 +11,7 @@ import { Sheet } from './ui';
 
 const tabClass = (active: boolean) =>
   cn(
-    'flex min-h-14 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-0.5 text-caption font-semibold transition-colors',
+    'flex min-h-14 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-0.5 text-caption font-semibold transition-colors disabled:cursor-default disabled:opacity-40',
     active ? 'text-sys-blue' : 'text-label-secondary hover:text-label',
   );
 
@@ -23,12 +23,14 @@ export default function TabBar() {
   const navigate = useNavigate();
   const reducedMotion = usePrefersReducedMotion();
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
+  const addMenuOpen = useUiStore((s) => s.addMenuOpen);
+  const setAddMenuOpen = useUiStore((s) => s.setAddMenuOpen);
   const hasTrip = useTripStore((s) => !!s.currentTripId);
   // Timeline search/filters live in Settings on mobile, so flag them on its tab.
   const filtersActive = useTimelineFilterStatus().isFiltered && hasTrip;
   const SettingsIcon = SETTINGS_ROUTE.icon;
   const [moreOpen, setMoreOpen] = useState(false);
-  const primary = APP_ROUTES.filter((r) => r.primary);
+  const primary = withTimelineAddAction(APP_ROUTES.filter((r) => r.primary));
   const secondary = APP_ROUTES.filter((r) => !r.primary);
   const current = findRoute(location.pathname);
   const moreActive = !!current && !current.primary;
@@ -37,21 +39,39 @@ export default function TabBar() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-[2400] border-t border-white/10 bg-surface/80 px-2 pt-1 pb-[max(4px,env(safe-area-inset-bottom))] backdrop-blur-[30px]"
+        className="fixed inset-x-0 bottom-0 z-[2400] border-t border-white/10 bg-surface/80 px-1 pt-1 pb-[max(4px,env(safe-area-inset-bottom))] backdrop-blur-[30px]"
       >
-        <ul className="mx-auto flex max-w-xl items-stretch gap-0.5">
-          {primary.map((r) => {
-            const Icon = r.icon;
+        <ul className="mx-auto flex max-w-xl items-stretch">
+          {primary.map((item) => {
+            const Icon = item.icon;
+            if (!isAppRoute(item)) {
+              return (
+                <li key={item.key} className="flex flex-1">
+                  <button
+                    type="button"
+                    className={tabClass(addMenuOpen)}
+                    aria-label={item.description}
+                    aria-haspopup="dialog"
+                    aria-expanded={addMenuOpen}
+                    disabled={!hasTrip}
+                    onClick={() => setAddMenuOpen(true)}
+                  >
+                    <Icon size={22} aria-hidden="true" />
+                    <span className={tabLabel}>{item.label}</span>
+                  </button>
+                </li>
+              );
+            }
             return (
-              <li key={r.key} className="flex flex-1">
+              <li key={item.key} className="flex flex-1">
                 <NavLink
-                  to={r.path}
+                  to={item.path}
                   viewTransition={!reducedMotion}
-                  aria-label={r.description}
+                  aria-label={item.description}
                   className={({ isActive }) => tabClass(isActive)}
                 >
                   <Icon size={22} aria-hidden="true" />
-                  <span className={tabLabel}>{r.label}</span>
+                  <span className={tabLabel}>{item.label}</span>
                 </NavLink>
               </li>
             );

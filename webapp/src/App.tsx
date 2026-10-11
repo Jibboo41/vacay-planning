@@ -116,6 +116,7 @@ type NavMode = 'none' | 'bottom' | 'rail';
 
 function MainLayout({ children }: { children: React.ReactNode }) {
   const currentTripId = useTripStore(s => s.currentTripId);
+  const trips = useTripStore(s => s.trips);
   const userId = useTripStore(s => s.userId);
   const initialized = useTripStore(s => s.initialized);
   const collapsed = useUiStore(s => s.timelineCollapsed);
@@ -143,18 +144,26 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   }
 
   const split = !!currentTripId && initialized && pathname !== '/trips' && pathname !== '/debug';
+  const currentTrip = trips.find((trip) => trip.id === currentTripId);
   return (
     <div className="flex min-h-dvh w-full flex-1 flex-col pl-(--side-rail-w)">
       <SideRail showTimelineToggle={split} />
       {split ? (
-        <SplitPane
-          leftLabel="Timeline"
-          collapsed={collapsed}
-          left={<ErrorBoundary name="Timeline" resetKey={currentTripId}><TimelineScreen /></ErrorBoundary>}
-          right={pathname === '/timeline' && !collapsed
-            ? <ErrorBoundary name="Map" resetKey={pathname}><MapViewScreen /></ErrorBoundary>
-            : children}
-        />
+        <div className="flex h-dvh min-h-0 w-full flex-1 flex-col overflow-hidden">
+          <header className="flex min-h-16 shrink-0 items-center justify-center border-b border-white/10 bg-surface/70 px-6 py-3 text-center shadow-elevated backdrop-blur-[30px]">
+            <h1 className="truncate text-title font-extrabold tracking-tight text-label">
+              {currentTrip?.title || 'Current Trip'}
+            </h1>
+          </header>
+          <SplitPane
+            leftLabel="Timeline"
+            collapsed={collapsed}
+            left={<ErrorBoundary name="Timeline" resetKey={currentTripId}><TimelineScreen /></ErrorBoundary>}
+            right={pathname === '/timeline' && !collapsed
+              ? <ErrorBoundary name="Map" resetKey={pathname}><MapViewScreen /></ErrorBoundary>
+              : children}
+          />
+        </div>
       ) : (
         <div className="flex min-h-dvh w-full flex-1 flex-col">{children}</div>
       )}

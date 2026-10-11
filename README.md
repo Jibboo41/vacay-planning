@@ -7,8 +7,8 @@
 ## 🌟 Key Features
 
 ### 🔹 Modern Nav Controls
-- **Minimalist Layout**: Icon-only floating menus (Sparkle Menu and View Switcher) for a clean, distraction-free aesthetic.
-- **iOS-Inspired Aesthetics**: 60px glassmorphic buttons with spring-curved transitions and balanced 50/50 desktop split-view.
+- **Responsive Navigation**: A mobile bottom tab bar and desktop side rail keep every screen and the timeline Add action in one predictable navigation system.
+- **iOS-Inspired Aesthetics**: Glassmorphic navigation, a full-width current-trip banner, and a balanced resizable desktop split-view.
 
 ### 🔹 AI Itinerary Ingestion
 - **Email Parser**: Paste raw booking confirmations and Gemini 2.5 Flash will digest, categorize, and intelligently map them into your timeline.
@@ -18,12 +18,12 @@
 
 ### 🔹 Dynamic Trip Outlining
 - **Trip Synopsis**: Generate a beautifully written AI summary of your entire journey's vibe and destination trajectory with one click.
-- **Balanced Desktop Split**: A 50/50 grid layout provides equal real-estate for the Timeline and Map on desktop screens.
+- **Balanced Desktop Split**: A resizable two-pane layout sits below a full-width trip banner, with independently scrolling Timeline and detail views.
 - **Advanced Reordering**: Full drag-and-drop support for all items, including hotel check-outs and rental car returns, automatically recalculating routes and stay durations.
 
 ### 🔹 Leaflet Destination Mapping
 - **Interactive Map**: Visualize your stops on a reactive vector map.
-- **Dynamic Control**: The left-side Sparkle menu automatically hides in the map view to provide an unobstructed view of the map legend and navigation markers.
+- **Unobstructed Controls**: Timeline creation actions open from the shared navigation menu instead of floating over map or itinerary content.
 - **OSRM Pathfinding**: Automatically draws organic road-routing splines between Destinations in chronological order. Fixed logic re-calculates paths instantly upon itinerary changes.
 
 ### 🔹 Travel Power Modules
@@ -122,7 +122,7 @@ flowchart TD
 ```
 
 ### Global UI Routing Diagram
-The application centers around an abstract floating control module which manipulates overarching global routing and spawns contextual editing modalities.
+The application uses a shared responsive navigation shell that routes between trip screens and opens contextual timeline-creation dialogs.
 
 ```mermaid
 stateDiagram-v2
@@ -143,15 +143,15 @@ stateDiagram-v2
     end note
   }
   
-  ActiveTrip --> GlobalControls : App.tsx Overlay
-  GlobalControls --> SparkleMenu : Hover Trigger
-  GlobalControls --> ViewSwitcher : Navigation Trigger
-  ViewSwitcher --> Todo
-  ViewSwitcher --> Costs
-  ViewSwitcher --> Weather
-  SparkleMenu --> AddNoteModal
-  SparkleMenu --> ParseAIModal
-  SparkleMenu --> EditActivityModal
+  ActiveTrip --> Navigation : Bottom tabs or side rail
+  Navigation --> Timeline
+  Navigation --> Todo
+  Navigation --> Costs
+  Navigation --> Weather
+  Navigation --> AddMenu
+  AddMenu --> AddNoteModal
+  AddMenu --> ParseAIModal
+  AddMenu --> EditActivityModal
 ```
 
 ---

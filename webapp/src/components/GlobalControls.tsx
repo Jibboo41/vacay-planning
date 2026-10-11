@@ -1,34 +1,28 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { findRoute } from '../app/routes';
+import { useEffect, useState } from 'react';
 import { Sparkles, PenLine, StickyNote, Utensils } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
-import { cn } from '../lib/cn';
-
-const fabPanel = 'fab-options grid transform-none gap-2 rounded-panel border border-white/10 bg-surface/70 p-3 shadow-elevated backdrop-blur-[30px]';
+import { useUiStore } from '../store/useUiStore';
 import type { ItineraryItem } from '../core/models';
 import AddItineraryModal from './modals/AddItineraryModal';
 import AddNoteModal from './modals/AddNoteModal';
 import { startNewItem } from '../store/itemActions';
 import EditItineraryModal from './modals/EditItineraryModal';
 import AiScoutModal from './modals/AiScoutModal';
+import { Sheet } from './ui';
 
 export default function GlobalControls() {
-  const { items, addItem, updateItem, editingItem, editingExpense, selectedDayKey, currentTripId } = useTripStore();
-  const location = useLocation();
-
-  const [isSparkleOpen, setIsSparkleOpen] = useState(false);
-
+  const { items, addItem, updateItem, selectedDayKey, currentTripId } = useTripStore();
+  const addMenuOpen = useUiStore((s) => s.addMenuOpen);
+  const setAddMenuOpen = useUiStore((s) => s.setAddMenuOpen);
   const [addVisible, setAddVisible] = useState(false);
   const [addNoteVisible, setAddNoteVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
   const [editItem, setEditItem] = useState<ItineraryItem | null>(null);
   const [scoutVisible, setScoutVisible] = useState(false);
 
-  // The add menu appears on trip screens (from the shared route config), except the full-bleed map.
-  const route = findRoute(location.pathname);
-  const showAddFab = !!route && route.key !== 'map' && !!currentTripId;
-  const shouldHide = !!editingItem || !!editingExpense || addVisible || addNoteVisible || editVisible;
+  useEffect(() => {
+    if (!currentTripId && addMenuOpen) setAddMenuOpen(false);
+  }, [addMenuOpen, currentTripId, setAddMenuOpen]);
 
   const getEarliestDate = () => {
     if (items.length === 0) return new Date().toISOString();
@@ -42,45 +36,29 @@ export default function GlobalControls() {
 
   return (
     <>
-      {/* ── Sparkles Action FAB (Bottom Left) ── */}
-      {showAddFab && !shouldHide && (
-        <div className="fab-group left items-start">
-        <button 
-          className={cn('fab-main', isSparkleOpen && 'active')}
-          onClick={() => { setIsSparkleOpen(!isSparkleOpen); }}
-          aria-label="Add menu"
-          aria-expanded={isSparkleOpen}
-        >
-          <Sparkles size={24} className="text-white" />
-        </button>
-
-        <div className={cn(fabPanel, 'min-w-40 grid-cols-2', isSparkleOpen ? 'open -translate-y-2.5' : 'translate-y-5 scale-95')}>
-          <NavButton 
-            icon={<Sparkles size={20} />} label="AI Parse" 
-            onClick={() => { setAddVisible(true); setIsSparkleOpen(false); }} 
-            isActive={false} 
+      <Sheet open={addMenuOpen && !!currentTripId} onClose={() => setAddMenuOpen(false)} title="Add to timeline">
+        <div className="grid grid-cols-2 gap-3 pb-2">
+          <NavButton
+            icon={<Sparkles size={20} />} label="AI Parse"
+            onClick={() => { setAddMenuOpen(false); setAddVisible(true); }}
           />
-          <NavButton 
-            icon={<PenLine size={20} />} label="Manual" 
+          <NavButton
+            icon={<PenLine size={20} />} label="Manual"
             onClick={() => {
+              setAddMenuOpen(false);
               startNewItem();
-              setIsSparkleOpen(false);
-            }} 
-            isActive={false} 
+            }}
           />
-          <NavButton 
-            icon={<StickyNote size={20} />} label="Note" 
-            onClick={() => { setAddNoteVisible(true); setIsSparkleOpen(false); }} 
-            isActive={false} 
+          <NavButton
+            icon={<StickyNote size={20} />} label="Note"
+            onClick={() => { setAddMenuOpen(false); setAddNoteVisible(true); }}
           />
-          <NavButton 
-            icon={<Utensils size={20} />} label="Scout" 
-            onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }} 
-            isActive={false} 
+          <NavButton
+            icon={<Utensils size={20} />} label="Scout"
+            onClick={() => { setAddMenuOpen(false); setScoutVisible(true); }}
           />
         </div>
-      </div>
-      )}
+      </Sheet>
 
       {/* Modals */}
       {addVisible && <AddItineraryModal onClose={() => setAddVisible(false)} onAdd={(item) => {
@@ -122,21 +100,15 @@ export default function GlobalControls() {
   );
 }
 
-function NavButton({ icon, label, onClick, isActive }: { icon: React.ReactNode, label: string, onClick: () => void, isActive: boolean }) {
+function NavButton({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-current={isActive ? 'page' : undefined}
-      className={cn(
-        'flex min-h-16 flex-col items-center justify-center gap-1 rounded-2xl border px-1.5 py-3 transition-colors duration-200 motion-reduce:transition-none',
-        isActive
-          ? 'border-sys-blue/40 bg-sys-blue/25 text-white'
-          : 'border-white/2 bg-white/5 text-label-secondary hover:bg-white/10 hover:text-label',
-      )}
+      className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-card border border-white/8 bg-white/5 px-1.5 py-3 text-label-secondary transition-colors duration-200 hover:bg-white/10 hover:text-label motion-reduce:transition-none"
     >
-      <span className={isActive ? 'opacity-100' : 'opacity-80'}>{icon}</span>
-      <span className={cn('text-caption tracking-wide', isActive ? 'font-extrabold' : 'font-semibold')}>{label}</span>
+      <span className="opacity-80">{icon}</span>
+      <span className="text-caption font-semibold tracking-wide">{label}</span>
     </button>
   );
 }

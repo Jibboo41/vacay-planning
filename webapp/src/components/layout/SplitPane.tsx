@@ -82,10 +82,10 @@ export default function SplitPane({ left, right, collapsed, leftLabel, className
   return (
     <div
       ref={containerRef}
-      className={cn('grid h-dvh w-full overflow-hidden', dragging && 'cursor-col-resize select-none', className)}
+      className={cn('grid min-h-0 w-full flex-1 overflow-hidden', dragging && 'cursor-col-resize select-none', className)}
       style={{ gridTemplateColumns: collapsed ? '0px 0px 1fr' : `${effective ? `${effective}px` : '1fr'} 12px 1fr` }}
     >
-      <section aria-label={leftLabel} hidden={collapsed} className="split-left relative h-dvh min-w-0 overflow-y-auto border-r-0">
+      <section aria-label={leftLabel} hidden={collapsed} className="split-left relative h-full min-w-0 overflow-y-auto border-r-0">
         {left}
       </section>
       <div
@@ -108,7 +108,7 @@ export default function SplitPane({ left, right, collapsed, leftLabel, className
         <span aria-hidden="true" className={cn('h-full w-px bg-white/10 transition-colors group-hover:bg-sys-blue/60 group-focus-visible:bg-sys-blue', dragging && 'bg-sys-blue')} />
         <span aria-hidden="true" className="absolute top-1/2 h-10 w-1.5 -translate-y-1/2 rounded-full bg-white/25 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
       </div>
-      <section aria-label="Details" className="split-right relative h-dvh min-w-0 overflow-y-auto">
+      <section aria-label="Details" className="split-right relative h-full min-w-0 overflow-y-auto">
         {right}
       </section>
     </div>

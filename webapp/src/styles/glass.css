@@ -181,52 +181,6 @@
     font-size: 28px;
   }
 
-  /* ── Floating Actions Row (Horizontal Alignment) ── */
-  .floating-tab-bar {
-    position: fixed;
-    bottom: calc(24px + env(safe-area-inset-bottom));
-    right: 98px; /* Positioned to the LEFT of the FAB group */
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    z-index: 50;
-  }
-
-  .floating-tab-btn {
-    width: 52px;
-    height: 52px;
-    border-radius: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    color: var(--sys-label-secondary);
-    background: rgba(44, 44, 46, 0.75);
-    backdrop-filter: blur(24px) saturate(1.5);
-    border: 0.5px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-    transition: all 0.14s ease;
-  }
-  .floating-tab-btn:active { transform: scale(0.88); }
-  .floating-tab-btn--active {
-    color: var(--sys-label-primary);
-    background: rgba(10, 132, 255, 0.35);
-    border-color: rgba(10, 132, 255, 0.5);
-  }
-
-  .fab-group {
-    position: fixed;
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    gap: 14px;
-    z-index: 2500;
-    pointer-events: none;
-  }
-  .fab-group.right { right: 24px; }
-  .fab-group.left { left: 16px; }
-
   /* ── Glass Blue Button ── */
   .btn-glass-blue {
     background: rgba(10, 132, 255, 0.18);
@@ -248,69 +202,10 @@
   .btn-glass-blue:active { transform: scale(0.96); }
   .btn-glass-blue:disabled { opacity: 0.45; cursor: default; transform: none; }
 
-  .fab-main {
-    width: 60px;
-    height: 60px;
-    border-radius: 30px;
-    background: rgba(10, 132, 255, 0.22);
-    border: 1px solid rgba(10, 132, 255, 0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
-    border: 2px solid rgba(255, 255, 255, 0.4); /* Thicker white ring for visibility */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: auto;
-  }
-  .fab-main.active { transform: rotate(45deg); background: var(--sys-bg-elevated-3); border-color: rgba(255,255,255,0.1); box-shadow: none; }
-
-  .fab-options {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(20px) scale(0.85);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .fab-options.open { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-
-  .fab-sub {
-    width: 48px;
-    height: 48px;
-    border-radius: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--sys-bg-elevated-2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-  }
-
-  .fab-sub-label {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    white-space: nowrap;
-  }
-  .fab-group.right .fab-sub-label { right: 60px; }
-  .fab-group.left .fab-sub-label { left: 60px; }
-
-  .fab-sub:hover .fab-sub-label { opacity: 1; }
-
   /* ── Modals & Leaflet Popups ── */
   .modal-backdrop {
     position: fixed; inset: 0; background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(6px); z-index: 8000; /* Above FABs */
+    backdrop-filter: blur(6px); z-index: 8000; /* Above app chrome */
     display: flex; justify-content: center; align-items: flex-end;
     overscroll-behavior: contain;
   }

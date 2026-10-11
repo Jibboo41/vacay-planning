@@ -1,5 +1,5 @@
 import {
-  BookOpen, Calendar, CheckSquare, CloudSun, Compass, DollarSign, Luggage, Settings, StickyNote,
+  BookOpen, Calendar, CheckSquare, CloudSun, Compass, DollarSign, Luggage, Plus, Settings, StickyNote,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -20,9 +20,9 @@ export interface AppRoute {
 
 /**
  * Single source of truth for the trip screens. Consumed by the router (App),
- * the mobile tab bar, the desktop side rail, the add-menu FAB and the command
- * palette. Keep at most four `primary` routes so the tab bar (plus "More" and
- * "Settings") fits narrow phones.
+ * the mobile tab bar, the desktop side rail and the command palette. Keep at
+ * most four `primary` routes so the tab bar can retain 44px targets alongside
+ * Add, More and Settings on narrow phones.
  */
 export const APP_ROUTES: readonly AppRoute[] = [
   { key: 'timeline', path: '/timeline', label: 'Timeline', description: 'Itinerary timeline', icon: Calendar, primary: true, keywords: ['itinerary', 'schedule', 'days'] },
@@ -37,9 +37,29 @@ export const APP_ROUTES: readonly AppRoute[] = [
 
 export const DEFAULT_ROUTE = '/timeline';
 
+export const ADD_TIMELINE_ACTION = {
+  key: 'add',
+  label: 'Add',
+  description: 'Add to timeline',
+  icon: Plus,
+} as const;
+
+export type TripNavigationItem = AppRoute | typeof ADD_TIMELINE_ACTION;
+
+/** Insert the timeline Add action immediately after Todo in any route subset. */
+export function withTimelineAddAction(routes: readonly AppRoute[]): TripNavigationItem[] {
+  return routes.flatMap((route) => (
+    route.key === 'todo' ? [route, ADD_TIMELINE_ACTION] : [route]
+  ));
+}
+
+export function isAppRoute(item: TripNavigationItem): item is AppRoute {
+  return 'path' in item;
+}
+
 /**
  * Settings (trips, timeline search & filters, export, appearance, account).
- * Not a trip screen: it works without a selected trip and has no add FAB.
+ * Not a trip screen: it works without a selected trip.
  */
 export const SETTINGS_ROUTE = {
   path: '/settings',
