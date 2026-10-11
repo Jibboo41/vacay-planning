@@ -26,6 +26,7 @@
   --glass-blur: blur(44px); /* Triple-digit level blur for maximum glass effect */
   --side-rail-width: 88px;
   --mobile-tab-bar-height: 66px;
+  --screen-header-top-padding: calc(22px + env(safe-area-inset-top));
 
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   font-synthesis: none;
@@ -218,7 +219,7 @@ input, textarea {
   position: sticky;
   top: 0;
   z-index: 1000;
-  padding: calc(14px + env(safe-area-inset-top)) 20px 14px;
+  padding: var(--screen-header-top-padding) 20px 14px;
   display: flex;
   align-items: center;
   gap: 16px;
