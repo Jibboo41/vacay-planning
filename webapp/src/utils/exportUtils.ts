@@ -4,7 +4,7 @@ export { downloadTripExcel } from './excelExport';
 /**
  * Escapes a string for CSV format by doubling quotes and wrapping in quotes if needed.
  */
-function escapeCSV(val: any): string {
+function escapeCSV(val: unknown): string {
   if (val === undefined || val === null) return '';
   const str = String(val);
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {

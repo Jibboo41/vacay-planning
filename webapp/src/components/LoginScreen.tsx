@@ -3,6 +3,17 @@ import { auth, googleProvider } from '../core/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { LogIn } from 'lucide-react';
 
+function getAuthError(error: unknown) {
+  if (error && typeof error === 'object') {
+    const maybeError = error as { code?: unknown; message?: unknown };
+    return {
+      code: typeof maybeError.code === 'string' ? maybeError.code : undefined,
+      message: typeof maybeError.message === 'string' ? maybeError.message : undefined,
+    };
+  }
+  return { code: undefined, message: undefined };
+}
+
 const LoginScreen: React.FC = () => {
   const [signingIn, setSigningIn] = React.useState(false);
 
@@ -12,13 +23,14 @@ const LoginScreen: React.FC = () => {
       console.log('Opening Google Sign-in Popup...');
       await signInWithPopup(auth, googleProvider);
       // Popup success will be handled by the auth state listener in App.tsx
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login failed:', error);
       setSigningIn(false);
-      if (error.code === 'auth/popup-blocked') {
+      const authError = getAuthError(error);
+      if (authError.code === 'auth/popup-blocked') {
         alert('Please allow popups for this site to sign in.');
       } else {
-        alert('Login Error: ' + (error.message || 'Unknown error'));
+        alert('Login Error: ' + (authError.message || 'Unknown error'));
       }
     }
   };

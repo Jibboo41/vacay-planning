@@ -1,156 +1,114 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type PointerEvent,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { cn } from '../../lib/cn';
 
 const STORAGE_KEY = 'vacay:split-width';
-const MIN_LEFT_WIDTH = 360;
-const MIN_RIGHT_WIDTH = 420;
-const DIVIDER_WIDTH = 12;
-const KEYBOARD_STEP = 32;
+const MIN_LEFT = 360;
+const MIN_RIGHT = 420;
+const STEP = 32;
 
-function readStoredWidth(): number | null {
-  const stored = Number(localStorage.getItem(STORAGE_KEY));
-  return Number.isFinite(stored) && stored > 0 ? stored : null;
+function readStored(): number | null {
+  const v = Number(localStorage.getItem(STORAGE_KEY));
+  return Number.isFinite(v) && v > 0 ? v : null;
 }
 
-function clampWidth(width: number, containerWidth: number): number {
-  const maximum = Math.max(
-    MIN_LEFT_WIDTH,
-    containerWidth - MIN_RIGHT_WIDTH - DIVIDER_WIDTH,
-  );
-  return Math.min(Math.max(width, MIN_LEFT_WIDTH), maximum);
+function clampSplit(width: number, container: number) {
+  const max = Math.max(MIN_LEFT, container - MIN_RIGHT);
+  return Math.min(Math.max(width, MIN_LEFT), max);
 }
 
 interface SplitPaneProps {
   left: ReactNode;
   right: ReactNode;
+  /** Hide the left pane (collapsed). */
+  collapsed?: boolean;
   leftLabel: string;
+  className?: string;
 }
 
-export default function SplitPane({ left, right, leftLabel }: SplitPaneProps) {
+/**
+ * Two-pane layout with a draggable / keyboard-resizable divider.
+ * The left width (px) is persisted in localStorage (`vacay:split-width`).
+ */
+export default function SplitPane({ left, right, collapsed, leftLabel, className }: SplitPaneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [leftWidth, setLeftWidth] = useState<number | null>(readStoredWidth);
-  const [containerWidth, setContainerWidth] = useState(0);
+  const [width, setWidth] = useState<number | null>(readStored);
   const [dragging, setDragging] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new ResizeObserver(([entry]) => {
-      setContainerWidth(entry.contentRect.width);
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
-  const effectiveWidth = containerWidth
-    ? clampWidth(leftWidth ?? containerWidth / 2, containerWidth)
-    : null;
+  const effective = containerWidth ? clampSplit(width ?? containerWidth / 2, containerWidth) : null;
 
-  const commitWidth = useCallback((width: number) => {
-    const nextWidth = containerWidth ? clampWidth(width, containerWidth) : width;
-    setLeftWidth(nextWidth);
-    localStorage.setItem(STORAGE_KEY, String(Math.round(nextWidth)));
-  }, [containerWidth]);
+  const commit = useCallback((w: number) => {
+    setWidth(w);
+    localStorage.setItem(STORAGE_KEY, String(Math.round(w)));
+  }, []);
 
-  const updateFromPointer = (clientX: number) => {
-    const container = containerRef.current;
-    if (!container) return;
-    const bounds = container.getBoundingClientRect();
-    setLeftWidth(clampWidth(clientX - bounds.left, bounds.width));
-  };
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
     setDragging(true);
   };
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!dragging) return;
-    updateFromPointer(event.clientX);
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!dragging || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setWidth(clampSplit(e.clientX - rect.left, rect.width));
   };
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+  const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
     if (!dragging) return;
-    updateFromPointer(event.clientX);
     setDragging(false);
-    event.currentTarget.releasePointerCapture(event.pointerId);
-
-    const container = containerRef.current;
-    if (container) {
-      const bounds = container.getBoundingClientRect();
-      commitWidth(event.clientX - bounds.left);
-    }
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    if (effective) commit(effective);
   };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!containerWidth || effectiveWidth === null) return;
-
-    let nextWidth: number | null = null;
-    if (event.key === 'ArrowLeft') nextWidth = effectiveWidth - KEYBOARD_STEP;
-    if (event.key === 'ArrowRight') nextWidth = effectiveWidth + KEYBOARD_STEP;
-    if (event.key === 'Home') nextWidth = MIN_LEFT_WIDTH;
-    if (event.key === 'End') {
-      nextWidth = containerWidth - MIN_RIGHT_WIDTH - DIVIDER_WIDTH;
-    }
-    if (nextWidth === null) return;
-
-    event.preventDefault();
-    commitWidth(nextWidth);
-  };
-
-  const resetWidth = () => {
-    setLeftWidth(null);
-    localStorage.removeItem(STORAGE_KEY);
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!containerWidth || effective == null) return;
+    let next: number | null = null;
+    if (e.key === 'ArrowLeft') next = effective - STEP;
+    else if (e.key === 'ArrowRight') next = effective + STEP;
+    else if (e.key === 'Home') next = MIN_LEFT;
+    else if (e.key === 'End') next = containerWidth - MIN_RIGHT;
+    if (next == null) return;
+    e.preventDefault();
+    commit(clampSplit(next, containerWidth));
   };
 
   return (
     <div
       ref={containerRef}
-      className={`split-pane ${dragging ? 'split-pane--dragging' : ''}`}
-      style={{
-        gridTemplateColumns: effectiveWidth === null
-          ? 'minmax(0, 1fr) 12px minmax(0, 1fr)'
-          : `${effectiveWidth}px 12px minmax(0, 1fr)`,
-      }}
+      className={cn('grid min-h-0 w-full flex-1 overflow-hidden', dragging && 'cursor-col-resize select-none', className)}
+      style={{ gridTemplateColumns: collapsed ? '0px 0px 1fr' : `${effective ? `${effective}px` : '1fr'} 12px 1fr` }}
     >
-      <section className="split-left" aria-label={leftLabel}>
+      <section aria-label={leftLabel} hidden={collapsed} className="split-left relative h-full min-w-0 overflow-y-auto border-r-0">
         {left}
       </section>
-
       <div
-        className="split-pane__divider"
         role="separator"
         aria-orientation="vertical"
         aria-label={`Resize ${leftLabel.toLowerCase()} pane`}
-        aria-valuemin={MIN_LEFT_WIDTH}
-        aria-valuemax={containerWidth
-          ? Math.max(MIN_LEFT_WIDTH, containerWidth - MIN_RIGHT_WIDTH - DIVIDER_WIDTH)
-          : undefined}
-        aria-valuenow={effectiveWidth === null ? undefined : Math.round(effectiveWidth)}
-        tabIndex={0}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onKeyDown={handleKeyDown}
-        onDoubleClick={resetWidth}
-        title="Drag to resize. Double-click to reset."
+        aria-valuemin={MIN_LEFT}
+        aria-valuemax={containerWidth ? Math.max(MIN_LEFT, containerWidth - MIN_RIGHT) : undefined}
+        aria-valuenow={effective ? Math.round(effective) : undefined}
+        tabIndex={collapsed ? -1 : 0}
+        hidden={collapsed}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onKeyDown={onKeyDown}
+        onDoubleClick={() => { setWidth(null); localStorage.removeItem(STORAGE_KEY); }}
+        className="group relative z-10 flex cursor-col-resize touch-none items-center justify-center"
       >
-        <span className="split-pane__divider-line" aria-hidden="true" />
-        <span className="split-pane__divider-grip" aria-hidden="true" />
+        <span aria-hidden="true" className={cn('h-full w-px bg-white/10 transition-colors group-hover:bg-sys-blue/60 group-focus-visible:bg-sys-blue', dragging && 'bg-sys-blue')} />
+        <span aria-hidden="true" className="absolute top-1/2 h-10 w-1.5 -translate-y-1/2 rounded-full bg-white/25 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
       </div>
-
-      <section className="split-right" aria-label="Details">
+      <section aria-label="Details" className="split-right relative h-full min-w-0 overflow-y-auto">
         {right}
       </section>
     </div>

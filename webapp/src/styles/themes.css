@@ -1,0 +1,25 @@
+/*
+ * Ambient background themes.
+ *
+ * The active theme is written to <html data-theme="..."> from the Zustand store
+ * (see App.tsx). Each theme only overrides the three blob colors; everything
+ * else (glass, labels, item-type colors) is shared.
+ */
+:root,
+[data-theme="default"] {
+  --blob-1: var(--color-sys-blue);
+  --blob-2: var(--color-sys-purple);
+  --blob-3: var(--color-sys-green);
+}
+
+[data-theme="sunset"]    { --blob-1: #FF3B30; --blob-2: #FF9F0A; --blob-3: #FFD60A; }
+[data-theme="midnight"]  { --blob-1: #5E5CE6; --blob-2: #BF5AF2; --blob-3: #32ADE6; }
+[data-theme="forest"]    { --blob-1: #30D158; --blob-2: #34C759; --blob-3: #32ADE6; }
+[data-theme="aurora"]    { --blob-1: #00F5A0; --blob-2: #8B5CF6; --blob-3: #06B6D4; }
+[data-theme="desert"]    { --blob-1: #E2A57E; --blob-2: #C9415A; --blob-3: #EDCA7F; }
+[data-theme="ocean"]     { --blob-1: #0EA5E9; --blob-2: #0D9488; --blob-3: #6366F1; }
+[data-theme="vulcan"]    { --blob-1: #FF4500; --blob-2: #FF8C00; --blob-3: #FF2D55; }
+[data-theme="sakura"]    { --blob-1: #FF85A2; --blob-2: #D891EF; --blob-3: #FFB6CE; }
+[data-theme="cyberpunk"] { --blob-1: #FF00AA; --blob-2: #00FFEA; --blob-3: #FFE600; }
+[data-theme="slate"]     { --blob-1: #708090; --blob-2: #708090; --blob-3: #708090; }
+[data-theme="black"]     { --blob-1: #000000; --blob-2: #000000; --blob-3: #000000; }
