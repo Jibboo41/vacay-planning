@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, Compass, Calendar, BookOpen, PenLine, Layers, CheckSquare, DollarSign, CloudSun, StickyNote, Utensils, Luggage, CreditCard } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Sparkles, PenLine, StickyNote, Utensils } from 'lucide-react';
+import { findRoute } from '../app/routes';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import AddItineraryModal from './modals/AddItineraryModal';
@@ -9,12 +10,10 @@ import EditItineraryModal from './modals/EditItineraryModal';
 import AiScoutModal from './modals/AiScoutModal';
 
 export default function GlobalControls() {
-  const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen } = useTripStore();
-  const navigate = useNavigate();
+  const { items, addItem, updateItem, editingItem, editingExpense, isSidebarOpen, currentTripId } = useTripStore();
   const location = useLocation();
 
   const [isSparkleOpen, setIsSparkleOpen] = useState(false);
-  const [isViewOpen, setIsViewOpen] = useState(false);
 
   const [addVisible, setAddVisible] = useState(false);
   const [addNoteVisible, setAddNoteVisible] = useState(false);
@@ -22,6 +21,8 @@ export default function GlobalControls() {
   const [editItem, setEditItem] = useState<ItineraryItem | null>(null);
   const [scoutVisible, setScoutVisible] = useState(false);
 
+  const route = findRoute(location.pathname);
+  const showAddFab = !!route && route.key !== 'map' && !!currentTripId;
   const shouldHide = isSidebarOpen || !!editingItem || !!editingExpense || addVisible || addNoteVisible || editVisible;
 
   const getEarliestDate = () => {
@@ -35,27 +36,14 @@ export default function GlobalControls() {
     return earliest.split('T')[0];
   };
 
-  const currentIcon = useMemo(() => {
-    if (location.pathname === '/map') return <Compass size={24} color="#fff" />;
-    if (location.pathname === '/timeline') return <Calendar size={24} color="#fff" />;
-    if (location.pathname === '/summary') return <BookOpen size={24} color="#fff" />;
-    if (location.pathname === '/todo') return <CheckSquare size={24} color="#fff" />;
-    if (location.pathname === '/costs') return <DollarSign size={24} color="#fff" />;
-    if (location.pathname === '/weather') return <CloudSun size={24} color="#fff" />;
-    if (location.pathname === '/notes') return <StickyNote size={24} color="#fff" />;
-    if (location.pathname === '/packing') return <Luggage size={24} color="#fff" />;
-    if (location.pathname === '/cards') return <CreditCard size={24} color="#fff" />;
-    return <Layers size={24} color="#fff" />;
-  }, [location.pathname]);
-
   return (
     <>
       {/* ── Sparkles Action FAB (Bottom Left) ── */}
-      {location.pathname !== '/map' && !shouldHide && (
+      {showAddFab && !shouldHide && (
         <div className="fab-group left" style={{ alignItems: 'flex-start' }}>
         <button 
           className={`fab-main ${isSparkleOpen ? 'active' : ''}`} 
-          onClick={() => { setIsSparkleOpen(!isSparkleOpen); setIsViewOpen(false); }}
+          onClick={() => setIsSparkleOpen(!isSparkleOpen)}
           aria-label="Add menu"
         >
           <Sparkles size={24} color="#fff" />
@@ -107,81 +95,6 @@ export default function GlobalControls() {
             icon={<Utensils size={20} />} label="Scout" 
             onClick={() => { setScoutVisible(true); setIsSparkleOpen(false); }} 
             isActive={false} 
-          />
-        </div>
-      </div>
-      )}
-
-      {/* ── View Switcher FAB (Bottom Right) ── */}
-      {!shouldHide && (
-        <div className="fab-group right" style={{ alignItems: 'flex-end' }}>
-          <button 
-          className={`fab-main ${isViewOpen ? 'active' : ''}`}
-          onClick={() => { setIsViewOpen(!isViewOpen); setIsSparkleOpen(false); }}
-          aria-label="Switch Views"
-        >
-          {currentIcon}
-        </button>
-
-        <div className={`fab-options ${isViewOpen ? 'open' : ''}`} style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(3, 1fr)', 
-          gap: '8px',
-          background: 'rgba(28, 28, 30, 0.7)',
-          padding: '12px',
-          borderRadius: '24px',
-          backdropFilter: 'blur(30px)',
-          WebkitBackdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          minWidth: '240px',
-          transform: isViewOpen ? 'translateY(-10px) scale(1)' : 'translateY(20px) scale(0.95)',
-          opacity: isViewOpen ? 1 : 0
-        }}>
-          <NavButton 
-            icon={<Calendar size={20} />} label="Timeline" 
-            onClick={() => { navigate('/timeline'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/timeline'} 
-          />
-          <NavButton 
-            icon={<Compass size={20} />} label="Map" 
-            onClick={() => { navigate('/map'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/map'} 
-          />
-          <NavButton 
-            icon={<BookOpen size={20} />} label="Summary" 
-            onClick={() => { navigate('/summary'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/summary'} 
-          />
-          <NavButton 
-            icon={<CheckSquare size={20} />} label="Todo" 
-            onClick={() => { navigate('/todo'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/todo'} 
-          />
-          <NavButton 
-            icon={<DollarSign size={20} />} label="Costs" 
-            onClick={() => { navigate('/costs'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/costs'} 
-          />
-          <NavButton 
-            icon={<CloudSun size={20} />} label="Weather" 
-            onClick={() => { navigate('/weather'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/weather'} 
-          />
-          <NavButton 
-            icon={<StickyNote size={20} />} label="Notes" 
-            onClick={() => { navigate('/notes'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/notes'} 
-          />
-          <NavButton 
-            icon={<Luggage size={20} />} label="Packing" 
-            onClick={() => { navigate('/packing'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/packing'} 
-          />
-          <NavButton 
-            icon={<CreditCard size={20} />} label="Cards" 
-            onClick={() => { navigate('/cards'); setIsViewOpen(false); }} 
-            isActive={location.pathname === '/cards'} 
           />
         </div>
       </div>

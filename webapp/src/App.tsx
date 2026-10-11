@@ -13,6 +13,9 @@ import LoginScreen from './components/LoginScreen';
 import TripSelector from './components/TripSelector';
 import GlobalControls from './components/GlobalControls';
 import Sidebar from './components/Sidebar';
+import TabBar from './components/TabBar';
+import SideRail from './components/layout/SideRail';
+import SplitPane from './components/layout/SplitPane';
 import GlobalModals from './components/modals/GlobalModals';
 import React, { useEffect, useState } from 'react';
 import { auth, db } from './core/firebase';
@@ -82,7 +85,8 @@ const SyncStatus = () => {
 };
 
 function MainLayout({ children }: { children: React.ReactNode }) {
-  const { currentTripId } = useTripStore();
+  const currentTripId = useTripStore(state => state.currentTripId);
+  const userId = useTripStore(state => state.userId);
   const location = useLocation();
   const [isWide, setIsWide] = useState(window.innerWidth >= 1000);
 
@@ -92,24 +96,43 @@ function MainLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/trips';
+  const showNavigation = !!userId && location.pathname !== '/login';
 
-  if (!isAuthPage && isWide && currentTripId) {
+  if (!showNavigation) {
     return (
-      <div className="split-layout">
-        <div className="split-left">
-          <TimelineScreen />
-        </div>
-        <div className="split-right">
-          {location.pathname === '/timeline' ? <MapViewScreen /> : children}
-        </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
+        {children}
       </div>
     );
   }
 
+  if (!isWide) {
+    return (
+      <div className="mobile-nav-layout">
+        {children}
+        <TabBar />
+      </div>
+    );
+  }
+
+  const showSplitLayout = !!currentTripId
+    && location.pathname !== '/trips'
+    && location.pathname !== '/debug';
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%' }}>
-      {children}
+    <div className="desktop-nav-layout">
+      <SideRail />
+      {showSplitLayout ? (
+        <SplitPane
+          leftLabel="Timeline"
+          left={<TimelineScreen />}
+          right={location.pathname === '/timeline' ? <MapViewScreen /> : children}
+        />
+      ) : (
+        <div className="desktop-nav-layout__content">
+          {children}
+        </div>
+      )}
     </div>
   );
 }

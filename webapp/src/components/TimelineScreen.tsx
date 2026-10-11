@@ -430,7 +430,7 @@ export default function TimelineScreen() {
       <header ref={headerRef} className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0, paddingTop: 'calc(4px + env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
           <button 
-            className="header-icon-btn"
+            className="header-icon-btn legacy-menu-button"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
           >

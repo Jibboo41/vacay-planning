@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay, CreditCard } from '../core/models';
 import { fetchWeather } from '../data/weatherApi';
 import { db, auth } from '../core/firebase';
+import { listTodoCategories, normalizeTodoCategory } from '../core/todoCategories';
 import { 
   collection, 
   addDoc, 
@@ -85,8 +86,8 @@ interface TripStore {
   reorderGeneralNotes: (newOrder: import('../core/models').TripNote[]) => Promise<void>;
 
   // Todo Actions
-  addTodo: (text: string, dueDate?: string, notes?: string) => Promise<void>;
-  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null; notes?: string | null }) => Promise<void>;
+  addTodo: (text: string, dueDate?: string, notes?: string, category?: string) => Promise<void>;
+  updateTodo: (id: string, updates: { text?: string; dueDate?: string | null; notes?: string | null; category?: string | null }) => Promise<void>;
   toggleTodo: (id: string) => Promise<void>;
   deleteTodo: (id: string) => Promise<void>;
   reorderTodos: (newOrder: import('../core/models').TodoItem[]) => Promise<void>;
@@ -526,7 +527,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     await updateDoc(doc(db, "trips", currentTripId), { aiSummary: summary });
   },
 
-  addTodo: async (text, dueDate, notes) => {
+  addTodo: async (text, dueDate, notes, category) => {
     const { currentTripId, todos, initialized } = get();
     if (!currentTripId || !initialized) return;
     const newTodo: TodoItem = { 
@@ -535,7 +536,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
       completed: false, 
       createdAt: Date.now(),
       dueDate: dueDate || undefined,
-      notes: notes || undefined
+      notes: notes || undefined,
+      category: normalizeTodoCategory(category, listTodoCategories(todos))
     };
     const newTodos = [...todos, newTodo];
     set({ todos: newTodos });
@@ -559,7 +561,10 @@ export const useTripStore = create<TripStore>((set, get) => ({
           ...t, 
           ...updates,
           dueDate: updates.dueDate === null ? undefined : (updates.dueDate ?? t.dueDate),
-          notes: updates.notes === null ? undefined : (updates.notes ?? t.notes)
+          notes: updates.notes === null ? undefined : (updates.notes ?? t.notes),
+          category: updates.category === undefined
+            ? t.category
+            : normalizeTodoCategory(updates.category, listTodoCategories(todos))
         };
       }
       return t;

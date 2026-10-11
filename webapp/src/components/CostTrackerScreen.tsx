@@ -103,7 +103,7 @@ export default function CostTrackerScreen() {
     <div className="safe-area-inset" style={{ minHeight: '100vh', background: 'transparent' }}>
       <header className="screen-header">
         <button 
-          className="header-icon-btn"
+          className="header-icon-btn legacy-menu-button"
           onClick={() => setSidebarOpen(true)}
         >
           <Menu size={24} />

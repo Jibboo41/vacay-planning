@@ -121,14 +121,13 @@ export default function PackingScreen() {
     <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
       {/* Header */}
       <header className="screen-header">
-        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
+        <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
           <h1 className="page-title" style={{ margin: 0 }}>Packing List</h1>
           <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>GEAR & LUGGAGE</div>
         </div>
-        <div style={{ width: 44 }} />
       </header>
 
       <div style={{ padding: '0 24px 12px 24px' }}>

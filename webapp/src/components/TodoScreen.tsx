@@ -1,7 +1,16 @@
-import { useState, useRef } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Circle, Plus, Trash2, CheckSquare, Menu, Calendar, GripVertical, Pencil, X, Check } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { TodoItem } from '../core/models';
+import {
+  DEFAULT_TODO_CATEGORY,
+  getTodoCategoryIcon,
+  groupTodosByCategory,
+  listTodoCategories,
+  moveTodo,
+  todoCategoryOf,
+} from '../core/todoCategories';
+import TodoCategoryPicker from './TodoCategoryPicker';
 
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, toggleTodo, deleteTodo, reorderTodos, setSidebarOpen } = useTripStore();
@@ -9,22 +18,35 @@ export default function TodoScreen() {
   const [newTodo, setNewTodo] = useState('');
   const [newDueDate, setNewDueDate] = useState('');
   const [newNotes, setNewNotes] = useState('');
+  const [newCategory, setNewCategory] = useState(DEFAULT_TODO_CATEGORY);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editDueDate, setEditDueDate] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editCategory, setEditCategory] = useState(DEFAULT_TODO_CATEGORY);
+
+  const categoryOptions = useMemo(() => listTodoCategories(todos), [todos]);
+  const groupedTodoRows = useMemo(
+    () => groupTodosByCategory(todos).flatMap((group, groupIndex) =>
+      group.todos.map((todo, todoIndex) => ({
+        todo,
+        group,
+        groupIndex,
+        isFirstInGroup: todoIndex === 0,
+      }))),
+    [todos],
+  );
 
   // Drag state
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [overIndex, setOverIndex] = useState<number | null>(null);
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-  const touchStartY = useRef<number>(0);
-  const touchDragIndex = useRef<number | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const dragItem = useRef<string | null>(null);
+  const dragOverItem = useRef<string | null>(null);
+  const touchDragId = useRef<string | null>(null);
 
   const handleAdd = () => {
     if (!newTodo.trim()) return;
-    addTodo(newTodo.trim(), newDueDate || undefined, newNotes.trim() || undefined);
+    addTodo(newTodo.trim(), newDueDate || undefined, newNotes.trim() || undefined, newCategory);
     setNewTodo('');
     setNewDueDate('');
     setNewNotes('');
@@ -36,72 +58,72 @@ export default function TodoScreen() {
     setEditText(todo.text);
     setEditDueDate(todo.dueDate || '');
     setEditNotes(todo.notes || '');
+    setEditCategory(todoCategoryOf(todo));
   };
 
   const commitEdit = () => {
     if (!editingId || !editText.trim()) { setEditingId(null); return; }
-    updateTodo(editingId, { text: editText.trim(), dueDate: editDueDate || null, notes: editNotes.trim() || null });
+    updateTodo(editingId, {
+      text: editText.trim(),
+      dueDate: editDueDate || null,
+      notes: editNotes.trim() || null,
+      category: editCategory,
+    });
     setEditingId(null);
   };
 
   // Mouse drag handlers
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    dragItem.current = index;
-    setDraggingIndex(index);
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    dragItem.current = id;
+    setDraggingId(id);
     e.dataTransfer.effectAllowed = 'move';
   };
-  const handleDragEnter = (index: number) => {
-    dragOverItem.current = index;
-    setOverIndex(index);
+  const handleDragEnter = (id: string) => {
+    dragOverItem.current = id;
+    setOverId(id);
   };
   const handleDragEnd = () => {
-    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-      const ordered = [...todos];
-      const [dragged] = ordered.splice(dragItem.current, 1);
-      ordered.splice(dragOverItem.current, 0, dragged);
-      reorderTodos(ordered);
+    if (dragItem.current && dragOverItem.current) {
+      const reordered = moveTodo(todos, dragItem.current, dragOverItem.current);
+      if (reordered) reorderTodos(reordered);
     }
     dragItem.current = null;
     dragOverItem.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
+    setDraggingId(null);
+    setOverId(null);
   };
 
   // Touch drag handlers
-  const handleGripTouchStart = (e: React.TouchEvent, index: number) => {
+  const handleGripTouchStart = (e: React.TouchEvent, id: string) => {
     e.stopPropagation();
-    touchDragIndex.current = index;
-    touchStartY.current = e.touches[0].clientY;
-    setDraggingIndex(index);
+    touchDragId.current = id;
+    setDraggingId(id);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchDragIndex.current === null) return;
+    if (!touchDragId.current) return;
     if (e.cancelable) e.preventDefault(); // Prevent scrolling on iOS during drag
     const touch = e.touches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    const itemEl = target?.closest('[data-todo-item]');
+    const itemEl = target?.closest<HTMLElement>('[data-todo-id]');
+    const nextOverId = itemEl?.dataset.todoId;
     
-    if (itemEl) {
-      const elements = Array.from(document.querySelectorAll('[data-todo-item]'));
-      const newOver = elements.indexOf(itemEl);
-      if (newOver !== -1 && newOver !== overIndex) {
-        setOverIndex(newOver);
-        if ('vibrate' in navigator) navigator.vibrate(5);
-      }
+    if (nextOverId && nextOverId !== overId) {
+      dragOverItem.current = nextOverId;
+      setOverId(nextOverId);
+      if ('vibrate' in navigator) navigator.vibrate(5);
     }
   };
 
   const handleTouchEnd = () => {
-    if (touchDragIndex.current !== null && overIndex !== null && overIndex !== touchDragIndex.current) {
-      const ordered = [...todos];
-      const [dragged] = ordered.splice(touchDragIndex.current, 1);
-      ordered.splice(overIndex, 0, dragged);
-      reorderTodos(ordered);
+    if (touchDragId.current && dragOverItem.current) {
+      const reordered = moveTodo(todos, touchDragId.current, dragOverItem.current);
+      if (reordered) reorderTodos(reordered);
     }
-    touchDragIndex.current = null;
-    setDraggingIndex(null);
-    setOverIndex(null);
+    touchDragId.current = null;
+    dragOverItem.current = null;
+    setDraggingId(null);
+    setOverId(null);
   };
 
   const isOverdue = (todo: TodoItem) =>
@@ -111,17 +133,16 @@ export default function TodoScreen() {
   const completedCount = todos.filter(t => t.completed).length;
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
+    <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingId !== null ? 'none' : 'auto' }}>
       {/* Header */}
       <header className="screen-header">
-        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
+        <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
           <h1 className="page-title" style={{ margin: 0 }}>Things to Do</h1>
           <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>TRIP CHECKLIST</div>
         </div>
-        <div style={{ width: 44 }} /> {/* Balance header */}
       </header>
       <div style={{ padding: '0 24px 12px 24px' }}>
           <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
@@ -163,6 +184,16 @@ export default function TodoScreen() {
                   borderRadius: '10px', padding: '12px 14px', color: '#fff',
                   fontSize: '17px', outline: 'none', width: '100%'
                 }}
+              />
+            </div>
+
+            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+              <span id="new-todo-category-label" className="edit-field-label">Category</span>
+              <TodoCategoryPicker
+                labelId="new-todo-category-label"
+                value={newCategory}
+                onChange={setNewCategory}
+                options={categoryOptions}
               />
             </div>
 
@@ -236,34 +267,68 @@ export default function TodoScreen() {
               <p style={{ fontSize: '15px' }}>No tasks yet. Stay organized for your trip!</p>
             </div>
           ) : (
-            todos.map((todo, index) => {
+            groupedTodoRows.map(({ todo, group, groupIndex, isFirstInGroup }) => {
               const isEditing = editingId === todo.id;
-              const isDragging = draggingIndex === index;
-              const isOver = overIndex === index && draggingIndex !== null && draggingIndex !== index;
+              const isDragging = draggingId === todo.id;
+              const isOver = overId === todo.id && draggingId !== null && draggingId !== todo.id;
+              const CategoryIcon = getTodoCategoryIcon(group.category);
+              const completedInGroup = group.todos.filter(groupTodo => groupTodo.completed).length;
 
               return (
-                <div
-                  key={todo.id}
-                  data-todo-item
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnter={() => handleDragEnter(index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={e => e.preventDefault()}
-                  className="glass-card"
-                  style={{
-                    display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
-                    padding: '14px 12px',
-                    borderRadius: '16px',
-                    background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
-                    border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                    transition: 'all 0.15s ease',
-                    opacity: isDragging ? 0.4 : 1,
-                    transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
-                    boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : undefined,
-                    zIndex: isDragging ? 2 : 1
-                  }}
-                >
+                <Fragment key={todo.id}>
+                  {isFirstInGroup && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '0 4px',
+                        marginTop: groupIndex === 0 ? 0 : '18px',
+                        marginBottom: '2px',
+                      }}
+                    >
+                      <CategoryIcon size={15} color="var(--sys-blue)" aria-hidden="true" />
+                      <h2 style={{
+                        flex: 1,
+                        margin: 0,
+                        fontSize: '12px',
+                        fontWeight: 800,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        color: 'var(--sys-label-secondary)',
+                      }}>
+                        {group.category}
+                      </h2>
+                      <span
+                        aria-label={`${completedInGroup} of ${group.todos.length} done`}
+                        style={{ fontSize: '11px', fontWeight: 700, color: 'var(--sys-label-tertiary)' }}
+                      >
+                        {completedInGroup}/{group.todos.length}
+                      </span>
+                    </div>
+                  )}
+                  <div
+                    data-todo-item
+                    data-todo-id={todo.id}
+                    draggable={!isEditing}
+                    onDragStart={(e) => handleDragStart(e, todo.id)}
+                    onDragEnter={() => handleDragEnter(todo.id)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={e => e.preventDefault()}
+                    className="glass-card"
+                    style={{
+                      display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
+                      padding: '14px 12px',
+                      borderRadius: '16px',
+                      background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
+                      border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                      transition: 'all 0.15s ease',
+                      opacity: isDragging ? 0.4 : 1,
+                      transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
+                      boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : undefined,
+                      zIndex: isDragging ? 2 : 1
+                    }}
+                  >
                   {/* Grip */}
                   <div
                     style={{ 
@@ -271,7 +336,7 @@ export default function TodoScreen() {
                       paddingTop: isEditing ? '10px' : 0,
                       touchAction: 'none' // Important for iOS dragging
                     }}
-                    onTouchStart={e => handleGripTouchStart(e, index)}
+                    onTouchStart={e => handleGripTouchStart(e, todo.id)}
                   >
                     <GripVertical size={18} />
                   </div>
@@ -332,6 +397,12 @@ export default function TodoScreen() {
                             resize: 'vertical', marginTop: '2px', boxSizing: 'border-box'
                           }}
                         />
+                        <TodoCategoryPicker
+                          compact
+                          value={editCategory}
+                          onChange={setEditCategory}
+                          options={categoryOptions}
+                        />
                       </div>
                     ) : (
                       <>
@@ -385,7 +456,8 @@ export default function TodoScreen() {
                       </>
                     )}
                   </div>
-                </div>
+                  </div>
+                </Fragment>
               );
             })
           )}

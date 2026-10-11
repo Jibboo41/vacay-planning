@@ -181,7 +181,7 @@ export default function WeatherScreen() {
         </div>
       )}
       <header className="screen-header">
-        <button className="header-icon-btn" onClick={() => setSidebarOpen(true)}>
+        <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
