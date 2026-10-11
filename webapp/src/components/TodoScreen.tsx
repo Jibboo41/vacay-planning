@@ -450,7 +450,7 @@ export default function TodoScreen() {
                         <button onClick={() => startEdit(todo)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
                           <Pencil size={16} />
                         </button>
-                        <button onClick={() => deleteTodo(todo.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => { if (window.confirm(`Delete "${todo.text}"?`)) deleteTodo(todo.id); }} aria-label="Delete" style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
                           <Trash2 size={16} />
                         </button>
                       </>
