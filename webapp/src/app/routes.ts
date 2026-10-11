@@ -1,9 +1,9 @@
 import {
-  BookOpen, Calendar, CheckSquare, CloudSun, Compass, DollarSign, Luggage, Plus, Settings, StickyNote,
+  BookOpen, Calendar, CheckSquare, CloudSun, Compass, CreditCard as CreditCardIcon, DollarSign, Luggage, Plus, Settings, StickyNote,
   type LucideIcon,
 } from 'lucide-react';
 
-export type AppRouteKey = 'timeline' | 'map' | 'summary' | 'todo' | 'costs' | 'weather' | 'notes' | 'packing';
+export type AppRouteKey = 'timeline' | 'map' | 'summary' | 'todo' | 'costs' | 'cards' | 'weather' | 'notes' | 'packing';
 
 export interface AppRoute {
   key: AppRouteKey;
@@ -30,6 +30,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { key: 'summary', path: '/summary', label: 'Summary', description: 'Trip summary outline', icon: BookOpen, primary: false, keywords: ['overview', 'outline'] },
   { key: 'todo', path: '/todo', label: 'Todo', description: 'Trip to-do list', icon: CheckSquare, primary: true, keywords: ['tasks', 'checklist'] },
   { key: 'costs', path: '/costs', label: 'Costs', description: 'Cost tracker', icon: DollarSign, primary: true, keywords: ['budget', 'expenses', 'money'] },
+  { key: 'cards', path: '/cards', label: 'Cards', description: 'Credit card rewards strategy', icon: CreditCardIcon, primary: false, keywords: ['rewards', 'cashback', 'foreign transaction fee'] },
   { key: 'weather', path: '/weather', label: 'Weather', description: 'Weather forecast', icon: CloudSun, primary: false, keywords: ['forecast', 'temperature'] },
   { key: 'notes', path: '/notes', label: 'Notes', description: 'Trip notes', icon: StickyNote, primary: false, keywords: ['memo'] },
   { key: 'packing', path: '/packing', label: 'Packing', description: 'Packing list', icon: Luggage, primary: false, keywords: ['luggage', 'bags'] },

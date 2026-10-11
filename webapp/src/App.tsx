@@ -7,6 +7,7 @@ import CostTrackerScreen from './components/CostTrackerScreen';
 import WeatherScreen from './components/WeatherScreen';
 import NotesScreen from './components/NotesScreen';
 import PackingScreen from './components/PackingScreen';
+import CreditCardsScreen from './components/CreditCardsScreen';
 import SettingsScreen from './components/SettingsScreen';
 import DebugScreen from './components/DebugScreen';
 import LoginScreen from './components/LoginScreen';
@@ -290,6 +291,7 @@ function App() {
             <Route path="/weather" element={<ProtectedRoute name="Weather">{currentTripId ? <WeatherScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/notes" element={<ProtectedRoute name="Notes">{currentTripId ? <NotesScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path="/packing" element={<ProtectedRoute name="Packing">{currentTripId ? <PackingScreen /> : <NoTripState />}</ProtectedRoute>} />
+            <Route path="/cards" element={<ProtectedRoute name="Cards">{currentTripId ? <CreditCardsScreen /> : <NoTripState />}</ProtectedRoute>} />
             <Route path={SETTINGS_ROUTE.path} element={<ProtectedRoute name="Settings"><SettingsScreen /></ProtectedRoute>} />
             {isDebugEnabled() && (
               <Route path="/debug" element={<ProtectedRoute name="Debug"><DebugScreen onBack={() => window.history.back()} /></ProtectedRoute>} />

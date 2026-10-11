@@ -30,6 +30,7 @@
 - **Todo System**: Trip checklists grouped by category (General, Bookings, Documents, Money, Home, Shopping, or your own), with due-date tracking, overdue highlighting, inline edit, and drag-to-reorder (dropping onto another category moves the task there).
 - **Global Event Filtering**: Toggle visibility for specific categories (Flights, Hotels, Rentals, Activities, etc.) across both the Timeline and Map from the timeline's filter chips (desktop) or Settings (mobile) to focus on specific trip segments.
 - **Cost Tracker**: Comprehensive expense dashboard aggregating itinerary costs with paid/remaining split tracking and over-budget alerts.
+- **Credit Card Strategy**: Track rewards categories, cashback rates, foreign transaction fees, and trip-specific card notes to choose the best card for each purchase.
 - **Weather Suite**: Integrated daily forecasts via Open-Meteo API with **5-year historical precipitation averages** (rainfall + snowfall in inches) and daily H/L aggregated across all stops.
 - **Enhanced Grouping**: Multi-leg flight grouping and automated rental car pickup/return cycle splitting.
 
@@ -147,6 +148,7 @@ stateDiagram-v2
   Navigation --> Timeline
   Navigation --> Todo
   Navigation --> Costs
+  Navigation --> Cards
   Navigation --> Weather
   Navigation --> AddMenu
   AddMenu --> AddNoteModal

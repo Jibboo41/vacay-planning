@@ -8,8 +8,8 @@ import { useUiStore } from '../../store/useUiStore';
 
 const railItem = (active: boolean) =>
   cn(
-    'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-control text-[12px] font-semibold transition-colors',
-    active ? 'bg-sys-blue/25 text-label' : 'text-label-secondary hover:bg-white/8 hover:text-label',
+    'flex min-h-14 w-full flex-col items-center justify-center gap-0.5 rounded-card border text-[12px] font-semibold transition-all',
+    active ? 'border-white/20 bg-white/12 text-label' : 'border-transparent text-label-secondary hover:bg-white/6 hover:text-label',
   );
 
 /** Desktop navigation rail driven by `APP_ROUTES`, plus Trips and Settings. */
@@ -27,7 +27,7 @@ export default function SideRail({ showTimelineToggle }: { showTimelineToggle: b
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-y-0 left-0 z-[2400] flex w-(--side-rail-w) flex-col items-center gap-1 overflow-y-auto border-r border-white/8 bg-surface/60 px-2 pt-[calc(env(safe-area-inset-top)+12px)] pb-4 backdrop-blur-[30px]"
+      className="fixed inset-y-0 left-0 z-[2400] flex w-(--side-rail-w) flex-col items-center gap-1 overflow-y-auto border-r border-white/8 bg-surface/35 px-2 pt-[calc(env(safe-area-inset-top)+12px)] pb-4 shadow-[4px_0_30px_rgba(0,0,0,0.1)] backdrop-blur-[40px] backdrop-saturate-200"
     >
       <button
         type="button"

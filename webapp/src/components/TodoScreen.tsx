@@ -259,7 +259,7 @@ export default function TodoScreen() {
                       </div>
                     ) : (
                       <>
-                        <span className={cn('block truncate text-[16px] font-medium transition-all duration-200', todo.completed ? 'text-label-tertiary line-through' : 'text-label')}>
+                        <span className={cn('block break-words text-[16px] font-medium transition-all duration-200', todo.completed ? 'text-label-tertiary line-through' : 'text-label')}>
                           {todo.text}
                         </span>
                         {todo.dueDate && (
@@ -267,7 +267,7 @@ export default function TodoScreen() {
                             {isOverdue(todo) ? '⚠ ' : ''}Due: {new Date(todo.dueDate.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         )}
-                        {todo.notes && <div className="mt-1.5 whitespace-pre-wrap text-footnote leading-[1.4] text-label-secondary">{todo.notes}</div>}
+                        {todo.notes && <div className="mt-1.5 whitespace-pre-wrap break-words text-footnote leading-[1.4] text-label-secondary">{todo.notes}</div>}
                       </>
                     )}
                   </div>
@@ -287,7 +287,16 @@ export default function TodoScreen() {
                         <IconButton aria-label="Edit task" variant="ghost" size="sm" onClick={() => startEdit(todo)}>
                           <Pencil size={16} />
                         </IconButton>
-                        <IconButton aria-label="Delete task" variant="danger" size="sm" onClick={() => deleteWithUndo('todos', todo.id, `"${todo.text}"`)}>
+                        <IconButton
+                          aria-label="Delete task"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm(`Delete "${todo.text}"?`)) {
+                              deleteWithUndo('todos', todo.id, `"${todo.text}"`);
+                            }
+                          }}
+                        >
                           <Trash2 size={16} />
                         </IconButton>
                       </>

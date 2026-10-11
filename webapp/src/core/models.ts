@@ -61,6 +61,8 @@ export interface ItineraryItem {
   paidAmount?: number;
   /** ID to group multiple flight legs or related items */
   groupId?: string;
+  /** Whether the item is starred as a preferred activity */
+  isStarred?: boolean;
 }
 
 export interface TripNote {
@@ -116,4 +118,14 @@ export interface WeatherDay {
 export interface WeatherCache {
   lastUpdated: number;
   forecast: WeatherDay[];
+}
+
+export interface CreditCard {
+  id: string;
+  name: string;
+  categories: ('Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other' | 'Groceries')[];
+  cashback: { [category: string]: number };
+  noForeignTxFee: boolean;
+  specialOffers?: string;
+  notes?: string;
 }

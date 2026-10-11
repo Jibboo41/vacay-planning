@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { MapPin, Sparkles, Loader, ArrowRight, Gauge, Ruler, Activity, Timer, CalendarPlus } from 'lucide-react';
+import { MapPin, Sparkles, Loader, ArrowRight, Gauge, Ruler, Activity, Timer, CalendarPlus, Star } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import { getItemTone, getItemTypeMeta } from '../core/itemTypes';
@@ -97,8 +97,9 @@ function SummaryItemCard({ item, isCheckout = false }: SummaryItemProps) {
             {timeText}
         </Badge>
         )}
-      <h3 className="m-0 text-[15px] font-bold text-white">
+      <h3 className="m-0 flex items-center gap-1.5 text-[15px] font-bold text-white">
           {item._segments ? `${item._segments.length} Flight segments` : item.title}
+          {item.isStarred && <Star size={14} fill="#FFD700" color="#FFD700" />}
         </h3>
         
         {item._segments ? (

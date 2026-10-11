@@ -11,8 +11,8 @@ import { Sheet } from './ui';
 
 const tabClass = (active: boolean) =>
   cn(
-    'flex min-h-14 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-0.5 text-caption font-semibold transition-colors disabled:cursor-default disabled:opacity-40',
-    active ? 'text-sys-blue' : 'text-label-secondary hover:text-label',
+    'flex min-h-14 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-card border px-0.5 text-caption font-semibold transition-all disabled:cursor-default disabled:opacity-40',
+    active ? 'border-white/20 bg-white/12 text-label' : 'border-transparent text-label-secondary hover:bg-white/6 hover:text-label',
   );
 
 const tabLabel = 'max-w-full truncate';
@@ -39,7 +39,7 @@ export default function TabBar() {
     <>
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-[2400] border-t border-white/10 bg-surface/80 px-1 pt-1 pb-[max(4px,env(safe-area-inset-bottom))] backdrop-blur-[30px]"
+        className="fixed inset-x-0 bottom-0 z-[2400] border-t border-white/8 bg-surface/35 px-1 pt-1 pb-[max(4px,env(safe-area-inset-bottom))] shadow-[0_-4px_30px_rgba(0,0,0,0.1)] backdrop-blur-[40px] backdrop-saturate-200"
       >
         <ul className="mx-auto flex max-w-xl items-stretch">
           {primary.map((item) => {

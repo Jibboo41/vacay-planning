@@ -1,5 +1,5 @@
 import React, { useId, useState } from 'react';
-import { MapPin, GripVertical, ChevronDown, ChevronUp, Hash, DollarSign, CreditCard, Trash2, Globe, Copy, Navigation, CalendarPlus } from 'lucide-react';
+import { MapPin, GripVertical, ChevronDown, ChevronUp, Hash, DollarSign, CreditCard, Trash2, Globe, Copy, Navigation, CalendarPlus, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
@@ -30,6 +30,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, onGripKe
   const detailsId = useId();
   const navigate = useNavigate();
   const setFocusedLocation = useTripStore(s => s.setFocusedLocation);
+  const updateItem = useTripStore(s => s.updateItem);
   const tintedBackgrounds = useTripStore(s => s.tintedBackgrounds);
   const weather = useTripStore(s => s.weather);
   const meta = getItemTypeMeta(item);
@@ -92,6 +93,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, onGripKe
         isExpanded && 'expanded max-h-[1000px]',
         !isExpanded && 'max-h-[200px]',
         tone.borderClass,
+        item.isStarred && 'border-l-sys-yellow ring-1 ring-inset ring-sys-yellow/40 shadow-[0_0_20px_rgba(255,214,10,0.22)]',
         tintedBackgrounds && tone.bgClass,
         (groupPosition === 'middle' || groupPosition === 'end') && '-mt-3 rounded-t-none',
         (groupPosition === 'middle' || groupPosition === 'start') && 'rounded-b-none',
@@ -169,6 +171,22 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, onGripKe
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            aria-label={item.isStarred ? `Remove preferred star from ${item.title}` : `Mark ${item.title} as preferred`}
+            aria-pressed={!!item.isStarred}
+            className={cn(
+              'flex min-h-11 min-w-11 items-center justify-center rounded-control text-label-tertiary transition-colors hover:bg-white/6 hover:text-sys-yellow',
+              item.isStarred && 'text-sys-yellow',
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              void updateItem(item.id, { isStarred: !item.isStarred });
+            }}
+          >
+            <Star size={17} fill={item.isStarred ? 'currentColor' : 'none'} aria-hidden="true" />
+          </button>
 
           <button
             type="button"
