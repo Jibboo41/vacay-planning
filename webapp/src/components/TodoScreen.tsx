@@ -11,6 +11,7 @@ import {
   todoCategoryOf,
 } from '../core/todoCategories';
 import TodoCategoryPicker from './TodoCategoryPicker';
+import { useTodoDrag } from './useTodoDrag';
 
 export default function TodoScreen() {
   const { todos, addTodo, updateTodo, toggleTodo, deleteTodo, reorderTodos, setSidebarOpen } = useTripStore();
@@ -37,12 +38,18 @@ export default function TodoScreen() {
     [todos],
   );
 
-  // Drag state
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
-  const dragItem = useRef<string | null>(null);
-  const dragOverItem = useRef<string | null>(null);
-  const touchDragId = useRef<string | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const { activeId: draggingId, overId, startDrag } = useTodoDrag({
+    topBoundaryRef: headerRef,
+    onDrop: (activeId, targetId) => {
+      const reordered = moveTodo(todos, activeId, targetId);
+      if (reordered) reorderTodos(reordered);
+    },
+  });
+  // moveTodo lands the item after the target when moving down the list, before it when moving up.
+  const dragFromIndex = draggingId ? groupedTodoRows.findIndex(row => row.todo.id === draggingId) : -1;
+  const dragToIndex = overId ? groupedTodoRows.findIndex(row => row.todo.id === overId) : -1;
+  const dropPosition = dragFromIndex < dragToIndex ? 'after' : 'before';
 
   const handleAdd = () => {
     if (!newTodo.trim()) return;
@@ -72,60 +79,6 @@ export default function TodoScreen() {
     setEditingId(null);
   };
 
-  // Mouse drag handlers
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    dragItem.current = id;
-    setDraggingId(id);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-  const handleDragEnter = (id: string) => {
-    dragOverItem.current = id;
-    setOverId(id);
-  };
-  const handleDragEnd = () => {
-    if (dragItem.current && dragOverItem.current) {
-      const reordered = moveTodo(todos, dragItem.current, dragOverItem.current);
-      if (reordered) reorderTodos(reordered);
-    }
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDraggingId(null);
-    setOverId(null);
-  };
-
-  // Touch drag handlers
-  const handleGripTouchStart = (e: React.TouchEvent, id: string) => {
-    e.stopPropagation();
-    touchDragId.current = id;
-    setDraggingId(id);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchDragId.current) return;
-    if (e.cancelable) e.preventDefault(); // Prevent scrolling on iOS during drag
-    const touch = e.touches[0];
-    const target = document.elementFromPoint(touch.clientX, touch.clientY);
-    const itemEl = target?.closest<HTMLElement>('[data-todo-id]');
-    const nextOverId = itemEl?.dataset.todoId;
-    
-    if (nextOverId && nextOverId !== overId) {
-      dragOverItem.current = nextOverId;
-      setOverId(nextOverId);
-      if ('vibrate' in navigator) navigator.vibrate(5);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (touchDragId.current && dragOverItem.current) {
-      const reordered = moveTodo(todos, touchDragId.current, dragOverItem.current);
-      if (reordered) reorderTodos(reordered);
-    }
-    touchDragId.current = null;
-    dragOverItem.current = null;
-    setDraggingId(null);
-    setOverId(null);
-  };
-
   const isOverdue = (todo: TodoItem) =>
     !todo.completed && todo.dueDate &&
     new Date(todo.dueDate.replace(/-/g, '/')) < new Date(new Date().setHours(0, 0, 0, 0));
@@ -133,9 +86,9 @@ export default function TodoScreen() {
   const completedCount = todos.filter(t => t.completed).length;
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingId !== null ? 'none' : 'auto' }}>
+    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)' }}>
       {/* Header */}
-      <header className="screen-header">
+      <header ref={headerRef} className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
@@ -253,11 +206,7 @@ export default function TodoScreen() {
         )}
 
         {/* Todo List */}
-        <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {todos.length === 0 ? (
             <div style={{
               textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)',
@@ -310,35 +259,33 @@ export default function TodoScreen() {
                   <div
                     data-todo-item
                     data-todo-id={todo.id}
-                    draggable={!isEditing}
-                    onDragStart={(e) => handleDragStart(e, todo.id)}
-                    onDragEnter={() => handleDragEnter(todo.id)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={e => e.preventDefault()}
+                    onPointerDown={isEditing ? undefined : event => startDrag(event, todo.id)}
                     className="glass-card"
                     style={{
+                      position: 'relative',
                       display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
                       padding: '14px 12px',
                       borderRadius: '16px',
-                      background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
-                      border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
-                      transition: 'all 0.15s ease',
-                      opacity: isDragging ? 0.4 : 1,
-                      transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
-                      boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : undefined,
-                      zIndex: isDragging ? 2 : 1
+                      background: isDragging
+                        ? 'rgba(10,132,255,0.04)'
+                        : isOver ? 'rgba(10,132,255,0.08)' : undefined,
+                      border: isDragging ? '1px dashed rgba(10,132,255,0.55)' : '1px solid rgba(255,255,255,0.08)',
+                      transition: 'background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease',
+                      opacity: isDragging ? 0.35 : 1,
+                      zIndex: isOver ? 2 : undefined,
                     }}
                   >
+                  {isOver && (
+                    <span className={`todo-drop-indicator todo-drop-indicator--${dropPosition}`} aria-hidden="true" />
+                  )}
                   {/* Grip */}
                   <div
-                    style={{ 
-                      color: 'var(--sys-label-tertiary)', cursor: 'grab', flexShrink: 0, 
-                      paddingTop: isEditing ? '10px' : 0,
-                      touchAction: 'none' // Important for iOS dragging
-                    }}
-                    onTouchStart={e => handleGripTouchStart(e, todo.id)}
+                    data-drag-handle
+                    className={`todo-drag-handle ${isEditing ? 'todo-drag-handle--disabled' : ''}`}
+                    style={{ paddingTop: isEditing ? '10px' : 0 }}
+                    title={isEditing ? undefined : 'Drag to reorder'}
                   >
-                    <GripVertical size={18} />
+                    <GripVertical size={18} aria-hidden="true" />
                   </div>
 
                   {/* Check */}

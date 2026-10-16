@@ -118,7 +118,7 @@ export default function PackingScreen() {
   }, [packingItems]);
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
+    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
       {/* Header */}
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>

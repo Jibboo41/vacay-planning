@@ -87,6 +87,8 @@ const SyncStatus = () => {
 function MainLayout({ children }: { children: React.ReactNode }) {
   const currentTripId = useTripStore(state => state.currentTripId);
   const userId = useTripStore(state => state.userId);
+  const tripTitle = useTripStore(state =>
+    state.trips.find(trip => trip.id === state.currentTripId)?.title);
   const location = useLocation();
   const [isWide, setIsWide] = useState(window.innerWidth >= 1000);
 
@@ -123,11 +125,16 @@ function MainLayout({ children }: { children: React.ReactNode }) {
     <div className="desktop-nav-layout">
       <SideRail />
       {showSplitLayout ? (
-        <SplitPane
-          leftLabel="Timeline"
-          left={<TimelineScreen />}
-          right={location.pathname === '/timeline' ? <MapViewScreen /> : children}
-        />
+        <div className="desktop-split-layout">
+          <header className="desktop-trip-banner">
+            <h1 className="desktop-trip-banner__title">{tripTitle || 'Current Trip'}</h1>
+          </header>
+          <SplitPane
+            leftLabel="Timeline"
+            left={<TimelineScreen title="Timeline" />}
+            right={location.pathname === '/timeline' ? <MapViewScreen /> : children}
+          />
+        </div>
       ) : (
         <div className="desktop-nav-layout__content">
           {children}

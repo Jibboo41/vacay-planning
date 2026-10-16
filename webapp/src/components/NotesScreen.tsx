@@ -109,7 +109,7 @@ export default function NotesScreen() {
   };
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh' }}>
+    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)' }}>
       {/* Header */}
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>

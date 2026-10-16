@@ -27,6 +27,13 @@ interface Trip {
   cardNotes?: string;
 }
 
+export interface AddMenuAnchor {
+  top: number;
+  right: number;
+}
+
+const ALL_TIMELINE_FILTERS = ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'transit', 'unknown'];
+
 interface TripStore {
   trips: Trip[];
   currentTripId: string | null;
@@ -42,6 +49,8 @@ interface TripStore {
   userId: string | null;
   loading: boolean;
   isSidebarOpen: boolean;
+  isAddMenuOpen: boolean;
+  addMenuAnchor: AddMenuAnchor | null;
   focusedLocation: { lat: number, lng: number } | null;
   theme: string;
   initialized: boolean;
@@ -58,6 +67,8 @@ interface TripStore {
   setUserId: (userId: string | null) => void;
   setLoading: (loading: boolean) => void;
   setSidebarOpen: (open: boolean) => void;
+  openAddMenu: (anchor?: AddMenuAnchor) => void;
+  closeAddMenu: () => void;
   setFocusedLocation: (loc: { lat: number, lng: number } | null) => void;
   setTheme: (theme: string) => void;
   setTintedBackgrounds: (enabled: boolean) => void;
@@ -73,6 +84,7 @@ interface TripStore {
   updateItem: (id: string, updatedFields: Partial<ItineraryItem>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   toggleFilter: (type: string) => void;
+  showAllFilters: () => void;
   toggleDayFilter: (dateKey: string) => void;
   duplicateTrip: (tripId: string) => Promise<string>;
   addNote: (dayKey: string, title: string, content: string) => Promise<void>;
@@ -167,6 +179,8 @@ export const useTripStore = create<TripStore>((set, get) => ({
   userId: null,
   loading: true,
   isSidebarOpen: false,
+  isAddMenuOpen: false,
+  addMenuAnchor: null,
   focusedLocation: null,
   theme: localStorage.getItem('vacay_theme') || 'default',
   initialized: false,
@@ -174,7 +188,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   lastSaveError: null,
   editingItem: null,
   editingExpense: null,
-  activeFilters: ['flight', 'hotel', 'rental-car', 'activity', 'food', 'hiking', 'note', 'unknown'],
+  activeFilters: [...ALL_TIMELINE_FILTERS],
   hiddenDayFilters: [],
   tintedBackgrounds: localStorage.getItem('vacay_tinted_backgrounds') === 'true',
   isWeatherRefreshing: false,
@@ -191,12 +205,15 @@ export const useTripStore = create<TripStore>((set, get) => ({
   setUserId: (userId) => set({ userId }),
   setLoading: (loading) => set({ loading }),
   setSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
+  openAddMenu: (anchor) => set({ isAddMenuOpen: true, addMenuAnchor: anchor ?? null }),
+  closeAddMenu: () => set({ isAddMenuOpen: false, addMenuAnchor: null }),
   setFocusedLocation: (focusedLocation) => set({ focusedLocation }),
   toggleFilter: (type: string) => set((state) => ({
     activeFilters: state.activeFilters.includes(type)
       ? state.activeFilters.filter(t => t !== type)
       : [...state.activeFilters, type]
   })),
+  showAllFilters: () => set({ activeFilters: [...ALL_TIMELINE_FILTERS] }),
   toggleDayFilter: (dateKey: string) => set((state) => ({
     hiddenDayFilters: state.hiddenDayFilters.includes(dateKey)
       ? state.hiddenDayFilters.filter(d => d !== dateKey)

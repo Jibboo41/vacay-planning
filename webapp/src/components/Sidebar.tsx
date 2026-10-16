@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
-import { useTripStore } from '../store/useTripStore';
-import { 
-  Plus, LogOut, X, Layout, Sunrise, Moon, TreePine, Sparkles, 
-  Flower2, Waves, Flame, Flower, Zap, Plane, BedDouble, Car, Navigation, 
-  MountainSnow, Utensils, StickyNote, TrainFront, ArrowLeft, Terminal,
-  ChevronDown, ChevronUp, FileSpreadsheet 
+import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from 'react';
+import {
+  BedDouble,
+  Car,
+  Check,
+  ChevronRight,
+  FileSpreadsheet,
+  LogOut,
+  MountainSnow,
+  Navigation,
+  Plane,
+  Plus,
+  Sparkles,
+  StickyNote,
+  Terminal,
+  TrainFront,
+  Utensils,
+  X,
+  type LucideIcon,
 } from 'lucide-react';
-import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
+import { auth } from '../core/firebase';
+import { useTripStore } from '../store/useTripStore';
 import { downloadTripExcel } from '../utils/exportUtils';
 
 interface SidebarProps {
@@ -15,286 +28,419 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const ITEM_FILTERS: { type: string; label: string; icon: LucideIcon }[] = [
+  { type: 'flight', label: 'Flights', icon: Plane },
+  { type: 'hotel', label: 'Hotels', icon: BedDouble },
+  { type: 'rental-car', label: 'Cars', icon: Car },
+  { type: 'activity', label: 'Activities', icon: Navigation },
+  { type: 'hiking', label: 'Hiking', icon: MountainSnow },
+  { type: 'food', label: 'Food', icon: Utensils },
+  { type: 'transit', label: 'Transit', icon: TrainFront },
+  { type: 'note', label: 'Notes', icon: StickyNote },
+];
+
+const THEMES = [
+  { key: 'default', label: 'Default', swatch: 'linear-gradient(135deg, #0A84FF 0%, #BF5AF2 100%)' },
+  { key: 'sunset', label: 'Sunset', swatch: 'linear-gradient(135deg, #FF3B30 0%, #FF9F0A 50%, #FFD60A 100%)' },
+  { key: 'midnight', label: 'Midnight', swatch: 'linear-gradient(135deg, #5E5CE6 0%, #BF5AF2 60%, #32ADE6 100%)' },
+  { key: 'forest', label: 'Forest', swatch: 'linear-gradient(135deg, #30D158 0%, #34C759 50%, #32ADE6 100%)' },
+  { key: 'aurora', label: 'Aurora', swatch: 'linear-gradient(135deg, #00F5A0 0%, #8B5CF6 55%, #06B6D4 100%)' },
+  { key: 'desert', label: 'Desert Rose', swatch: 'linear-gradient(135deg, #E2A57E 0%, #C9415A 55%, #EDCA7F 100%)' },
+  { key: 'ocean', label: 'Deep Ocean', swatch: 'linear-gradient(135deg, #0EA5E9 0%, #0D9488 50%, #6366F1 100%)' },
+  { key: 'vulcan', label: 'Vulcan', swatch: 'linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FF2D55 100%)' },
+  { key: 'sakura', label: 'Sakura', swatch: 'linear-gradient(135deg, #FF85A2 0%, #D891EF 55%, #FFB6CE 100%)' },
+  { key: 'cyberpunk', label: 'Cyberpunk', swatch: 'linear-gradient(135deg, #FF00AA 0%, #00FFEA 55%, #FFE600 100%)' },
+  { key: 'slate', label: 'Slate', swatch: '#708090' },
+  { key: 'black', label: 'Black', swatch: '#000000' },
+];
+
+const TRIP_COLORS = ['#0A84FF', '#BF5AF2', '#30D158', '#FF9F0A', '#FF375F', '#64D2FF', '#5E5CE6', '#FFD60A'];
+
+const FOCUSABLE_SELECTOR = 'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
+
+function tripColor(tripId: string) {
+  let hash = 0;
+  for (let index = 0; index < tripId.length; index += 1) {
+    hash = (hash * 31 + tripId.charCodeAt(index)) | 0;
+  }
+  return TRIP_COLORS[Math.abs(hash) % TRIP_COLORS.length];
+}
+
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const { 
-    trips, currentTripId, setCurrentTrip, addTrip,
-    theme, setTheme, activeFilters, toggleFilter,
-    tintedBackgrounds, setTintedBackgrounds
-  } = useTripStore();
-  
-  const [newTripTitle, setNewTripTitle] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [appearanceExpanded, setAppearanceExpanded] = useState(false);
+  const trips = useTripStore(state => state.trips);
+  const currentTripId = useTripStore(state => state.currentTripId);
+  const setCurrentTrip = useTripStore(state => state.setCurrentTrip);
+  const addTrip = useTripStore(state => state.addTrip);
+  const theme = useTripStore(state => state.theme);
+  const setTheme = useTripStore(state => state.setTheme);
+  const activeFilters = useTripStore(state => state.activeFilters);
+  const toggleFilter = useTripStore(state => state.toggleFilter);
+  const showAllFilters = useTripStore(state => state.showAllFilters);
+  const tintedBackgrounds = useTripStore(state => state.tintedBackgrounds);
+  const setTintedBackgrounds = useTripStore(state => state.setTintedBackgrounds);
   const navigate = useNavigate();
+  const panelRef = useRef<HTMLElement>(null);
 
+  const [isAddingTrip, setIsAddingTrip] = useState(false);
+  const [newTripTitle, setNewTripTitle] = useState('');
+  const [isCreatingTrip, setIsCreatingTrip] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
 
-  const glassIconStyle = {
-    color: 'rgba(255,255,255,0.9)',
-    filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.4))'
+  const currentTrip = trips.find(trip => trip.id === currentTripId);
+  const user = auth.currentUser;
+  const userLabel = user?.displayName || user?.email || 'Signed in';
+  const hasHiddenFilters = ITEM_FILTERS.some(filter => !activeFilters.includes(filter.type));
+
+  const cancelNewTrip = () => {
+    setIsAddingTrip(false);
+    setNewTripTitle('');
   };
 
-  const handleAddTrip = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTripTitle.trim()) return;
+  const close = () => {
+    cancelNewTrip();
+    onClose();
+  };
+
+  const requestClose = useEffectEvent(close);
+
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!isOpen || !panel) return;
+
+    panel.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        requestClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const focusInside = !!active && active !== panel && panel.contains(active);
+
+      if (event.shiftKey && (!focusInside || active === first)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (!focusInside || active === last)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      const active = document.activeElement;
+      if (!active || active === document.body || panel.contains(active)) {
+        document.querySelector<HTMLElement>('[data-settings-trigger]')?.focus({ preventScroll: true });
+      }
+    };
+  }, [isOpen]);
+
+  const goTo = (path: string) => {
+    close();
+    navigate(path);
+  };
+
+  const handleSelectTrip = (tripId: string) => {
+    setCurrentTrip(tripId);
+    goTo('/timeline');
+  };
+
+  const handleCreateTrip = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const title = newTripTitle.trim();
+    if (!title || isCreatingTrip) return;
+
+    setIsCreatingTrip(true);
     try {
-      await addTrip(newTripTitle);
-      setNewTripTitle('');
-      setIsAdding(false);
-      onClose();
-      navigate('/timeline');
-    } catch (err) {
-      console.error(err);
+      await addTrip(title);
+      goTo('/timeline');
+    } catch (error) {
+      console.error('Failed to create trip', error);
+    } finally {
+      setIsCreatingTrip(false);
     }
   };
 
-  const handleSelectTrip = (id: string) => {
-    setCurrentTrip(id);
-    onClose();
-    navigate('/timeline');
+  const handleExport = async () => {
+    if (!currentTrip || isExporting) return;
+    setIsExporting(true);
+    try {
+      await downloadTripExcel(currentTrip.title, currentTrip.items || [], currentTrip.expenses || []);
+    } catch (error) {
+      console.error('Failed to export trip', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    close();
+    auth.signOut();
   };
 
   return (
     <>
-      <div 
-        className={`sidebar-overlay ${isOpen ? 'active' : ''}`} 
-        onClick={onClose}
+      <div
+        className={`settings-overlay ${isOpen ? 'settings-overlay--open' : ''}`}
+        aria-hidden="true"
+        onClick={close}
       />
-      
-      <aside className={`sidebar-panel ${isOpen ? 'open' : ''}`}>
-        <div className="sidebar-header" style={{ paddingBottom: '10px' }}>
-          <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
-            <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0 }}>My Trips</h2>
-            <button 
-              onClick={() => { onClose(); navigate('/trips'); }}
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '4px', margin: '4px 0 0 0',
-                background: 'none', border: 'none', color: 'var(--sys-blue)', 
-                fontSize: '13px', fontWeight: 700, padding: 0, cursor: 'pointer' 
-              }}
-            >
-              <ArrowLeft size={14} /> Back to Selector
-            </button>
-          </div>
-          <button onClick={onClose} style={{ color: 'var(--sys-label-secondary)' }}>
-            <X size={24} />
-          </button>
-        </div>
 
-        <div className="sidebar-content">
-          <div className="trip-mini-list">
-            {trips.map(trip => (
-              <div 
-                key={trip.id} 
-                className={`trip-pill ${currentTripId === trip.id ? 'active' : ''}`}
-                onClick={() => handleSelectTrip(trip.id)}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {trip.title}
-                  </div>
-                  <div style={{ fontSize: '12px', opacity: 0.5, marginTop: '2px' }}>
-                    {trip.items.length} {trip.items.length === 1 ? 'item' : 'items'}
-                  </div>
-                </div>
-              </div>
-            ))}
+      <section
+        ref={panelRef}
+        className={`settings-panel ${isOpen ? 'settings-panel--open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        tabIndex={-1}
+        inert={!isOpen}
+      >
+        <header className="settings-header">
+          <div className="settings-header__text">
+            <h2 id="settings-title">Settings</h2>
+            <p>{currentTrip?.title || 'No trip selected'}</p>
           </div>
-
-          <button className="btn-glass-blue add-trip-pill" onClick={() => setIsAdding(true)}>
-            <Plus size={20} />
-            <span>Add Trip</span>
+          <button
+            type="button"
+            className="settings-icon-button"
+            aria-label="Close settings"
+            onClick={close}
+          >
+            <X size={20} aria-hidden="true" />
           </button>
-          <div style={{ padding: '24px 0 10px' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Filter Views</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-              {[
-                { type: 'flight', icon: <Plane size={18} /> },
-                { type: 'hotel', icon: <BedDouble size={18} /> },
-                { type: 'rental-car', icon: <Car size={18} /> },
-                { type: 'activity', icon: <Navigation size={18} /> },
-                { type: 'hiking', icon: <MountainSnow size={18} /> },
-                { type: 'food', icon: <Utensils size={18} /> },
-                { type: 'note', icon: <StickyNote size={18} /> },
-                { type: 'transit', icon: <TrainFront size={18} /> },
-              ].map(f => {
-                const isActive = activeFilters.includes(f.type);
+        </header>
+
+        <div className="settings-body">
+          <section className="settings-section" aria-labelledby="settings-trips-heading">
+            <div className="settings-section__header">
+              <h3 id="settings-trips-heading">Trips</h3>
+              <button type="button" className="settings-link" onClick={() => goTo('/trips')}>
+                All trips
+              </button>
+            </div>
+
+            <div className="settings-group">
+              {trips.map(trip => {
+                const selected = trip.id === currentTripId;
+                const color = tripColor(trip.id);
+                const itemCount = trip.items?.length ?? 0;
+
                 return (
                   <button
-                    key={f.type}
-                    onClick={() => toggleFilter(f.type)}
-                    style={{
-                      aspectRatio: '1', borderRadius: '12px',
-                      background: isActive ? 'var(--sys-blue)' : 'rgba(255,255,255,0.05)',
-                      border: '1px solid ' + (isActive ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'),
-                      color: isActive ? '#fff' : 'var(--sys-label-secondary)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.2s ease', cursor: 'pointer',
-                    }}
-                    title={f.type}
+                    key={trip.id}
+                    type="button"
+                    className={`settings-row ${selected ? 'settings-row--selected' : ''}`}
+                    aria-current={selected ? 'true' : undefined}
+                    onClick={() => handleSelectTrip(trip.id)}
                   >
-                    {f.icon}
+                    <span className="settings-row__icon" style={{ color, background: `${color}29` }} aria-hidden="true">
+                      {trip.title.trim().charAt(0).toUpperCase() || '?'}
+                    </span>
+                    <span className="settings-row__text">
+                      <span className="settings-row__title">{trip.title}</span>
+                      <span className="settings-row__subtitle">
+                        {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                      </span>
+                    </span>
+                    {selected && <Check size={18} className="settings-row__check" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+
+              {isAddingTrip ? (
+                <form className="settings-new-trip" onSubmit={handleCreateTrip}>
+                  <input
+                    autoFocus
+                    type="text"
+                    aria-label="Trip name"
+                    placeholder="Trip name, e.g. Rome 2025"
+                    value={newTripTitle}
+                    disabled={isCreatingTrip}
+                    onChange={event => setNewTripTitle(event.target.value)}
+                    onKeyDown={event => {
+                      if (event.key !== 'Escape') return;
+                      event.stopPropagation();
+                      cancelNewTrip();
+                    }}
+                  />
+                  <button type="button" className="settings-text-button" onClick={cancelNewTrip}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="settings-primary-button"
+                    disabled={!newTripTitle.trim() || isCreatingTrip}
+                  >
+                    {isCreatingTrip ? 'Creating…' : 'Create'}
+                  </button>
+                </form>
+              ) : (
+                <button type="button" className="settings-row" onClick={() => setIsAddingTrip(true)}>
+                  <span className="settings-row__icon settings-row__icon--accent" aria-hidden="true">
+                    <Plus size={18} />
+                  </span>
+                  <span className="settings-row__text">
+                    <span className="settings-row__title settings-row__title--accent">New trip</span>
+                  </span>
+                </button>
+              )}
+            </div>
+          </section>
+
+          <section className="settings-section" aria-labelledby="settings-filters-heading">
+            <div className="settings-section__header">
+              <h3 id="settings-filters-heading">Filters</h3>
+              {hasHiddenFilters && (
+                <button type="button" className="settings-link" onClick={showAllFilters}>
+                  Show all
+                </button>
+              )}
+            </div>
+            <div className="settings-chips">
+              {ITEM_FILTERS.map(filter => {
+                const Icon = filter.icon;
+                const active = activeFilters.includes(filter.type);
+
+                return (
+                  <button
+                    key={filter.type}
+                    type="button"
+                    className={`settings-chip ${active ? 'settings-chip--active' : ''}`}
+                    aria-pressed={active}
+                    onClick={() => toggleFilter(filter.type)}
+                  >
+                    <Icon size={15} aria-hidden="true" />
+                    <span>{filter.label}</span>
                   </button>
                 );
               })}
             </div>
-          </div>
+            <p className="settings-section__footnote">Item types shown on the timeline and map.</p>
+          </section>
 
-          <div style={{ padding: '24px 0 10px' }}>
-            <h3 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Portability</h3>
-            <button 
-              className="btn-glass-blue" 
-              style={{ width: '100%', padding: '14px', borderRadius: '144px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-              onClick={() => {
-                const trip = trips.find(t => t.id === currentTripId);
-                if (trip) {
-                  downloadTripExcel(trip.title, trip.items || [], trip.expenses || []);
-                }
-              }}
-            >
-              <FileSpreadsheet size={18} />
-              <span>Export to Sheets</span>
-            </button>
-          </div>
-
-          <div style={{ padding: '24px 0 10px' }}>
-            <button 
-              onClick={() => setAppearanceExpanded(!appearanceExpanded)}
-              style={{ 
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                padding: 0, background: 'none', border: 'none', color: 'var(--sys-label-secondary)' 
-              }}
-            >
-              <h3 style={{ fontSize: '13px', fontWeight: 800, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Appearance</h3>
-              {appearanceExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-            
-            {appearanceExpanded && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '14px' }}>
-                {([
-                  { key: 'default',   label: 'Default',     icon: <Layout size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #0A84FF 0%, #BF5AF2 100%)' },
-                  { key: 'sunset',    label: 'Sunset',      icon: <Sunrise size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF3B30 0%, #FF9F0A 50%, #FFD60A 100%)' },
-                  { key: 'midnight',  label: 'Midnight',    icon: <Moon size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #5E5CE6 0%, #BF5AF2 60%, #32ADE6 100%)' },
-                  { key: 'forest',    label: 'Forest',      icon: <TreePine size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #30D158 0%, #34C759 50%, #32ADE6 100%)' },
-                  { key: 'aurora',    label: 'Aurora',      icon: <Sparkles size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #00F5A0 0%, #8B5CF6 55%, #06B6D4 100%)' },
-                  { key: 'desert',    label: 'Desert Rose', icon: <Flower2 size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #E2A57E 0%, #C9415A 55%, #EDCA7F 100%)' },
-                  { key: 'ocean',     label: 'Deep Ocean',  icon: <Waves size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #0EA5E9 0%, #0D9488 50%, #6366F1 100%)' },
-                  { key: 'vulcan',    label: 'Vulcan',      icon: <Flame size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF4500 0%, #FF8C00 50%, #FF2D55 100%)' },
-                  { key: 'sakura',    label: 'Sakura',      icon: <Flower size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF85A2 0%, #D891EF 55%, #FFB6CE 100%)' },
-                  { key: 'cyberpunk', label: 'Cyberpunk',   icon: <Zap size={20} style={glassIconStyle} />, grad: 'linear-gradient(135deg, #FF00AA 0%, #00FFEA 55%, #FFE600 100%)' },
-                  { key: 'slate',     label: 'Slate',       icon: <Plus size={20} style={glassIconStyle} />, grad: '#708090' },
-                  { key: 'black',     label: 'Black',       icon: <Moon size={20} style={glassIconStyle} />, grad: '#000000' },
-                ]).map(t => (
-                  <button
-                    key={t.key}
-                    onClick={() => setTheme(t.key)}
-                    style={{
-                      position: 'relative',
-                      borderRadius: '14px',
-                      overflow: 'hidden',
-                      border: theme === t.key ? '2px solid rgba(255,255,255,0.7)' : '2px solid transparent',
-                      boxShadow: theme === t.key ? '0 0 18px rgba(255,255,255,0.25)' : 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      transition: 'all 0.25s ease',
-                      aspectRatio: '1.8',
-                    }}
+          {currentTrip && (
+            <section className="settings-section" aria-labelledby="settings-export-heading">
+              <div className="settings-section__header">
+                <h3 id="settings-export-heading">Export</h3>
+              </div>
+              <div className="settings-group">
+                <button type="button" className="settings-row" disabled={isExporting} onClick={handleExport}>
+                  <span
+                    className="settings-row__icon"
+                    style={{ color: 'var(--sys-green)', background: 'rgba(48, 209, 88, 0.16)' }}
+                    aria-hidden="true"
                   >
-                    <div style={{ position: 'absolute', inset: 0, background: t.grad, opacity: 0.9 }} />
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      background: 'rgba(0,0,0,0.25)',
-                      display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', justifyContent: 'center',
-                      gap: '4px'
-                    }}>
-                      {t.icon}
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', letterSpacing: '0.02em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{t.label}</span>
-                    </div>
-                    {theme === t.key && (
-                      <div style={{ position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px', borderRadius: '50%', background: '#fff', boxShadow: '0 0 6px rgba(255,255,255,0.8)' }} />
-                    )}
-                  </button>
-                ))}
+                    <FileSpreadsheet size={18} />
+                  </span>
+                  <span className="settings-row__text">
+                    <span className="settings-row__title">Export spreadsheet</span>
+                    <span className="settings-row__subtitle">
+                      {isExporting ? 'Preparing download…' : 'Itinerary & costs as .xlsx'}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} className="settings-row__chevron" aria-hidden="true" />
+                </button>
               </div>
-            )}
+            </section>
+          )}
 
-            {appearanceExpanded && (
-              <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div 
-                  onClick={() => setTintedBackgrounds(!tintedBackgrounds)}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                    cursor: 'pointer', padding: '4px 0' 
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ 
-                      width: '32px', height: '32px', borderRadius: '8px', 
-                      background: 'rgba(255,255,255,0.05)', display: 'flex', 
-                      alignItems: 'center', justifyContent: 'center', color: tintedBackgrounds ? 'var(--sys-blue)' : 'var(--sys-label-secondary)'
-                    }}>
-                      <Sparkles size={18} />
-                    </div>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: tintedBackgrounds ? '#fff' : 'var(--sys-label-secondary)' }}>Tinted backgrounds</span>
-                  </div>
-                  <div style={{ 
-                    width: '44px', height: '24px', borderRadius: '12px', 
-                    background: tintedBackgrounds ? 'var(--sys-blue)' : 'rgba(255,255,255,0.1)',
-                    position: 'relative', transition: 'all 0.2s ease'
-                  }}>
-                    <div style={{ 
-                      position: 'absolute', top: '2px', left: tintedBackgrounds ? '22px' : '2px',
-                      width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.2)', transition: 'all 0.2s cubic-bezier(0.23, 1, 0.32, 1)'
-                    }} />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="sidebar-footer" style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => auth.signOut()} className="logout-pill" style={{ flex: 1 }}>
-            <LogOut size={18} />
-            <span>Sign Out</span>
-          </button>
-          <button 
-            onClick={() => { onClose(); navigate('/debug'); }} 
-            className="logout-pill" 
-            style={{ width: '50px', justifyContent: 'center', background: 'rgba(255,255,255,0.03)' }}
-            title="System Logs"
-          >
-            <Terminal size={18} />
-          </button>
-        </div>
-
-        {isAdding && (
-          <div className="modal-backdrop" style={{ zIndex: 6000 }} onClick={() => setIsAdding(false)}>
-            <div className="modal-sheet" style={{ maxWidth: '400px', marginBottom: 'auto', marginTop: '100px', borderRadius: '24px' }} onClick={e => e.stopPropagation()}>
-              <div className="modal-pull-indicator" />
-              <h2 style={{ marginBottom: '20px', textAlign: 'center' }}>Plan New Trip</h2>
-              <form onSubmit={handleAddTrip}>
-                <div className="edit-field-group">
-                  <label className="edit-field-label">Trip Name</label>
-                  <input 
-                    autoFocus
-                    className="edit-field-input"
-                    type="text" 
-                    placeholder="e.g. Rome 2025"
-                    value={newTripTitle}
-                    onChange={e => setNewTripTitle(e.target.value)}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                  <button type="button" onClick={() => setIsAdding(false)} style={{ flex: 1, padding: '14px', borderRadius: '14px', background: 'var(--sys-bg-elevated-2)', color: '#fff' }}>Cancel</button>
-                  <button type="submit" style={{ flex: 1, padding: '14px', borderRadius: '14px', background: '#fff', color: '#000', fontWeight: 700 }}>Create Trip</button>
-                </div>
-              </form>
+          <section className="settings-section" aria-labelledby="settings-appearance-heading">
+            <div className="settings-section__header">
+              <h3 id="settings-appearance-heading">Appearance</h3>
             </div>
+            <div className="settings-group">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={tintedBackgrounds}
+                className="settings-row"
+                onClick={() => setTintedBackgrounds(!tintedBackgrounds)}
+              >
+                <span
+                  className="settings-row__icon"
+                  style={{ color: 'var(--sys-purple)', background: 'rgba(191, 90, 242, 0.16)' }}
+                  aria-hidden="true"
+                >
+                  <Sparkles size={18} />
+                </span>
+                <span className="settings-row__text">
+                  <span className="settings-row__title">Tinted cards</span>
+                  <span className="settings-row__subtitle">Color timeline cards by type</span>
+                </span>
+                <span className={`settings-switch ${tintedBackgrounds ? 'settings-switch--on' : ''}`} aria-hidden="true" />
+              </button>
+            </div>
+
+            <div className="settings-themes" role="group" aria-label="Theme">
+              {THEMES.map(option => {
+                const selected = theme === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    className={`settings-theme ${selected ? 'settings-theme--selected' : ''}`}
+                    aria-pressed={selected}
+                    onClick={() => setTheme(option.key)}
+                  >
+                    <span className="settings-theme__swatch" style={{ background: option.swatch }} aria-hidden="true">
+                      {selected && <Check size={18} strokeWidth={3} />}
+                    </span>
+                    <span className="settings-theme__label">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        <footer className="settings-footer">
+          <div className="settings-account">
+            {user?.photoURL && !avatarFailed ? (
+              <img
+                className="settings-account__avatar"
+                src={user.photoURL}
+                alt=""
+                referrerPolicy="no-referrer"
+                onError={() => setAvatarFailed(true)}
+              />
+            ) : (
+              <span className="settings-account__avatar" aria-hidden="true">
+                {userLabel.charAt(0).toUpperCase()}
+              </span>
+            )}
+            <div className="settings-account__text">
+              <span className="settings-account__name">{userLabel}</span>
+              {user?.displayName && user.email && (
+                <span className="settings-account__email">{user.email}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="settings-icon-button"
+              aria-label="Open system logs"
+              title="System logs"
+              onClick={() => goTo('/debug')}
+            >
+              <Terminal size={18} aria-hidden="true" />
+            </button>
           </div>
-        )}
-      </aside>
+
+          <button type="button" className="settings-signout" onClick={handleSignOut}>
+            <LogOut size={18} aria-hidden="true" />
+            <span>Sign out</span>
+          </button>
+        </footer>
+      </section>
     </>
   );
 }

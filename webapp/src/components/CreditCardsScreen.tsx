@@ -226,7 +226,7 @@ export default function CreditCardsScreen() {
   const currentMap = activeTab === 'no-ftf' ? bestNoFtfCardsMap : bestCardsMap;
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>

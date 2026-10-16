@@ -283,7 +283,7 @@ export default function SummaryScreen() {
   };
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: 'var(--screen-min-height, 100vh)' }}>
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />

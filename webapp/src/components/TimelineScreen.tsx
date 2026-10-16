@@ -97,7 +97,12 @@ function DraggableCard({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
-export default function TimelineScreen() {
+interface TimelineScreenProps {
+  /** Overrides the header title, which otherwise shows the trip name. */
+  title?: string;
+}
+
+export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
   const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
   const currentTrip = trips.find(t => t.id === currentTripId);
 
@@ -437,7 +442,7 @@ export default function TimelineScreen() {
             <Menu size={24} />
           </button>
           <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.7rem' }}>
-            {currentTrip?.title || 'Itinerary'}
+            {title || currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 

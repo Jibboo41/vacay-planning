@@ -519,7 +519,7 @@ export default function MapViewScreen() {
   }
 
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', zIndex: 10, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: 'var(--map-screen-height, 100dvh)', width: '100%', zIndex: 10, overflow: 'hidden' }}>
       <div className="screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15, 16, 20, 0.45)' }}>
         <button 
           className="header-icon-btn legacy-menu-button"

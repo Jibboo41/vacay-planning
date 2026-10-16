@@ -2,6 +2,7 @@ import {
   BookOpen,
   Calendar,
   CheckSquare,
+  CirclePlus,
   CloudSun,
   Compass,
   CreditCard,
@@ -46,4 +47,31 @@ export const APP_ROUTES: readonly AppRoute[] = [
 export function findRoute(pathname: string): AppRoute | undefined {
   return APP_ROUTES.find(route =>
     pathname === route.path || pathname.startsWith(`${route.path}/`));
+}
+
+export interface NavAction {
+  key: 'add';
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}
+
+export type NavEntry = AppRoute | NavAction;
+
+export const ADD_TIMELINE_ACTION: NavAction = {
+  key: 'add',
+  label: 'Add',
+  description: 'Add to timeline',
+  icon: CirclePlus,
+};
+
+/** Places the "Add to timeline" action right after the Todo route. */
+export function withTimelineAddAction(routes: readonly AppRoute[]): NavEntry[] {
+  const todoIndex = routes.findIndex(route => route.key === 'todo');
+  const insertAt = todoIndex === -1 ? routes.length : todoIndex + 1;
+  return [...routes.slice(0, insertAt), ADD_TIMELINE_ACTION, ...routes.slice(insertAt)];
+}
+
+export function isAppRoute(entry: NavEntry): entry is AppRoute {
+  return 'path' in entry;
 }

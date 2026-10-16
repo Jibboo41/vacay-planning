@@ -100,7 +100,7 @@ export default function CostTrackerScreen() {
   };
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', background: 'transparent' }}>
+    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', background: 'transparent' }}>
       <header className="screen-header">
         <button 
           className="header-icon-btn legacy-menu-button"

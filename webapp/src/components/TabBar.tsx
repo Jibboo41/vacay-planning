@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Map as MapIcon, Menu, MoreHorizontal, X } from 'lucide-react';
+import { Map as MapIcon, MoreHorizontal, Settings, X } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { APP_ROUTES, findRoute } from '../app/routes';
+import { APP_ROUTES, findRoute, isAppRoute, withTimelineAddAction } from '../app/routes';
 import { useTripStore } from '../store/useTripStore';
 
 export default function TabBar() {
@@ -9,8 +9,11 @@ export default function TabBar() {
   const navigate = useNavigate();
   const setSidebarOpen = useTripStore(state => state.setSidebarOpen);
   const isSidebarOpen = useTripStore(state => state.isSidebarOpen);
+  const isAddMenuOpen = useTripStore(state => state.isAddMenuOpen);
+  const openAddMenu = useTripStore(state => state.openAddMenu);
+  const hasTrip = useTripStore(state => !!state.currentTripId);
   const [moreOpen, setMoreOpen] = useState(false);
-  const primaryRoutes = APP_ROUTES.filter(route => route.primary);
+  const primaryEntries = withTimelineAddAction(APP_ROUTES.filter(route => route.primary));
   const secondaryRoutes = APP_ROUTES.filter(route => !route.primary);
   const currentRoute = findRoute(location.pathname);
   const moreActive = (!!currentRoute && !currentRoute.primary) || location.pathname === '/trips';
@@ -19,21 +22,41 @@ export default function TabBar() {
     <>
       <nav className="mobile-tab-bar" aria-label="Primary">
         <ul className="mobile-tab-bar__list">
-          {primaryRoutes.map(route => {
-            const Icon = route.icon;
+          {primaryEntries.map(entry => {
+            const Icon = entry.icon;
+
+            if (!isAppRoute(entry)) {
+              return (
+                <li key={entry.key}>
+                  <button
+                    type="button"
+                    data-add-menu-trigger
+                    className={`mobile-tab-bar__item ${isAddMenuOpen ? 'mobile-tab-bar__item--active' : ''}`}
+                    aria-label={entry.description}
+                    aria-haspopup="dialog"
+                    aria-expanded={isAddMenuOpen}
+                    disabled={!hasTrip}
+                    onClick={() => openAddMenu()}
+                  >
+                    <Icon size={22} aria-hidden="true" />
+                    <span>{entry.label}</span>
+                  </button>
+                </li>
+              );
+            }
 
             return (
-              <li key={route.key}>
+              <li key={entry.key}>
                 <NavLink
-                  to={route.path}
+                  to={entry.path}
                   end
-                  aria-label={route.description}
+                  aria-label={entry.description}
                   className={({ isActive }) =>
                     `mobile-tab-bar__item ${isActive ? 'mobile-tab-bar__item--active' : ''}`
                   }
                 >
                   <Icon size={22} aria-hidden="true" />
-                  <span>{route.label}</span>
+                  <span>{entry.label}</span>
                 </NavLink>
               </li>
             );
@@ -55,12 +78,15 @@ export default function TabBar() {
           <li>
             <button
               type="button"
+              data-settings-trigger
               className={`mobile-tab-bar__item ${isSidebarOpen ? 'mobile-tab-bar__item--active' : ''}`}
-              aria-label="Open trip menu"
+              aria-label="Open settings"
+              aria-haspopup="dialog"
+              aria-expanded={isSidebarOpen}
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu size={22} aria-hidden="true" />
-              <span>Menu</span>
+              <Settings size={22} aria-hidden="true" />
+              <span>Settings</span>
             </button>
           </li>
         </ul>

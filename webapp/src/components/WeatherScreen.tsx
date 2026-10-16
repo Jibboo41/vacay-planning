@@ -104,7 +104,7 @@ export default function WeatherScreen() {
   }, [items.length]);
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: '100vh', position: 'relative' }}>
+    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', position: 'relative' }}>
       {/* Detail Modal Overlay */}
       {selectedDay && (
         <div 
