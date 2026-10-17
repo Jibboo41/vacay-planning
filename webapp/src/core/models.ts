@@ -44,6 +44,8 @@ export interface ItineraryItem {
   endDate?: string;
   title: string;
   description?: string;
+  /** Optional image displayed instead of the timeline category icon. */
+  imageUrl?: string;
   confirmationNumber?: string;
   location: Location;
   hikeDetails?: HikeDetails;

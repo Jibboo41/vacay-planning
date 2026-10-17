@@ -3,6 +3,7 @@ import { Menu, Navigation, Plane, BedDouble, MountainSnow, TrainFront, Utensils,
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
+import { timelineDates } from '../core/timelineDetails';
 
 function getDayKey(dateString: string) {
   if (!dateString) return '';
@@ -37,15 +38,15 @@ interface SummaryItemProps {
 function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
   const getTheme = () => {
     switch (item.type) {
-      case 'flight':     return { icon: <Plane size={20} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
-      case 'hotel':      return { icon: <BedDouble size={20} />, color: isCheckout ? '#FF3B30' : '#FF9F0A', bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 159, 10, 0.1)' };
-      case 'rental-car': return { icon: <Car size={20} />, color: '#64D2FF', bg: 'rgba(100, 210, 255, 0.1)' };
-      case 'activity':   return { icon: <Navigation size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
-      case 'hiking':     return { icon: <MountainSnow size={20} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
-      case 'transit':    return { icon: <TrainFront size={20} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-      case 'food':       return { icon: <Utensils size={20} />, color: '#BF5AF2', bg: 'rgba(191, 90, 242, 0.1)' };
-      case 'note':       return { icon: <StickyNote size={20} />, color: '#8E8E93', bg: 'rgba(142, 142, 147, 0.1)' };
-      default:           return { icon: <CalendarClock size={20} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
+      case 'flight':     return { icon: <Plane size={20} />, color: 'var(--sys-blue)', bg: 'rgba(10, 132, 255, 0.1)' };
+      case 'hotel':      return { icon: <BedDouble size={20} />, color: isCheckout ? 'var(--sys-red-alt)' : 'var(--sys-orange)', bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 159, 10, 0.1)' };
+      case 'rental-car': return { icon: <Car size={20} />, color: 'var(--sys-cyan)', bg: 'rgba(100, 210, 255, 0.1)' };
+      case 'activity':   return { icon: <Navigation size={20} />, color: 'var(--sys-label-primary)', bg: 'rgba(var(--neutral-rgb), 0.05)' };
+      case 'hiking':     return { icon: <MountainSnow size={20} />, color: 'var(--sys-green)', bg: 'rgba(48, 209, 88, 0.1)' };
+      case 'transit':    return { icon: <TrainFront size={20} />, color: 'var(--sys-indigo)', bg: 'rgba(94, 92, 230, 0.1)' };
+      case 'food':       return { icon: <Utensils size={20} />, color: 'var(--sys-purple)', bg: 'rgba(191, 90, 242, 0.1)' };
+      case 'note':       return { icon: <StickyNote size={20} />, color: 'var(--sys-gray)', bg: 'rgba(142, 142, 147, 0.1)' };
+      default:           return { icon: <CalendarClock size={20} />, color: 'var(--sys-label-primary)', bg: 'rgba(var(--neutral-rgb), 0.05)' };
     }
   };
 
@@ -108,15 +109,15 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
       </div>
 
       {/* Content Column */}
-      <div style={{ flex: 1, padding: '8px 12px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)' }}>
+      <div style={{ flex: 1, padding: '8px 12px', borderRadius: '12px', background: 'rgba(var(--neutral-rgb), 0.02)' }}>
         {timeText && (
           <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, letterSpacing: '0.05em', marginBottom: '2px' }}>
             {timeText}
           </div>
         )}
-        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#FFF', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-primary)', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
           {item._segments ? `${item._segments.length} Flight segments` : item.title}
-          {item.isStarred && <Star size={14} fill="#FFD700" color="#FFD700" />}
+          {item.isStarred && <Star size={14} fill="var(--sys-gold)" color="var(--sys-gold)" />}
         </h3>
         
         {item._segments ? (
@@ -138,7 +139,7 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
 
         {/* Hike Details */}
         {item.type === 'hiking' && item.hikeDetails && (
-          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', color: '#30D158', fontSize: '12px', fontWeight: 600 }}>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', color: 'var(--sys-green)', fontSize: '12px', fontWeight: 600 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Gauge size={12} /> {(item.hikeDetails as any).difficulty.toUpperCase()}
             </div>
@@ -164,7 +165,7 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
         {item.type === 'note' && item.description && (
           <div style={{
             fontSize: '13px', color: 'var(--sys-label-secondary)',
-            lineHeight: '1.5', marginTop: '6px', borderTop: '1px solid rgba(255,255,255,0.05)',
+            lineHeight: '1.5', marginTop: '6px', borderTop: '1px solid rgba(var(--neutral-rgb), 0.05)',
             paddingTop: '6px'
           }}>
             <Linkified text={item.description} />
@@ -176,12 +177,10 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
 }
 
 export default function SummaryScreen() {
-  const { items, setSidebarOpen, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
+  const { items, dayDescriptions, setSidebarOpen, currentTripAiSummary, saveAiSummary, weather } = useTripStore();
   const [isGenerating, setIsGenerating] = useState(false);
   
   const dayGroups = useMemo(() => {
-    if (items.length === 0) return [];
-    
     // 1. Flatten all events including virtual checkouts/returns
     const flattened: any[] = [];
     items.forEach(item => {
@@ -195,26 +194,11 @@ export default function SummaryScreen() {
       }
     });
 
-    // 2. Find full trip range
-    const allDates = flattened.map(i => i._renderDate);
-    // Use ISO strings for sorting to find min/max
-    const sortedDateStrings = [...allDates].sort();
-    const minKey = getDayKey(sortedDateStrings[0]);
-    const maxKey = getDayKey(sortedDateStrings[sortedDateStrings.length - 1]);
-
+    // Include days that only have an overview and use timezone-safe calendar dates.
+    const dates = timelineDates(items.flatMap(item => [getDayKey(item.startDate), ...(item.endDate ? [getDayKey(item.endDate)] : [])]), dayDescriptions);
     const groups: { dateKey: string; label: string; items: any[] }[] = [];
-    
-    // Iterate day by day from minKey to maxKey
-    let current = new Date(minKey.replace(/-/g, '/'));
-    const end = new Date(maxKey.replace(/-/g, '/'));
-
-    // Security break to prevent infinite loop
-    let safety = 0;
-    while (current <= end && safety < 100) {
-      safety++;
-      const key = getDayKey(current.toISOString().split('T')[0]);
-      const label = getDayLabel(current.toISOString().split('T')[0]);
-      
+    for (const key of dates) {
+      const label = getDayLabel(key);
       const dayItems = flattened.filter(i => getDayKey(i._renderDate) === key)
         .sort((a, b) => {
           // Independent sort orders: checkouts use endSortOrder
@@ -226,7 +210,6 @@ export default function SummaryScreen() {
         });
 
       groups.push({ dateKey: key, label, items: dayItems });
-      current.setDate(current.getDate() + 1);
     }
 
     // 3. Post-Process Flight Grouping
@@ -250,7 +233,7 @@ export default function SummaryScreen() {
       });
       return { ...group, items: grouped };
     });
-  }, [items]);
+  }, [items, dayDescriptions]);
 
   const handleGenerateSummary = async () => {
     const { addDebugLog } = useTripStore.getState();
@@ -305,8 +288,8 @@ export default function SummaryScreen() {
             {/* The AI Summary Block */}
             <div style={{ background: 'rgba(10, 132, 255, 0.1)', border: '1px solid rgba(10, 132, 255, 0.2)', padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                <Sparkles size={20} color="#0A84FF" />
-                <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#0A84FF', margin: 0 }}>AI Trip Synopsis</h2>
+                <Sparkles size={20} color="var(--sys-blue)" />
+                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--sys-blue)', margin: 0 }}>AI Trip Synopsis</h2>
               </div>
               
               {currentTripAiSummary ? (
@@ -335,25 +318,26 @@ export default function SummaryScreen() {
               const low = dayForecasts.length > 0 ? Math.min(...dayForecasts.map(w => w.tempLow)) : null;
               
               return (
-                <div key={group.dateKey} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#fff', fontSize: '13px', fontWeight: 800 }}>
+                <div className="summary-day-card" key={group.dateKey} style={{ background: 'rgba(var(--neutral-rgb), 0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(var(--neutral-rgb), 0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(var(--neutral-rgb), 0.05)' }}>
+                    <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(var(--neutral-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--sys-label-primary)', fontSize: '13px', fontWeight: 800 }}>
                       {groupIdx + 1}
                     </div>
                     <div style={{ flex: 1, minWidth: 0, marginLeft: '12px' }}>
-                      <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#FFF', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--sys-label-primary)', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {group.label}
                       </h2>
                     </div>
                     {high !== null && low !== null && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(var(--neutral-rgb), 0.1)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-                          <span style={{ fontSize: '13px', fontWeight: 800, color: '#FF9F0A' }}>H: {Math.round(high)}°</span>
-                          <span style={{ fontSize: '10px', color: '#0A84FF', fontWeight: 700 }}>L: {Math.round(low)}°</span>
+                          <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-orange)' }}>H: {Math.round(high)}°</span>
+                          <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 700 }}>L: {Math.round(low)}°</span>
                         </div>
                       </div>
                     )}
                   </div>
+                  {dayDescriptions[group.dateKey] && <p className="summary-day-description">{dayDescriptions[group.dateKey]}</p>}
                   <div style={{ marginLeft: '4px' }}>
                     {group.items.map((item, idx) => (
                       <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />

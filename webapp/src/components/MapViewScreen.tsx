@@ -8,14 +8,14 @@ import { Menu, Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
 // ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
 
 const TYPE_COLORS: Record<string, string> = {
-  flight:   '#0A84FF',
-  hotel:    '#FF9F0A', // Back to Orange for distinction
-  activity: '#64D2FF', // Brighter Sky Blue
-  hiking:   '#30D158',
-  transit:  '#5E5CE6',
-  food:     '#BF5AF2', // Purple for meals
-  note:     '#8E8E93', // Gray for notes
-  unknown:  '#8E8E93',
+  flight:   'var(--sys-blue)',
+  hotel:    'var(--sys-orange)', // Back to Orange for distinction
+  activity: 'var(--sys-cyan)', // Brighter Sky Blue
+  hiking:   'var(--sys-green)',
+  transit:  'var(--sys-indigo)',
+  food:     'var(--sys-purple)', // Purple for meals
+  note:     'var(--sys-gray)', // Gray for notes
+  unknown:  'var(--sys-gray)',
 };
 
 const TYPE_EMOJI: Record<string, string> = {
@@ -29,10 +29,10 @@ const TYPE_EMOJI: Record<string, string> = {
   unknown:  '📍',
 };
 
-const DAY_PALETTE = ['#0A84FF', '#30D158', '#FF9F0A', '#BF5AF2', '#FF6B6B', '#64D2FF'];
+const DAY_PALETTE = ['var(--sys-blue)', 'var(--sys-green)', 'var(--sys-orange)', 'var(--sys-purple)', '#FF6B6B', 'var(--sys-cyan)'];
 
 function makeMarkerIcon(type: string, isCheckout?: boolean) {
-  const color = isCheckout ? '#FF453A' : (TYPE_COLORS[type] ?? TYPE_COLORS.unknown);
+  const color = isCheckout ? 'var(--sys-red)' : (TYPE_COLORS[type] ?? TYPE_COLORS.unknown);
   const emoji = TYPE_EMOJI[type]  ?? TYPE_EMOJI.unknown;
   
   return L.divIcon({
@@ -42,12 +42,12 @@ function makeMarkerIcon(type: string, isCheckout?: boolean) {
         <!-- Glass Teardrop Pin -->
         <div style="
           position:absolute;width:34px;height:34px;
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(var(--neutral-rgb), 0.05);
           backdrop-filter: blur(12px) saturate(180%);
           -webkit-backdrop-filter: blur(12px) saturate(180%);
           border-radius:50% 50% 50% 0;
           transform: rotate(-45deg);
-          border:1.5px solid rgba(255, 255, 255, 0.4);
+          border:1.5px solid rgba(var(--neutral-rgb), 0.4);
           box-shadow: 0 4px 16px rgba(0,0,0,0.3);"></div>
         
         <!-- Internal Tint Lens (also teardrop shaped for consistency) -->
@@ -519,8 +519,8 @@ export default function MapViewScreen() {
   }
 
   return (
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: 'var(--map-screen-height, 100dvh)', width: '100%', zIndex: 10, overflow: 'hidden' }}>
-      <div className="screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(15, 16, 20, 0.45)' }}>
+    <div className="map-screen" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: 'var(--map-screen-height, 100dvh)', width: '100%', zIndex: 10, overflow: 'hidden' }}>
+      <div className="screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(var(--chrome-rgb), 0.45)' }}>
         <button 
           className="header-icon-btn legacy-menu-button"
           onClick={() => setSidebarOpen(true)}
@@ -529,7 +529,7 @@ export default function MapViewScreen() {
           <Menu size={24} />
         </button>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: '#FFF', margin: 0 }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--sys-label-primary)', margin: 0 }}>
             Destinations
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
@@ -629,7 +629,7 @@ export default function MapViewScreen() {
                     padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
                     fontWeight: 700, textDecoration: 'none', gap: '8px',
                     background: 'rgba(10, 132, 255, 0.5)', border: '1px solid rgba(10, 132, 255, 0.65)',
-                    color: '#ffffff'
+                    color: 'var(--sys-label-primary)'
                   }}
                 >
                   <span>{isIOS() ? ' Maps' : 'Google Maps'}</span>
@@ -658,7 +658,7 @@ export default function MapViewScreen() {
                       backdrop-filter: blur(8px);
                       -webkit-backdrop-filter: blur(8px);
                       border-radius:50%;
-                      border: 1.5px solid rgba(255,255,255,0.5);
+                      border: 1.5px solid rgba(var(--neutral-rgb), 0.5);
                       box-shadow:0 6px 16px rgba(0,0,0,0.3);"></div>
                     <span style="position:relative;z-index:1;font-size:16px;line-height:1;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🛬</span>
                   </div>`,
@@ -686,7 +686,7 @@ export default function MapViewScreen() {
                       fontWeight: 700, textDecoration: 'none', 
                       background: 'rgba(10, 132, 255, 0.5)',
                       borderColor: 'rgba(10, 132, 255, 0.65)',
-                      color: '#ffffff'
+                      color: 'var(--sys-label-primary)'
                     }}
                   >
                     Open in Maps
@@ -704,7 +704,7 @@ export default function MapViewScreen() {
           transform: 'translateX(-50%)',
           background: 'rgba(10, 132, 255, 0.2)', backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          color: '#fff', fontSize: '13px', fontWeight: 700,
+          color: 'var(--sys-label-primary)', fontSize: '13px', fontWeight: 700,
           padding: '12px 24px', borderRadius: '24px',
           zIndex: 2000, whiteSpace: 'nowrap',
           boxShadow: '0 8px 32px rgba(10, 132, 255, 0.25)',
@@ -722,7 +722,7 @@ export default function MapViewScreen() {
           transform: 'translateX(-50%)',
           background: 'rgba(255, 59, 48, 0.2)', backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          color: '#fff', fontSize: '13px', fontWeight: 700,
+          color: 'var(--sys-label-primary)', fontSize: '13px', fontWeight: 700,
           padding: '12px 24px', borderRadius: '24px',
           zIndex: 2000, whiteSpace: 'nowrap',
           boxShadow: '0 8px 32px rgba(255, 59, 48, 0.25)',
@@ -737,10 +737,10 @@ export default function MapViewScreen() {
       {routeStatus === 'done' && (
         <div style={{
           position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))',
-          left: '16px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(20px)',
+          left: '16px', background: 'var(--sys-bg-elevated)', backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)', borderRadius: '18px',
           padding: '12px 14px', zIndex: 1000, display: 'flex', flexDirection: 'column',
-          gap: '8px', border: '1px solid rgba(255,255,255,0.1)',
+          gap: '8px', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)', maxHeight: '40vh', overflowY: 'auto'
         }}>
           <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em', marginBottom: '2px' }}>VISIBILITY BY DAY</div>
@@ -760,12 +760,12 @@ export default function MapViewScreen() {
                 }}
               >
                 <div style={{ width: '28px', height: '6px', borderRadius: '3px', background: DAY_PALETTE[i % DAY_PALETTE.length], flexShrink: 0 }} />
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 600 }}>{label}</span>
+                <span style={{ color: 'var(--sys-label-primary)', fontSize: '12px', fontWeight: 600 }}>{label}</span>
               </div>
             );
           })}
 
-          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '4px 0' }} />
+          <div style={{ height: '1px', background: 'rgba(var(--neutral-rgb), 0.1)', margin: '4px 0' }} />
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '28px', height: '0', borderTop: '2px dashed rgba(180, 180, 200, 0.4)', flexShrink: 0 }} />

@@ -133,8 +133,8 @@ export default function TodoScreen() {
                 onChange={e => setNewTodo(e.target.value)}
                 placeholder="Pack gear, Check in, etc."
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                   fontSize: '17px', outline: 'none', width: '100%'
                 }}
               />
@@ -158,9 +158,9 @@ export default function TodoScreen() {
                   value={newDueDate}
                   onChange={e => setNewDueDate(e.target.value)}
                   style={{
-                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px', padding: '14px 16px', color: '#fff',
-                    fontSize: '16px', colorScheme: 'dark', width: '100%',
+                    background: 'rgba(var(--neutral-rgb), 0.07)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
+                    borderRadius: '12px', padding: '14px 16px', color: 'var(--sys-label-primary)',
+                    fontSize: '16px', colorScheme: 'inherit', width: '100%',
                     boxSizing: 'border-box', display: 'block', margin: 0
                   }}
                 />
@@ -174,8 +174,8 @@ export default function TodoScreen() {
                 onChange={e => setNewNotes(e.target.value)}
                 placeholder="Confirmation numbers, packing details, etc."
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                   fontSize: '15px', outline: 'none', width: '100%', minHeight: '60px',
                   resize: 'vertical', display: 'block', boxSizing: 'border-box'
                 }}
@@ -195,8 +195,8 @@ export default function TodoScreen() {
                 onClick={() => setShowAddForm(false)}
                 style={{ 
                   flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(255,255,255,0.08)', color: '#fff', 
-                  border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
                 }}
               >
                 Cancel
@@ -269,7 +269,7 @@ export default function TodoScreen() {
                       background: isDragging
                         ? 'rgba(10,132,255,0.04)'
                         : isOver ? 'rgba(10,132,255,0.08)' : undefined,
-                      border: isDragging ? '1px dashed rgba(10,132,255,0.55)' : '1px solid rgba(255,255,255,0.08)',
+                      border: isDragging ? '1px dashed rgba(10,132,255,0.55)' : '1px solid rgba(var(--neutral-rgb), 0.08)',
                       transition: 'background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease',
                       opacity: isDragging ? 0.35 : 1,
                       zIndex: isOver ? 2 : undefined,
@@ -311,8 +311,8 @@ export default function TodoScreen() {
                           onChange={e => setEditText(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
                           style={{
-                            background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(10,132,255,0.4)',
-                            borderRadius: '8px', padding: '8px 10px', color: '#fff',
+                            background: 'rgba(var(--neutral-rgb), 0.07)', border: '1px solid rgba(10,132,255,0.4)',
+                            borderRadius: '8px', padding: '8px 10px', color: 'var(--sys-label-primary)',
                             fontSize: '16px', fontWeight: 500, outline: 'none', width: '100%'
                           }}
                         />
@@ -324,9 +324,9 @@ export default function TodoScreen() {
                             value={editDueDate}
                             onChange={e => setEditDueDate(e.target.value)}
                             style={{
-                              background: 'rgba(255,255,255,0.05)', border: 'none',
-                              borderRadius: '6px', padding: '3px 7px', color: '#fff',
-                              fontSize: '12px', colorScheme: 'dark'
+                              background: 'rgba(var(--neutral-rgb), 0.05)', border: 'none',
+                              borderRadius: '6px', padding: '3px 7px', color: 'var(--sys-label-primary)',
+                              fontSize: '12px', colorScheme: 'inherit'
                             }}
                           />
                           {editDueDate && (
@@ -338,8 +338,8 @@ export default function TodoScreen() {
                           onChange={e => setEditNotes(e.target.value)}
                           placeholder="Add notes..."
                           style={{
-                            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '8px', padding: '8px 10px', color: '#fff',
+                            background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
+                            borderRadius: '8px', padding: '8px 10px', color: 'var(--sys-label-primary)',
                             fontSize: '14px', outline: 'none', width: '100%', minHeight: '50px',
                             resize: 'vertical', marginTop: '2px', boxSizing: 'border-box'
                           }}
@@ -354,7 +354,7 @@ export default function TodoScreen() {
                     ) : (
                       <>
                         <span style={{
-                          fontSize: '16px', color: todo.completed ? 'var(--sys-label-tertiary)' : '#fff',
+                          fontSize: '16px', color: todo.completed ? 'var(--sys-label-tertiary)' : 'var(--sys-label-primary)',
                           textDecoration: todo.completed ? 'line-through' : 'none',
                           transition: 'all 0.2s ease', fontWeight: 500,
                           display: 'block', wordBreak: 'break-word', overflowWrap: 'anywhere'
@@ -388,16 +388,16 @@ export default function TodoScreen() {
                         <button onClick={commitEdit} style={{ background: 'rgba(48,209,88,0.15)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-green)', cursor: 'pointer', display: 'flex' }}>
                           <Check size={16} />
                         </button>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
                           <X size={16} />
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(todo)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => startEdit(todo)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
                           <Pencil size={16} />
                         </button>
-                        <button onClick={() => { if (window.confirm(`Delete "${todo.text}"?`)) deleteTodo(todo.id); }} aria-label="Delete" style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => { if (window.confirm(`Delete "${todo.text}"?`)) deleteTodo(todo.id); }} aria-label="Delete" style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-red)', cursor: 'pointer', display: 'flex' }}>
                           <Trash2 size={16} />
                         </button>
                       </>

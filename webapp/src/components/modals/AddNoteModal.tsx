@@ -76,8 +76,8 @@ export default function AddNoteModal({ activeDayKey, onClose, onAdd }: AddNoteMo
               fontSize: '16px', fontWeight: 700,
               transition: 'all 0.2s',
               opacity: (content.trim() || title.trim()) ? 1 : 0.4,
-              border: !(content.trim() || title.trim()) ? '1px solid rgba(255,255,255,0.08)' : undefined,
-              background: !(content.trim() || title.trim()) ? 'rgba(255,255,255,0.05)' : undefined,
+              border: !(content.trim() || title.trim()) ? '1px solid rgba(var(--neutral-rgb), 0.08)' : undefined,
+              background: !(content.trim() || title.trim()) ? 'rgba(var(--neutral-rgb), 0.05)' : undefined,
             }}
           >
             Add Note

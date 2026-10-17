@@ -3,6 +3,8 @@ import { Menu, Map, RefreshCw } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
+import DayDescription from './DayDescription';
+import { timelineDates } from '../core/timelineDetails';
 import type { ItineraryItem } from '../core/models';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -103,7 +105,7 @@ interface TimelineScreenProps {
 }
 
 export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
-  const { items, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
+  const { items, dayDescriptions, currentTripId, trips, weather, reorderItems, setSidebarOpen, setEditingItem, activeFilters, isWeatherRefreshing } = useTripStore();
   const currentTrip = trips.find(t => t.id === currentTripId);
 
   const [activeDayKey, setActiveDayKey] = useState<string>('');
@@ -149,8 +151,9 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
     return a._renderDate.localeCompare(b._renderDate);
   });
 
-  const dayGroups: DayGroup[] = [];
-  const dayMap: Record<string, DayGroup> = {};
+  const dates = timelineDates(items.flatMap(item => [getDayKey(item.startDate), ...(item.endDate ? [getDayKey(item.endDate)] : [])]), dayDescriptions);
+  const dayGroups: DayGroup[] = dates.map(dateKey => ({ dateKey, label: getDayLabel(dateKey), items: [] }));
+  const dayMap: Record<string, DayGroup> = Object.fromEntries(dayGroups.map(group => [group.dateKey, group]));
 
   flattened.forEach(item => {
     const key = getDayKey(item._renderDate);
@@ -474,7 +477,7 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
           }
 
           return (
-              <div key={group.dateKey}>
+              <div key={`${currentTripId}-${group.dateKey}`}>
                 <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span className="day-section-label">{group.label}</span>
@@ -494,10 +497,12 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
                     </div>
                   ) : (high !== null && low !== null && (
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
-                      <span style={{ color: '#FF9F0A' }}>H: {high}°</span> <span style={{ color: '#0A84FF' }}>L: {low}°</span>
+                      <span style={{ color: 'var(--sys-orange)' }}>H: {high}°</span> <span style={{ color: 'var(--sys-blue)' }}>L: {low}°</span>
                     </span>
                   ))}
                 </div>
+
+                {currentTripId && <DayDescription tripId={currentTripId} dateKey={group.dateKey} label={group.label} description={dayDescriptions[group.dateKey] || ''} />}
 
                 <div
                   className="start-day-drop-zone"

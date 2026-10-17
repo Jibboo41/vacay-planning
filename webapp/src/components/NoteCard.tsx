@@ -1,3 +1,4 @@
+import ItemThumbnail from './ItemThumbnail';
 import React, { useState } from 'react';
 import { StickyNote, GripVertical, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
@@ -23,16 +24,16 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
         borderLeft: '4px solid var(--sys-label-tertiary)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
-        maxHeight: isExpanded ? '800px' : '120px',
+        maxHeight: isExpanded ? '800px' : item.imageUrl ? '180px' : '120px',
         padding: '16px',
         borderRadius: '16px',
         margin: '0 16px 12px',
         position: 'relative',
-        background: isExpanded ? 'rgba(255, 255, 255, 0.05)' : undefined
+        background: isExpanded ? 'rgba(var(--neutral-rgb), 0.05)' : undefined
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: '6px', letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', background: 'rgba(var(--neutral-rgb), 0.05)', padding: '2px 7px', borderRadius: '6px', letterSpacing: '0.05em' }}>
           {item.title.toUpperCase()}
         </span>
         <div 
@@ -45,13 +46,7 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
       </div>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-        <div style={{
-          width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0,
-          background: 'rgba(255, 255, 255, 0.1)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <StickyNote size={20} color="var(--sys-label-secondary)" />
-        </div>
+        <ItemThumbnail imageUrl={item.imageUrl} title={item.title} icon={<StickyNote size={20} />} color="var(--sys-label-secondary)" background="var(--glass-bg-light)" onEdit={onPress} />
 
         {/* Title hidden as requested since it's in the badge */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -72,7 +67,7 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
       </div>
 
       {isExpanded && (
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(var(--neutral-rgb), 0.05)' }}>
 
           <div style={{ display: 'flex', gap: '8px' }}>
             <button 

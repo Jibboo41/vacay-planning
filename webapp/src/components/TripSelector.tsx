@@ -223,7 +223,7 @@ const TripSelector: React.FC = () => {
         .trip-selector-screen {
           min-height: 100vh;
           background: transparent;
-          color: white;
+          color: var(--sys-label-primary);
           box-sizing: border-box;
         }
 
@@ -233,8 +233,8 @@ const TripSelector: React.FC = () => {
         }
 
         .logout-btn {
-          background: rgba(255, 255, 255, 0.1);
-          border: none; color: #888;
+          background: rgba(var(--neutral-rgb), 0.1);
+          border: none; color: var(--sys-label-secondary);
           width: 40px; height: 40px;
           border-radius: 20px;
           display: flex; align-items: center; justify-content: center;
@@ -248,8 +248,8 @@ const TripSelector: React.FC = () => {
         }
 
         .trip-card {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(var(--neutral-rgb), 0.03);
+          border: 1px solid rgba(var(--neutral-rgb), 0.08);
           border-radius: 24px;
           padding: 24px;
           display: flex;
@@ -268,14 +268,14 @@ const TripSelector: React.FC = () => {
           content: "";
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+          background: linear-gradient(135deg, rgba(var(--neutral-rgb), 0.05) 0%, transparent 100%);
           pointer-events: none;
         }
 
         .trip-card:hover {
-          background: rgba(255, 255, 255, 0.07);
+          background: rgba(var(--neutral-rgb), 0.07);
           transform: translateY(-4px);
-          border-color: rgba(255, 255, 255, 0.15);
+          border-color: rgba(var(--neutral-rgb), 0.15);
           box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
         }
 
@@ -290,7 +290,7 @@ const TripSelector: React.FC = () => {
         .trip-meta {
           display: flex;
           gap: 12px;
-          color: #888;
+          color: var(--sys-label-secondary);
           font-size: 0.9rem;
           align-items: center;
         }
@@ -306,14 +306,14 @@ const TripSelector: React.FC = () => {
         .duplicate-trip-btn {
           background: transparent;
           border: none;
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(var(--neutral-rgb), 0.4);
           padding: 8px;
           border-radius: 8px;
           transition: all 0.2s;
         }
         .duplicate-trip-btn:hover {
-          color: #fff !important;
-          background: rgba(255, 255, 255, 0.1);
+          color: var(--sys-label-primary) !important;
+          background: rgba(var(--neutral-rgb), 0.1);
         }
 
         .delete-trip-btn {
@@ -325,12 +325,12 @@ const TripSelector: React.FC = () => {
           transition: all 0.2s;
         }
         .delete-trip-btn:hover {
-          color: #ff453a !important;
+          color: var(--sys-red) !important;
           background: rgba(255, 69, 58, 0.15);
         }
 
-        .chevron { color: rgba(255, 255, 255, 0.2); transition: color 0.2s; }
-        .trip-card:hover .chevron { color: rgba(255, 255, 255, 0.6); }
+        .chevron { color: rgba(var(--neutral-rgb), 0.2); transition: color 0.2s; }
+        .trip-card:hover .chevron { color: rgba(var(--neutral-rgb), 0.6); }
 
         .add-trip-btn-large {
           margin-top: 16px;
@@ -349,8 +349,8 @@ const TripSelector: React.FC = () => {
         .empty-state {
           padding: 40px;
           text-align: center;
-          color: #666;
-          border: 2px dashed rgba(255, 255, 255, 0.05);
+          color: var(--sys-label-secondary);
+          border: 2px dashed rgba(var(--neutral-rgb), 0.05);
           border-radius: 24px;
           margin-bottom: 24px;
         }
@@ -366,29 +366,29 @@ const TripSelector: React.FC = () => {
         }
 
         .modal-content {
-          background: #1c1c1e;
+          background: var(--sys-bg-elevated);
           width: 100%;
           max-width: 400px;
           border-radius: 24px;
           padding: 24px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(var(--neutral-rgb), 0.1);
         }
 
         .modal-content h2 { margin: 0 0 20px 0; font-size: 1.5rem; }
 
         .modal-content input {
           width: 100%;
-          background: #2c2c2e;
+          background: var(--sys-bg-elevated-2);
           border: none;
           border-radius: 12px;
           padding: 16px;
-          color: white;
+          color: var(--sys-label-primary);
           font-size: 16px;
           margin-bottom: 24px;
           outline: none;
         }
 
-        .modal-content input:focus { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); }
+        .modal-content input:focus { box-shadow: 0 0 0 2px rgba(var(--neutral-rgb), 0.1); }
 
         .modal-actions {
           display: flex; gap: 12px;
@@ -398,8 +398,8 @@ const TripSelector: React.FC = () => {
           flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer;
         }
 
-        .modal-actions button:first-child { background: #2c2c2e; color: #888; }
-        .submit-btn { background: white; color: black; }
+        .modal-actions button:first-child { background: var(--sys-bg-elevated-2); color: var(--sys-label-secondary); }
+        .submit-btn { background: var(--sys-label-primary); color: var(--sys-bg-base); }
         .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
       `}</style>
     </div>

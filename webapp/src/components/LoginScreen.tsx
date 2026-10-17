@@ -2,6 +2,7 @@ import React from 'react';
 import { auth, googleProvider } from '../core/firebase';
 import { signInWithPopup } from 'firebase/auth';
 import { LogIn } from 'lucide-react';
+import BrandMark from './BrandMark';
 
 const LoginScreen: React.FC = () => {
   const [signingIn, setSigningIn] = React.useState(false);
@@ -27,9 +28,9 @@ const LoginScreen: React.FC = () => {
     <div className="login-screen">
       <div className="login-content">
         <div className="logo-container">
-          <div className="logo-icon">✈️</div>
+          <div className="logo-icon"><BrandMark size={80} /></div>
           <h1>Vacay Planner</h1>
-          <p>Your journeys, beautifully organized.</p>
+          <p>Your trips, organized.</p>
         </div>
 
         <button 
@@ -49,7 +50,7 @@ const LoginScreen: React.FC = () => {
           align-items: center;
           justify-content: center;
           background: transparent;
-          color: #fff;
+          color: var(--sys-label-primary);
           overflow: hidden;
           position: relative;
         }
@@ -68,23 +69,19 @@ const LoginScreen: React.FC = () => {
         }
 
         .logo-icon {
-          font-size: 4rem;
-          margin-bottom: 1rem;
+          margin-bottom: 1.25rem;
           display: inline-block;
-          animation: float 3s ease-in-out infinite;
         }
 
-        h1 {
+        .login-screen h1 {
           font-size: 2.5rem;
           font-weight: 800;
           margin-bottom: 0.5rem;
-          background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          color: var(--sys-label-primary);
         }
 
-        p {
-          color: #888;
+        .login-screen p {
+          color: var(--sys-label-secondary);
           font-size: 1.1rem;
         }
 
@@ -96,9 +93,9 @@ const LoginScreen: React.FC = () => {
           width: 100%;
           padding: 16px;
           border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.05);
-          color: white;
+          border: 1px solid rgba(var(--neutral-rgb), 0.1);
+          background: rgba(var(--neutral-rgb), 0.05);
+          color: var(--sys-label-primary);
           font-size: 1rem;
           font-weight: 600;
           cursor: pointer;
@@ -107,9 +104,9 @@ const LoginScreen: React.FC = () => {
         }
 
         .google-signin-btn:hover {
-          background: rgba(255, 255, 255, 0.1);
+          background: rgba(var(--neutral-rgb), 0.1);
           transform: translateY(-2px);
-          border-color: rgba(255, 255, 255, 0.2);
+          border-color: rgba(var(--neutral-rgb), 0.2);
         }
 
         .google-signin-btn:active {
@@ -121,10 +118,6 @@ const LoginScreen: React.FC = () => {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
       `}</style>
     </div>
   );

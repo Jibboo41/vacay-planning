@@ -77,9 +77,9 @@ export default function TodoCategoryPicker({
     borderRadius: '999px',
     border: selected
       ? '1px solid rgba(10,132,255,0.65)'
-      : '1px solid rgba(255,255,255,0.12)',
-    background: selected ? 'rgba(10,132,255,0.18)' : 'rgba(255,255,255,0.06)',
-    color: selected ? '#fff' : 'var(--sys-label-secondary)',
+      : '1px solid rgba(var(--neutral-rgb), 0.12)',
+    background: selected ? 'rgba(10,132,255,0.18)' : 'rgba(var(--neutral-rgb), 0.06)',
+    color: selected ? 'var(--sys-label-primary)' : 'var(--sys-label-secondary)',
     fontSize: compact ? '11px' : '12px',
     fontWeight: 700,
     cursor: 'pointer',
@@ -135,11 +135,11 @@ export default function TodoCategoryPicker({
               minWidth: 0,
               flex: 1,
               height: compact ? '36px' : '40px',
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(var(--neutral-rgb), 0.07)',
+              border: '1px solid rgba(var(--neutral-rgb), 0.12)',
               borderRadius: '10px',
               padding: '8px 10px',
-              color: '#fff',
+              color: 'var(--sys-label-primary)',
               fontSize: compact ? '12px' : '14px',
               outline: 'none',
             }}

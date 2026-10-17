@@ -7,6 +7,8 @@ import {
   FileSpreadsheet,
   LogOut,
   MountainSnow,
+  Moon,
+  Sun,
   Navigation,
   Plane,
   Plus,
@@ -21,7 +23,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../core/firebase';
 import { useTripStore } from '../store/useTripStore';
-import { downloadTripExcel } from '../utils/exportUtils';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -54,7 +55,7 @@ const THEMES = [
   { key: 'black', label: 'Black', swatch: '#000000' },
 ];
 
-const TRIP_COLORS = ['#0A84FF', '#BF5AF2', '#30D158', '#FF9F0A', '#FF375F', '#64D2FF', '#5E5CE6', '#FFD60A'];
+const TRIP_COLORS = ['var(--sys-blue)', 'var(--sys-purple)', 'var(--sys-green)', 'var(--sys-orange)', 'var(--sys-pink-alt)', 'var(--sys-cyan)', 'var(--sys-indigo)', 'var(--sys-yellow)'];
 
 const FOCUSABLE_SELECTOR = 'button:not([disabled]), input:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
@@ -71,6 +72,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const currentTripId = useTripStore(state => state.currentTripId);
   const setCurrentTrip = useTripStore(state => state.setCurrentTrip);
   const addTrip = useTripStore(state => state.addTrip);
+  const appearance = useTripStore(state => state.appearance);
+  const setAppearance = useTripStore(state => state.setAppearance);
   const theme = useTripStore(state => state.theme);
   const setTheme = useTripStore(state => state.setTheme);
   const activeFilters = useTripStore(state => state.activeFilters);
@@ -174,7 +177,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     if (!currentTrip || isExporting) return;
     setIsExporting(true);
     try {
-      await downloadTripExcel(currentTrip.title, currentTrip.items || [], currentTrip.expenses || []);
+      const { downloadTripExcel } = await import('../utils/excelExport');
+      await downloadTripExcel(currentTrip.title, currentTrip.items || [], currentTrip.expenses || [], currentTrip.dayDescriptions || {});
     } catch (error) {
       console.error('Failed to export trip', error);
     } finally {
@@ -242,7 +246,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     aria-current={selected ? 'true' : undefined}
                     onClick={() => handleSelectTrip(trip.id)}
                   >
-                    <span className="settings-row__icon" style={{ color, background: `${color}29` }} aria-hidden="true">
+                    <span className="settings-row__icon" style={{ color, background: `color-mix(in srgb, ${color} 16%, transparent)` }} aria-hidden="true">
                       {trip.title.trim().charAt(0).toUpperCase() || '?'}
                     </span>
                     <span className="settings-row__text">
@@ -357,6 +361,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="settings-section__header">
               <h3 id="settings-appearance-heading">Appearance</h3>
             </div>
+            <div className="appearance-options" role="group" aria-label="Color appearance">
+              {(['dark', 'light'] as const).map(mode => (
+                <button type="button" key={mode} aria-pressed={appearance === mode} onClick={() => setAppearance(mode)} className={`appearance-option appearance-option--${mode}`}>
+                  <span className="appearance-option__sample" aria-hidden="true"><span /><span /><span /></span>
+                  <span>{mode === 'dark' ? <Moon size={16} /> : <Sun size={16} />}{mode === 'dark' ? 'Dark' : 'Light'}{appearance === mode && <Check size={15} />}</span>
+                </button>
+              ))}
+            </div>
             <div className="settings-group">
               <button
                 type="button"
@@ -380,7 +392,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
             </div>
 
-            <div className="settings-themes" role="group" aria-label="Theme">
+            <div className="settings-themes" role="group" aria-label="Dark background theme" hidden={appearance === 'light'}>
               {THEMES.map(option => {
                 const selected = theme === option.key;
 

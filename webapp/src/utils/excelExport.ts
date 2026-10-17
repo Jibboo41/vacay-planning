@@ -5,12 +5,21 @@ import type { ItineraryItem, Expense } from '../core/models';
 /**
  * Professional Trip Export with Styled Formatting for Excel/Google Sheets
  */
-export async function downloadTripExcel(tripTitle: string, items: ItineraryItem[], expenses: Expense[]) {
+export async function downloadTripExcel(tripTitle: string, items: ItineraryItem[], expenses: Expense[], dayDescriptions: Record<string, string> = {}) {
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Vacay Planner';
   workbook.lastModifiedBy = 'Vacay Planner';
   workbook.created = new Date();
   
+  if (Object.keys(dayDescriptions).length) {
+    const days = workbook.addWorksheet('Day Descriptions');
+    days.columns = [{ header: 'Date', key: 'date', width: 16 }, { header: 'Plan', key: 'plan', width: 90 }];
+    Object.entries(dayDescriptions).sort(([a], [b]) => a.localeCompare(b)).forEach(([date, plan]) => {
+      const row = days.addRow({ date, plan });
+      row.getCell(2).alignment = { wrapText: true, vertical: 'top' };
+    });
+  }
+
   // Create Main Itinerary Sheet
   const sheet = workbook.addWorksheet('Trip Itinerary', {
     views: [{ state: 'frozen', xSplit: 0, ySplit: 2 }],

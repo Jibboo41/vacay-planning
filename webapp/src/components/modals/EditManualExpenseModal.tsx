@@ -123,7 +123,7 @@ export default function EditManualExpenseModal() {
           </button>
           <button 
             onClick={handleDelete}
-            style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 69, 58, 0.1)', border: 'none', color: '#FF453A' }}
+            style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 69, 58, 0.1)', border: 'none', color: 'var(--sys-red)' }}
           >
             <Trash2 size={20} />
           </button>

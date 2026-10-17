@@ -6,6 +6,11 @@
 
 ## 🌟 Key Features
 
+### Timeline photos, day plans, and appearance
+- **Timeline photos**: Click an item's icon or open Edit Details to choose a photo or paste an HTTPS image URL. Choose **Use category icon** to remove it. Unavailable images fall back to the category icon.
+- **Day descriptions**: Add a short overview above each day's activities. Plans are saved by calendar date, stay visible when categories are filtered, and are included in the Summary and Excel export. Empty days between trip stops can have plans too.
+- **Dark / Light**: Choose under **Settings → Appearance**. Dark keeps the existing colorful glass style; Light uses simple white surfaces, restrained blue accents, and readable dark text throughout the app. The choice is remembered on this device.
+
 ### 🔹 Modern Nav Controls
 - **Minimalist Layout**: Icon-only floating menus (Sparkle Menu and View Switcher) for a clean, distraction-free aesthetic.
 - **iOS-Inspired Aesthetics**: 60px glassmorphic buttons with spring-curved transitions and balanced 50/50 desktop split-view.
@@ -186,6 +191,18 @@ stateDiagram-v2
    ```
 
 *(Note: Production rollouts leverage `firebase deploy` across hosting, functions, and firestore triggers.)*
+
+### Timeline photo storage
+
+Device uploads use the Firebase Storage bucket configured by `VITE_FIREBASE_STORAGE_BUCKET`. Enable that bucket in the Firebase project and deploy the included rules with `firebase deploy --only storage` before using uploads in production. HTTPS image links work independently of Storage.
+
+The browser accepts JPG, PNG, WebP, and GIF files up to 10 MB, converts them to a static JPEG with a maximum edge of 960 pixels, and uploads at most 1 MB. Trip documents store an optional `imageUrl`; day plans use an optional `dayDescriptions` map keyed by `YYYY-MM-DD`. Existing trips need no migration.
+
+Storage SDK access is limited to the signed-in owner under `users/{uid}/itinerary-images/`. Download URLs are bearer links, so anyone with a link can view that photo. Failed saves discard newly uploaded files. Successfully saved images are retained when replaced or removed because copied trips may still reference them; automatic orphan cleanup is not included.
+
+### Frontend validation
+
+From `webapp`, run `npm test` for the focused appearance, timeline, persistence, and upload tests, and `npm run build` for the production build. `npm run test:preview` opens a separate local fixture at `http://127.0.0.1:5174` with a sample Paris trip and mocked Firebase services; its edits stay in browser storage and never update real trips. The fixture is excluded from the production build.
 
 ---
 

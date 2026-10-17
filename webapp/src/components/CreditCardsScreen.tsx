@@ -24,14 +24,14 @@ const CATEGORY_ICONS: Record<FinanceCategory, any> = {
 };
 
 const CATEGORY_COLORS: Record<FinanceCategory, string> = {
-  'Car Rental': '#64D2FF',
-  'Flights': '#0A84FF',
-  'Gas': '#FFD60A',
-  'Dining': '#BF5AF2',
-  'Lodging': '#FF9F0A',
-  'Souvenirs': '#FF2D55',
+  'Car Rental': 'var(--sys-cyan)',
+  'Flights': 'var(--sys-blue)',
+  'Gas': 'var(--sys-yellow)',
+  'Dining': 'var(--sys-purple)',
+  'Lodging': 'var(--sys-orange)',
+  'Souvenirs': 'var(--sys-pink)',
   'Other': 'var(--sys-label-secondary)',
-  'Groceries': '#34C759',
+  'Groceries': 'var(--sys-green-alt)',
 };
 
 export default function CreditCardsScreen() {
@@ -243,11 +243,11 @@ export default function CreditCardsScreen() {
         <div style={{ 
           display: 'flex', 
           flexDirection: 'row', 
-          background: 'rgba(255,255,255,0.05)', 
+          background: 'rgba(var(--neutral-rgb), 0.05)',
           borderRadius: '14px', 
           padding: '4px',
           gap: '4px',
-          border: '1px solid rgba(255,255,255,0.05)'
+          border: '1px solid rgba(var(--neutral-rgb), 0.05)'
         }}>
           <button
             onClick={() => setActiveTab('guide')}
@@ -259,7 +259,7 @@ export default function CreditCardsScreen() {
               fontWeight: 700,
               transition: 'all 0.2s ease',
               background: activeTab === 'guide' ? 'var(--sys-blue)' : 'transparent',
-              color: activeTab === 'guide' ? '#fff' : 'var(--sys-label-secondary)',
+              color: activeTab === 'guide' ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
               border: 'none',
               cursor: 'pointer'
             }}
@@ -276,7 +276,7 @@ export default function CreditCardsScreen() {
               fontWeight: 700,
               transition: 'all 0.2s ease',
               background: activeTab === 'no-ftf' ? 'var(--sys-blue)' : 'transparent',
-              color: activeTab === 'no-ftf' ? '#fff' : 'var(--sys-label-secondary)',
+              color: activeTab === 'no-ftf' ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
               border: 'none',
               cursor: 'pointer'
             }}
@@ -293,7 +293,7 @@ export default function CreditCardsScreen() {
               fontWeight: 700,
               transition: 'all 0.2s ease',
               background: activeTab === 'manage' ? 'var(--sys-blue)' : 'transparent',
-              color: activeTab === 'manage' ? '#fff' : 'var(--sys-label-secondary)',
+              color: activeTab === 'manage' ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
               border: 'none',
               cursor: 'pointer'
             }}
@@ -307,8 +307,8 @@ export default function CreditCardsScreen() {
         {/* Notes & Strategy Section */}
         {(activeTab === 'guide' || activeTab === 'no-ftf') && (
           <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
+            background: 'rgba(var(--neutral-rgb), 0.03)',
+            border: '1px solid rgba(var(--neutral-rgb), 0.07)',
             borderRadius: '20px',
             padding: '16px 20px',
             backdropFilter: 'blur(20px)',
@@ -326,14 +326,14 @@ export default function CreditCardsScreen() {
                     <button 
                       type="button"
                       onClick={() => setIsEditingNotes(false)}
-                      style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '8px', padding: '4px 8px', color: 'var(--sys-label-secondary)', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                      style={{ background: 'rgba(var(--neutral-rgb), 0.05)', border: 'none', borderRadius: '8px', padding: '4px 8px', color: 'var(--sys-label-secondary)', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
                     >
                       Cancel
                     </button>
                     <button 
                       type="button"
                       onClick={handleSaveNotes}
-                      style={{ background: 'var(--sys-blue)', border: 'none', borderRadius: '8px', padding: '4px 10px', color: '#fff', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                      style={{ background: 'var(--sys-blue)', border: 'none', borderRadius: '8px', padding: '4px 10px', color: 'var(--on-accent)', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
                     >
                       Save
                     </button>
@@ -346,11 +346,11 @@ export default function CreditCardsScreen() {
                   style={{
                     width: '100%',
                     height: '80px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'rgba(var(--neutral-rgb), 0.05)',
+                    border: '1px solid rgba(var(--neutral-rgb), 0.1)',
                     borderRadius: '10px',
                     padding: '10px',
-                    color: '#fff',
+                    color: 'var(--sys-label-primary)',
                     fontSize: '14px',
                     outline: 'none',
                     resize: 'none',
@@ -376,7 +376,7 @@ export default function CreditCardsScreen() {
                 {cardNotes ? (
                   <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     {cardNotes.split('\n').filter(line => line.trim()).map((noteLine, idx) => (
-                      <li key={idx} style={{ fontSize: '14px', color: '#fff', opacity: 0.9, lineHeight: '1.5', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                      <li key={idx} style={{ fontSize: '14px', color: 'var(--sys-label-primary)', opacity: 0.9, lineHeight: '1.5', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                         {noteLine}
                       </li>
                     ))}
@@ -400,8 +400,8 @@ export default function CreditCardsScreen() {
               
               return (
                 <div key={cat} style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.07)',
+                  background: 'rgba(var(--neutral-rgb), 0.03)',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.07)',
                   borderRadius: '20px',
                   padding: '18px',
                   backdropFilter: 'blur(20px)',
@@ -413,7 +413,7 @@ export default function CreditCardsScreen() {
                       width: '32px',
                       height: '32px',
                       borderRadius: '8px',
-                      background: CATEGORY_COLORS[cat] + '22',
+                      background: `color-mix(in srgb, ${CATEGORY_COLORS[cat]} 13%, transparent)`,
                       color: CATEGORY_COLORS[cat],
                       display: 'flex',
                       alignItems: 'center',
@@ -421,7 +421,7 @@ export default function CreditCardsScreen() {
                     }}>
                       {CATEGORY_ICONS[cat]}
                     </div>
-                    <span style={{ fontSize: '16px', fontWeight: 800, color: '#fff' }}>{cat}</span>
+                    <span style={{ fontSize: '16px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>{cat}</span>
                   </div>
 
                   {/* Cards ranked */}
@@ -437,32 +437,32 @@ export default function CreditCardsScreen() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              background: isBest ? 'rgba(10, 132, 255, 0.08)' : 'rgba(255,255,255,0.02)',
-                              border: isBest ? '1px solid rgba(10, 132, 255, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                              background: isBest ? 'rgba(10, 132, 255, 0.08)' : 'rgba(var(--neutral-rgb), 0.02)',
+                              border: isBest ? '1px solid rgba(10, 132, 255, 0.3)' : '1px solid rgba(var(--neutral-rgb), 0.05)',
                               borderRadius: '12px',
                               padding: '12px 14px',
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                               {isBest ? (
-                                <Star size={16} color="#FFD60A" fill="#FFD60A" style={{ flexShrink: 0 }} />
+                                <Star size={16} color="var(--sys-yellow)" fill="var(--sys-yellow)" style={{ flexShrink: 0 }} />
                               ) : (
-                                <div style={{ width: 16, height: 16, border: '1px solid rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 800, color: 'var(--sys-label-secondary)', flexShrink: 0 }}>
+                                <div style={{ width: 16, height: 16, border: '1px solid rgba(var(--neutral-rgb), 0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 800, color: 'var(--sys-label-secondary)', flexShrink: 0 }}>
                                   {idx + 1}
                                 </div>
                               )}
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--sys-label-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                   {entry.card.name}
                                 </div>
                                 <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
                                   {entry.card.noForeignTxFee && (
-                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(48, 209, 88, 0.15)', color: '#30D158', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(48, 209, 88, 0.15)', color: 'var(--sys-green)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                       <Globe size={8} /> NO FTF
                                     </span>
                                   )}
                                   {entry.card.specialOffers && (
-                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(255, 214, 10, 0.15)', color: '#FFD60A', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px', background: 'rgba(255, 214, 10, 0.15)', color: 'var(--sys-yellow)', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                                       <Tag size={8} /> OFFERS
                                     </span>
                                   )}
@@ -471,7 +471,7 @@ export default function CreditCardsScreen() {
                             </div>
 
                             <div style={{ textAlign: 'right', marginLeft: '12px', flexShrink: 0 }}>
-                              <span style={{ fontSize: '18px', fontWeight: 900, color: isBest ? '#fff' : 'var(--sys-label-secondary)' }}>
+                              <span style={{ fontSize: '18px', fontWeight: 900, color: isBest ? 'var(--sys-label-primary)' : 'var(--sys-label-secondary)' }}>
                                 {entry.value}%
                               </span>
                               <div style={{ fontSize: '9px', color: 'var(--sys-label-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '1px' }}>Cashback</div>
@@ -519,8 +519,8 @@ export default function CreditCardsScreen() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {creditCards.map(card => (
                   <div key={card.id} style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'linear-gradient(135deg, rgba(var(--neutral-rgb), 0.05) 0%, rgba(var(--neutral-rgb), 0.01) 100%)',
+                    border: '1px solid rgba(var(--neutral-rgb), 0.08)',
                     borderRadius: '20px',
                     padding: '20px',
                     position: 'relative',
@@ -531,23 +531,23 @@ export default function CreditCardsScreen() {
                     {/* Corner shine element */}
                     <div style={{
                       position: 'absolute', top: 0, right: 0, width: '100px', height: '100px',
-                      background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)',
+                      background: 'radial-gradient(circle, rgba(var(--neutral-rgb), 0.05) 0%, transparent 70%)',
                       pointerEvents: 'none'
                     }} />
 
                     {/* Card Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
                       <div style={{ minWidth: 0 }}>
-                        <h3 style={{ fontSize: '17px', fontWeight: 800, margin: 0, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <h3 style={{ fontSize: '17px', fontWeight: 800, margin: 0, color: 'var(--sys-label-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {card.name}
                         </h3>
                         <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                           {card.noForeignTxFee ? (
-                            <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', background: 'rgba(48, 209, 88, 0.15)', color: '#30D158', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', background: 'rgba(48, 209, 88, 0.15)', color: 'var(--sys-green)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <Globe size={10} /> No FTF
                             </span>
                           ) : (
-                            <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: 'rgba(var(--neutral-rgb), 0.05)', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                               FTF Applies
                             </span>
                           )}
@@ -558,13 +558,13 @@ export default function CreditCardsScreen() {
                       <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                         <button 
                           onClick={() => openEditModal(card)}
-                          style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '10px', padding: '8px', color: 'var(--sys-label-secondary)', cursor: 'pointer' }}
+                          style={{ background: 'rgba(var(--neutral-rgb), 0.05)', border: 'none', borderRadius: '10px', padding: '8px', color: 'var(--sys-label-secondary)', cursor: 'pointer' }}
                         >
                           <Edit3 size={16} />
                         </button>
                         <button 
                           onClick={() => handleDelete(card.id)}
-                          style={{ background: 'rgba(255, 59, 48, 0.1)', border: 'none', borderRadius: '10px', padding: '8px', color: '#FF3B30', cursor: 'pointer' }}
+                          style={{ background: 'rgba(255, 59, 48, 0.1)', border: 'none', borderRadius: '10px', padding: '8px', color: 'var(--sys-red-alt)', cursor: 'pointer' }}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -583,8 +583,8 @@ export default function CreditCardsScreen() {
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
-                              background: 'rgba(255,255,255,0.03)',
-                              border: '1px solid rgba(255,255,255,0.05)',
+                              background: 'rgba(var(--neutral-rgb), 0.03)',
+                              border: '1px solid rgba(var(--neutral-rgb), 0.05)',
                               borderRadius: '8px',
                               padding: '6px 10px',
                             }}>
@@ -592,7 +592,7 @@ export default function CreditCardsScreen() {
                                 {CATEGORY_ICONS[cat]}
                               </span>
                               <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--sys-label-secondary)' }}>{cat}:</span>
-                              <span style={{ fontSize: '12px', fontWeight: 800, color: '#fff' }}>{card.cashback[cat]}%</span>
+                              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>{card.cashback[cat]}%</span>
                             </div>
                           ))}
                         </div>
@@ -602,16 +602,16 @@ export default function CreditCardsScreen() {
                     {/* Special Offers */}
                     {card.specialOffers && (
                       <div style={{ 
-                        borderTop: '1px solid rgba(255,255,255,0.06)', 
+                        borderTop: '1px solid rgba(var(--neutral-rgb), 0.06)',
                         paddingTop: '14px', 
                         marginTop: '14px' 
                       }}>
-                        <h4 style={{ fontSize: '11px', fontWeight: 800, color: '#FFD60A', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <h4 style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-yellow)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Tag size={12} /> Special Offers
                         </h4>
                         <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           {card.specialOffers.split('\n').filter(line => line.trim()).map((offer, idx) => (
-                            <li key={idx} style={{ fontSize: '13px', color: '#fff', opacity: 0.95, lineHeight: '1.4' }}>
+                            <li key={idx} style={{ fontSize: '13px', color: 'var(--sys-label-primary)', opacity: 0.95, lineHeight: '1.4' }}>
                               {offer}
                             </li>
                           ))}
@@ -622,7 +622,7 @@ export default function CreditCardsScreen() {
                     {/* Card Notes */}
                     {card.notes && (
                       <div style={{ 
-                        borderTop: '1px solid rgba(255,255,255,0.06)', 
+                        borderTop: '1px solid rgba(var(--neutral-rgb), 0.06)',
                         paddingTop: '14px', 
                         marginTop: '14px' 
                       }}>
@@ -631,7 +631,7 @@ export default function CreditCardsScreen() {
                         </h4>
                         <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '4px', listStyleType: 'disc' }}>
                           {card.notes.split('\n').filter(line => line.trim()).map((noteLine, idx) => (
-                            <li key={idx} style={{ fontSize: '13px', color: '#fff', opacity: 0.9, lineHeight: '1.4', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                            <li key={idx} style={{ fontSize: '13px', color: 'var(--sys-label-primary)', opacity: 0.9, lineHeight: '1.4', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                               {noteLine}
                             </li>
                           ))}
@@ -653,7 +653,7 @@ export default function CreditCardsScreen() {
             <div className="modal-pull-indicator" />
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: '#fff' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 800, margin: 0, color: 'var(--sys-label-primary)' }}>
                 {editingCard ? 'Edit Credit Card' : 'Add Credit Card'}
               </h2>
               <button 
@@ -684,28 +684,28 @@ export default function CreditCardsScreen() {
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between',
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
+                background: 'rgba(var(--neutral-rgb), 0.02)',
+                border: '1px solid rgba(var(--neutral-rgb), 0.06)',
                 padding: '12px 14px',
                 borderRadius: '12px',
                 marginTop: '4px'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Globe size={18} color={noForeignTxFee ? '#30D158' : 'var(--sys-label-secondary)'} />
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>No Foreign Transaction Fees</span>
+                  <Globe size={18} color={noForeignTxFee ? 'var(--sys-green)' : 'var(--sys-label-secondary)'} />
+                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--sys-label-primary)' }}>No Foreign Transaction Fees</span>
                 </div>
                 {/* Custom Switch */}
                 <div 
                   onClick={() => setNoForeignTxFee(!noForeignTxFee)}
                   style={{ 
                     width: '44px', height: '24px', borderRadius: '12px', 
-                    background: noForeignTxFee ? '#30D158' : 'rgba(255,255,255,0.1)',
+                    background: noForeignTxFee ? 'var(--sys-green)' : 'rgba(var(--neutral-rgb), 0.1)',
                     position: 'relative', transition: 'all 0.2s ease', cursor: 'pointer'
                   }}
                 >
                   <div style={{ 
                     position: 'absolute', top: '2px', left: noForeignTxFee ? '22px' : '2px',
-                    width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+                    width: '20px', height: '20px', borderRadius: '50%', background: 'var(--on-accent)',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.2)', transition: 'all 0.2s cubic-bezier(0.23, 1, 0.32, 1)'
                   }} />
                 </div>
@@ -722,8 +722,8 @@ export default function CreditCardsScreen() {
                   gap: '8px', 
                   maxHeight: '220px', 
                   overflowY: 'auto',
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(var(--neutral-rgb), 0.02)',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.06)',
                   borderRadius: '12px',
                   padding: '10px'
                 }}>
@@ -737,7 +737,7 @@ export default function CreditCardsScreen() {
                           alignItems: 'center', 
                           justifyContent: 'space-between',
                           padding: '6px 4px',
-                          borderBottom: cat !== 'Other' ? '1px solid rgba(255,255,255,0.04)' : 'none'
+                          borderBottom: cat !== 'Other' ? '1px solid rgba(var(--neutral-rgb), 0.04)' : 'none'
                         }}
                       >
                         <div 
@@ -748,12 +748,12 @@ export default function CreditCardsScreen() {
                             width: '18px',
                             height: '18px',
                             borderRadius: '4px',
-                            border: isSelected ? '1px solid var(--sys-blue)' : '1px solid rgba(255,255,255,0.3)',
+                            border: isSelected ? '1px solid var(--sys-blue)' : '1px solid rgba(var(--neutral-rgb), 0.3)',
                             background: isSelected ? 'var(--sys-blue)' : 'transparent',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#fff',
+                            color: 'var(--sys-label-primary)',
                             fontSize: '11px',
                             fontWeight: 'bold',
                             flexShrink: 0
@@ -764,7 +764,7 @@ export default function CreditCardsScreen() {
                             <span style={{ color: CATEGORY_COLORS[cat], flexShrink: 0 }}>
                               {CATEGORY_ICONS[cat]}
                             </span>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? '#fff' : 'var(--sys-label-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: isSelected ? 'var(--sys-label-primary)' : 'var(--sys-label-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {cat}
                             </span>
                           </div>
@@ -783,9 +783,9 @@ export default function CreditCardsScreen() {
                                 width: '56px',
                                 padding: '6px 8px',
                                 borderRadius: '8px',
-                                background: 'rgba(255,255,255,0.08)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: '#fff',
+                                background: 'rgba(var(--neutral-rgb), 0.08)',
+                                border: '1px solid rgba(var(--neutral-rgb), 0.1)',
+                                color: 'var(--sys-label-primary)',
                                 fontSize: '13px',
                                 fontWeight: 800,
                                 textAlign: 'center',
@@ -840,8 +840,8 @@ export default function CreditCardsScreen() {
                   onClick={() => setShowModal(false)} 
                   style={{ 
                     flex: 1, padding: '14px', borderRadius: '14px', 
-                    background: 'var(--sys-bg-elevated-2)', color: '#fff',
-                    border: '1px solid rgba(255,255,255,0.05)', fontWeight: 700, cursor: 'pointer' 
+                    background: 'var(--sys-bg-elevated-2)', color: 'var(--sys-label-primary)',
+                    border: '1px solid rgba(var(--neutral-rgb), 0.05)', fontWeight: 700, cursor: 'pointer'
                   }}
                 >
                   Cancel

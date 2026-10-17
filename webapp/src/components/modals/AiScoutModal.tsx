@@ -81,7 +81,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
           <div className={`ai-status-dot ${step === 'loading' ? 'active' : ''}`} />
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#FFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--sys-label-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Utensils size={20} className="text-ai" /> Dining Scout
           </h2>
         </div>
@@ -103,20 +103,20 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                     className="glass-card"
                     style={{
                       display: 'flex', alignItems: 'center', gap: '12px', padding: '14px',
-                      borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '12px', border: '1px solid rgba(var(--neutral-rgb), 0.08)',
                       textAlign: 'left', width: '100%', cursor: 'pointer', transition: 'all 0.2s ease'
                     }}
                   >
                     <div style={{ 
                       width: '40px', height: '40px', borderRadius: '10px', 
-                      background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', 
+                      background: 'rgba(var(--neutral-rgb), 0.05)', display: 'flex', alignItems: 'center',
                       justifyContent: 'center', color: 'var(--sys-label-tertiary)' 
                     }}>
                       <MapPin size={20} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: '10px', fontWeight: 900, color: 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{dayLabel}</div>
-                      <div style={{ fontSize: '15px', fontWeight: 700, color: '#FFF' }}>{stop.title}</div>
+                      <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-primary)' }}>{stop.title}</div>
                       <div style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', opacity: 0.8 }}>{stop.location.name}</div>
                     </div>
                   </button>
@@ -131,12 +131,12 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
             <div className="spinning" style={{ position: 'relative', width: '64px', height: '64px' }}>
               <div style={{ 
                 position: 'absolute', inset: 0, borderRadius: '50%', 
-                border: '4px solid rgba(191, 90, 242, 0.1)', borderTopColor: '#BF5AF2' 
+                border: '4px solid rgba(191, 90, 242, 0.1)', borderTopColor: 'var(--sys-purple)'
               }} />
-              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: '#BF5AF2' }} />
+              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'var(--sys-purple)' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>Scouting Near {selectedStop?.location.name}</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-label-primary)', marginBottom: '8px' }}>Scouting Near {selectedStop?.location.name}</h3>
               <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)' }}>Searching HappyCow & local gems...</p>
             </div>
           </div>
@@ -145,10 +145,10 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
         {step === 'results' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
              {error ? (
-              <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)', color: '#FF453A' }}>
+              <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)', color: 'var(--sys-red)' }}>
                 <p style={{ fontWeight: 700, marginBottom: '4px' }}>Scouting failed</p>
                 <div style={{ fontSize: '12px', opacity: 0.8 }}>{error}</div>
-                <button onClick={() => setStep('select')} style={{ marginTop: '12px', fontSize: '12px', fontWeight: 700, color: '#FFF', textDecoration: 'underline' }}>Try another location</button>
+                <button onClick={() => setStep('select')} style={{ marginTop: '12px', fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-primary)', textDecoration: 'underline' }}>Try another location</button>
               </div>
             ) : (
               <>
@@ -164,16 +164,16 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                       className="glass-card" 
                       style={{ 
                         padding: '16px', borderRadius: '16px', 
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(var(--neutral-rgb), 0.08)',
                         display: 'flex', flexDirection: 'column', gap: '8px'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
-                          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#FFF', marginBottom: '4px' }}>{res.name}</h3>
+                          <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--sys-label-primary)', marginBottom: '4px' }}>{res.name}</h3>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#BF5AF2', fontWeight: 700 }}>
-                              <Star size={12} fill="#BF5AF2" /> {res.rating}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--sys-purple)', fontWeight: 700 }}>
+                              <Star size={12} fill="var(--sys-purple)" /> {res.rating}
                             </div>
                             {res.distance && (
                               <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
@@ -196,7 +196,7 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                           <button 
                             onClick={() => handleAdd(res)}
                             className="header-icon-btn"
-                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--sys-blue)', borderColor: 'rgba(255,255,255,0.2)' }}
+                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--sys-blue)', color: 'var(--on-accent)', borderColor: 'rgba(var(--neutral-rgb), 0.2)' }}
                           >
                             <Plus size={20} />
                           </button>
@@ -208,12 +208,12 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                         <span style={{ fontSize: '12px', color: 'var(--sys-label-secondary)' }}>{res.address}</span>
                       </div>
 
-                      <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', lineHeight: '1.4', fontStyle: 'italic', borderLeft: '2px solid #BF5AF2', paddingLeft: '8px' }}>
+                      <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', lineHeight: '1.4', fontStyle: 'italic', borderLeft: '2px solid var(--sys-purple)', paddingLeft: '8px' }}>
                         "{res.description}"
                       </p>
 
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 800, background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px', color: 'var(--sys-label-tertiary)' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 800, background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 8px', borderRadius: '6px', color: 'var(--sys-label-tertiary)' }}>
                           {res.cuisineType.toUpperCase()}
                         </span>
                       </div>

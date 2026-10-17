@@ -100,7 +100,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
           <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Add from Email</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="#FFF" /></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="var(--sys-label-primary)" /></button>
         </div>
 
         <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginBottom: '20px', flexShrink: 0 }}>
@@ -114,7 +114,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
           style={{
             width: '100%', flex: 1, padding: '16px', borderRadius: '12px',
             background: 'var(--sys-bg-elevated-2)', border: '1px solid var(--sys-separator)',
-            color: '#FFF', fontSize: '16px', resize: 'none', lineHeight: '1.5',
+            color: 'var(--sys-label-primary)', fontSize: '16px', resize: 'none', lineHeight: '1.5',
             minHeight: '180px', marginBottom: '16px', outline: 'none'
           }}
         />
@@ -133,9 +133,9 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
             display: 'flex', justifyContent: 'center', alignItems: 'center',
             opacity: isLoading ? 0.7 : (!emailText.trim() ? 0.5 : 1), marginBottom: '24px',
             flexShrink: 0,
-            background: !emailText.trim() ? 'rgba(255, 255, 255, 0.05)' : undefined,
-            border: !emailText.trim() ? '1px solid rgba(255, 255, 255, 0.08)' : undefined,
-            color: !emailText.trim() ? 'var(--sys-label-secondary)' : '#fff',
+            background: !emailText.trim() ? 'rgba(var(--neutral-rgb), 0.05)' : undefined,
+            border: !emailText.trim() ? '1px solid rgba(var(--neutral-rgb), 0.08)' : undefined,
+            color: !emailText.trim() ? 'var(--sys-label-secondary)' : 'var(--sys-label-primary)',
             boxShadow: !emailText.trim() ? 'none' : undefined
           }}
         >

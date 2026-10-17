@@ -3,12 +3,16 @@ import type { ItineraryItem, TodoItem, Expense, WeatherCache, WeatherDay, Credit
 import { fetchWeather } from '../data/weatherApi';
 import { db, auth } from '../core/firebase';
 import { listTodoCategories, normalizeTodoCategory } from '../core/todoCategories';
+import { applyAppearance, readAppearance, type Appearance } from '../core/appearance';
+import { isDayKey, MAX_DAY_DESCRIPTION_LENGTH } from '../core/timelineDetails';
 import { 
   collection, 
   addDoc, 
   deleteDoc, 
   doc, 
-  updateDoc 
+  updateDoc,
+  deleteField,
+  FieldPath
 } from "firebase/firestore";
 
 interface Trip {
@@ -25,6 +29,7 @@ interface Trip {
   generalNotes?: import('../core/models').TripNote[];
   creditCards?: CreditCard[];
   cardNotes?: string;
+  dayDescriptions?: Record<string, string>;
 }
 
 export interface AddMenuAnchor {
@@ -46,6 +51,7 @@ interface TripStore {
   generalNotes: import('../core/models').TripNote[];
   creditCards: CreditCard[];
   cardNotes: string;
+  dayDescriptions: Record<string, string>;
   userId: string | null;
   loading: boolean;
   isSidebarOpen: boolean;
@@ -53,6 +59,7 @@ interface TripStore {
   addMenuAnchor: AddMenuAnchor | null;
   focusedLocation: { lat: number, lng: number } | null;
   theme: string;
+  appearance: Appearance;
   initialized: boolean;
   saving: boolean;
   lastSaveError: string | null;
@@ -71,6 +78,8 @@ interface TripStore {
   closeAddMenu: () => void;
   setFocusedLocation: (loc: { lat: number, lng: number } | null) => void;
   setTheme: (theme: string) => void;
+  setAppearance: (appearance: Appearance) => void;
+  saveDayDescription: (tripId: string, dateKey: string, description: string) => Promise<void>;
   setTintedBackgrounds: (enabled: boolean) => void;
   setCurrentTrip: (tripId: string | null) => void;
   setEditingItem: (item: ItineraryItem | null) => void;
@@ -81,7 +90,7 @@ interface TripStore {
   
   // Item Actions
   addItem: (item: ItineraryItem) => Promise<void>;
-  updateItem: (id: string, updatedFields: Partial<ItineraryItem>) => Promise<void>;
+  updateItem: (id: string, updatedFields: Partial<ItineraryItem>) => Promise<boolean>;
   deleteItem: (id: string) => Promise<void>;
   toggleFilter: (type: string) => void;
   showAllFilters: () => void;
@@ -176,6 +185,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   generalNotes: [],
   creditCards: [],
   cardNotes: '',
+  dayDescriptions: {},
   userId: null,
   loading: true,
   isSidebarOpen: false,
@@ -183,6 +193,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   addMenuAnchor: null,
   focusedLocation: null,
   theme: localStorage.getItem('vacay_theme') || 'default',
+  appearance: readAppearance(),
   initialized: false,
   saving: false,
   lastSaveError: null,
@@ -226,6 +237,33 @@ export const useTripStore = create<TripStore>((set, get) => ({
     set({ theme });
   },
 
+  setAppearance: (appearance) => {
+    applyAppearance(appearance);
+    try { localStorage.setItem('vacay_appearance', appearance); } catch { /* Still apply for this session. */ }
+    set({ appearance });
+  },
+
+  saveDayDescription: async (tripId, dateKey, description) => {
+    if (!isDayKey(dateKey)) throw new Error('Choose a valid day.');
+    const text = description.trim();
+    if (text.length > MAX_DAY_DESCRIPTION_LENGTH) throw new Error('Keep the description under 1,000 characters.');
+    if (!get().trips.some(trip => trip.id === tripId)) throw new Error('This trip is no longer available.');
+    // Update only this date so simultaneous edits to other days are preserved.
+    await updateDoc(doc(db, 'trips', tripId), new FieldPath('dayDescriptions', dateKey), text || deleteField());
+    set(state => {
+      const update = (descriptions: Record<string, string> = {}) => {
+        const next = { ...descriptions };
+        if (text) next[dateKey] = text;
+        else delete next[dateKey];
+        return next;
+      };
+      return {
+        trips: state.trips.map(trip => trip.id === tripId ? { ...trip, dayDescriptions: update(trip.dayDescriptions) } : trip),
+        ...(state.currentTripId === tripId ? { dayDescriptions: update(state.dayDescriptions) } : {}),
+      };
+    });
+  },
+
   setTintedBackgrounds: (tintedBackgrounds) => {
     localStorage.setItem('vacay_tinted_backgrounds', String(tintedBackgrounds));
     set({ tintedBackgrounds });
@@ -246,6 +284,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
         generalNotes: [],
         creditCards: [],
         cardNotes: '',
+        dayDescriptions: {},
         currentTripAiSummary: null,
         initialized: true 
       });
@@ -268,6 +307,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
          trips: sorted, 
          currentTripId: null,
          items: [],
+         dayDescriptions: {},
          initialized: true 
        });
        return;
@@ -297,6 +337,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
       generalNotes: currentTrip?.generalNotes || [],
       creditCards: currentTrip?.creditCards || [],
       cardNotes: currentTrip?.cardNotes || '',
+      dayDescriptions: currentTrip?.dayDescriptions || {},
       currentTripAiSummary: currentTrip?.aiSummary || null,
       initialized: true
     });
@@ -316,6 +357,9 @@ export const useTripStore = create<TripStore>((set, get) => ({
       generalNotes: trip?.generalNotes || [],
       creditCards: trip?.creditCards || [],
       cardNotes: trip?.cardNotes || '',
+      dayDescriptions: trip?.dayDescriptions || {},
+      editingItem: null,
+      isAddMenuOpen: false,
       currentTripAiSummary: trip?.aiSummary || null
     });
     if (tripId) localStorage.setItem('vacay_current_trip_id', tripId);
@@ -330,7 +374,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
     if (!userId) throw new Error("User not authenticated.");
     const newTrip = { title, userId, items: [], createdAt: Date.now() };
     const docRef = await addDoc(collection(db, "trips"), newTrip);
-    set({ currentTripId: docRef.id, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [], creditCards: [], cardNotes: '' });
+    set({ currentTripId: docRef.id, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [], creditCards: [], cardNotes: '', dayDescriptions: {} });
     localStorage.setItem('vacay_current_trip_id', docRef.id);
     return docRef.id;
   },
@@ -338,7 +382,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
   deleteTrip: async (tripId) => {
     await deleteDoc(doc(db, "trips", tripId));
     if (get().currentTripId === tripId) {
-      set({ currentTripId: null, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [], creditCards: [], cardNotes: '' });
+      set({ currentTripId: null, items: [], todos: [], packingItems: [], expenses: [], weather: null, generalNotes: [], creditCards: [], cardNotes: '', dayDescriptions: {} });
       localStorage.removeItem('vacay_current_trip_id');
     }
   },
@@ -393,7 +437,7 @@ export const useTripStore = create<TripStore>((set, get) => ({
 
   updateItem: async (id, updatedFields) => {
     const { currentTripId, items, initialized } = get();
-    if (!currentTripId || !initialized) return;
+    if (!currentTripId || !initialized || !items.some(item => item.id === id)) return false;
 
     // Normalize category before saving
     const finalUpdates = { ...updatedFields };
@@ -404,12 +448,18 @@ export const useTripStore = create<TripStore>((set, get) => ({
     
     try {
       await updateDoc(doc(db, "trips", currentTripId), { items: scrubData(newItems) });
-      set({ saving: false });
-      // Auto-trigger weather refresh when items are updated (dates/locations might change)
-      get().refreshWeather();
+      set(state => ({ saving: false, trips: state.trips.map(trip => trip.id === currentTripId ? { ...trip, items: newItems } : trip) }));
+      const before = items.find(item => item.id === id)!;
+      const after = newItems.find(item => item.id === id)!;
+      if (get().currentTripId === currentTripId && (
+        before.startDate !== after.startDate || before.endDate !== after.endDate ||
+        before.location.latitude !== after.location.latitude || before.location.longitude !== after.location.longitude
+      )) get().refreshWeather();
+      return true;
     } catch (err: any) {
       console.error("Update failed:", err);
-      set({ saving: false, lastSaveError: err.message });
+      set(state => ({ saving: false, lastSaveError: err.message, ...(state.currentTripId === currentTripId && state.items === newItems ? { items } : {}) }));
+      return false;
     }
   },
 

@@ -11,10 +11,7 @@ export default function GlobalModals() {
         <EditItineraryModal 
           item={editingItem} 
           onClose={() => setEditingItem(null)}
-          onSave={(id, updates) => {
-            updateItem(id, updates);
-            setEditingItem(null);
-          }}
+          onSave={updateItem}
         />
       )}
       {editingExpense && (

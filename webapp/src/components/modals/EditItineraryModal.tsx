@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { X, Save, Sparkles, Loader, Utensils } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
 import { parseAllTrailsUrl } from '../../data/api';
+import ItemImageField from '../ItemImageField';
+import { uploadItemImage } from '../../data/itemImages';
+import { validateImageUrl } from '../../core/timelineDetails';
 import { useTripStore } from '../../store/useTripStore';
 
 interface EditItineraryModalProps {
   item: ItineraryItem;
   onClose: () => void;
-  onSave: (id: string, updates: Partial<ItineraryItem>) => void;
+  onSave: (id: string, updates: Partial<ItineraryItem>) => Promise<boolean>;
 }
 
 /** Split "2024-07-10T08:00:00" → ["2024-07-10", "08:00"] safely */
@@ -19,6 +22,13 @@ function splitDateTime(dateStr: string): [string, string] {
 export default function EditItineraryModal({ item, onClose, onSave }: EditItineraryModalProps) {
   const [initDate, initTime] = splitDateTime(item.startDate);
   const [initEndDate, initEndTime] = item.endDate ? splitDateTime(item.endDate) : ['', ''];
+
+  const [editingTripId] = useState(() => useTripStore.getState().currentTripId);
+  const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
+  const [imageFile, setImageFile] = useState<Blob | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const [groupId] = useState(item.groupId || '');
   const [sortOrder] = useState<number | undefined>(item.sortOrder);
@@ -91,12 +101,23 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
     return () => clearTimeout(t);
   }, [address]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving || imageBusy) return;
+    if (!title.trim()) { setSaveError('Add a title before saving.'); return; }
+    setSaving(true);
+    setSaveError('');
+    let uploaded: Awaited<ReturnType<typeof uploadItemImage>> | undefined;
+    try {
+    if (useTripStore.getState().currentTripId !== editingTripId) throw new Error('The active trip changed. Reopen this item to edit it.');
+    let savedImageUrl = validateImageUrl(imageUrl);
+    if (imageFile) { uploaded = await uploadItemImage(imageFile); savedImageUrl = uploaded.url; }
+    if (useTripStore.getState().currentTripId !== editingTripId) throw new Error('The active trip changed. Reopen this item to edit it.');
     const startDateString = type === 'food' ? date : date ? (time ? `${date}T${time}:00` : date) : item.startDate;
     const endDateString = type === 'food' ? undefined : endDate ? (endTime ? `${endDate}T${endTime}:00` : endDate) : undefined;
 
-    onSave(item.id, {
-      title,
+    const saved = await onSave(item.id, {
+      title: title.trim(),
+      imageUrl: savedImageUrl || undefined,
       type,
       startDate: startDateString,
       endDate: endDateString,
@@ -141,7 +162,12 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       groupId,
       sortOrder
     });
+    if (!saved) throw new Error(useTripStore.getState().lastSaveError || 'Could not save this item. Please try again.');
     onClose();
+    } catch (cause) {
+      await uploaded?.discard().catch(() => {});
+      setSaveError(cause instanceof Error ? cause.message : 'Could not save this item. Please try again.');
+    } finally { setSaving(false); }
   };
 
   const handleParseAllTrails = async () => {
@@ -187,20 +213,23 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onClick={() => { if (!saving && !imageBusy) onClose(); }}>
       <div
         className="modal-sheet"
+        role="dialog" aria-modal="true" aria-label="Edit itinerary details"
         onClick={e => e.stopPropagation()}
         style={{ paddingBottom: 0 }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0, paddingTop: '4px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Edit Details</h2>
-          <button onClick={onClose}><X size={22} color="var(--sys-label-secondary)" /></button>
+          <button onClick={onClose} disabled={saving || imageBusy} aria-label="Close item editor"><X size={22} color="var(--sys-label-secondary)" /></button>
         </div>
 
         {/* Scrollable form body */}
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '16px', paddingRight: '12px' }}>
+        <fieldset disabled={saving} style={{ flex: 1, minHeight: 0, minWidth: 0, overflowY: 'auto', border: 0, margin: 0, padding: '0 12px 16px 0' }}>
+
+          <ItemImageField url={imageUrl} file={imageFile} disabled={saving} onBusyChange={setImageBusy} onChange={(url, file) => { setImageUrl(url); setImageFile(file); }} />
 
           {/* Title */}
           <div className="edit-field-group">
@@ -396,7 +425,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                         type="date" 
                         value={refundableCutoffDate} 
                         onChange={e => setRefundableCutoffDate(e.target.value)}
-                        style={{ colorScheme: 'dark' }}
+                        style={{ colorScheme: 'inherit' }}
                       />
                     </div>
                   )}
@@ -436,7 +465,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                   <div 
                     style={{
                       position: 'absolute', top: '100%', left: 0, right: 0, 
-                      background: 'var(--sys-bg-elevated-3)', border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'var(--sys-bg-elevated-3)', border: '1px solid rgba(var(--neutral-rgb), 0.15)',
                       borderRadius: '12px', marginTop: '6px', zIndex: 100, overflow: 'hidden',
                       boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
                     }}
@@ -446,7 +475,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                       return (
                         <div 
                           key={i}
-                          style={{ padding: '12px 14px', borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                          style={{ padding: '12px 14px', borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid rgba(var(--neutral-rgb), 0.05)', cursor: 'pointer' }}
                           onClick={() => {
                               setLocationName(sName);
                               setAddress(s.display_name);
@@ -455,7 +484,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                               setShowSuggestions(false);
                           }}
                         >
-                          <div style={{ fontWeight: 700, color: '#fff', fontSize: '14px', marginBottom: '2px' }}>{sName}</div>
+                          <div style={{ fontWeight: 700, color: 'var(--sys-label-primary)', fontSize: '14px', marginBottom: '2px' }}>{sName}</div>
                           <div style={{ color: 'var(--sys-label-secondary)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.display_name}</div>
                         </div>
                       );
@@ -487,12 +516,12 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontSize: '18px' }}>🥾</span>
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#34C759' }}>TRAIL STATS</span>
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--sys-green-alt)' }}>TRAIL STATS</span>
                     </div>
                   </div>
 
                   <div className="edit-field-group" style={{ position: 'relative' }}>
-                    <label className="edit-field-label" style={{ color: '#34C759', fontWeight: 700 }}>AllTrails Quick Import</label>
+                    <label className="edit-field-label" style={{ color: 'var(--sys-green-alt)', fontWeight: 700 }}>AllTrails Quick Import</label>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <input 
                         className="edit-field-input" 
@@ -507,7 +536,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                         onClick={handleParseAllTrails}
                         disabled={isParsingAllTrails || !allTrailsUrl.trim()}
                         style={{
-                          background: '#34C759', color: '#000', border: 'none', borderRadius: '10px',
+                          background: 'var(--sys-green-alt)', color: 'var(--sys-bg-base)', border: 'none', borderRadius: '10px',
                           padding: '0 16px', fontWeight: 700, cursor: isParsingAllTrails ? 'default' : 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!allTrailsUrl.trim() || isParsingAllTrails) ? 0.6 : 1
                         }}
@@ -552,8 +581,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                 <div style={{ background: 'rgba(191, 90, 242, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(191, 90, 242, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Utensils size={18} color="#BF5AF2" />
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: '#BF5AF2' }}>DINING DISCOVERY</span>
+                      <Utensils size={18} color="var(--sys-purple)" />
+                      <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--sys-purple)' }}>DINING DISCOVERY</span>
                     </div>
                   </div>
 
@@ -598,12 +627,15 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
           )}
 
 
-          </div>
+          </fieldset>
+
+        {saveError && <p className="field-error" role="alert">{saveError}</p>}
 
         {/* Save button — fixed at bottom */}
         <div style={{ flexShrink: 0, paddingTop: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleSave}
+            disabled={saving || imageBusy}
             className="btn-glass-blue"
             style={{
               width: '100%', padding: '16px', borderRadius: '14px',
@@ -611,8 +643,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
             }}
           >
-            <Save size={18} />
-            Save Changes
+            {saving ? <Loader size={18} className="spinning" /> : <Save size={18} />}
+            {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
       </div>

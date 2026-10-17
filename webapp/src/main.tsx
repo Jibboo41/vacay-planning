@@ -1,6 +1,10 @@
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import './appearance.css'
+import { applyAppearance, readAppearance } from './core/appearance'
+
+applyAppearance(readAppearance());
 
 try {
   ReactDOM.createRoot(document.getElementById('root')!).render(

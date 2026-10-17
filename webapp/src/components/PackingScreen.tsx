@@ -167,8 +167,8 @@ export default function PackingScreen() {
                 placeholder="Hiking boots, Passport, etc."
                 onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                   fontSize: '17px', outline: 'none', width: '100%'
                 }}
               />
@@ -179,7 +179,7 @@ export default function PackingScreen() {
               <div style={{ 
                 display: 'flex', 
                 flexDirection: 'row', 
-                background: 'rgba(255,255,255,0.05)', 
+                background: 'rgba(var(--neutral-rgb), 0.05)',
                 borderRadius: '14px', 
                 padding: '4px',
                 gap: '4px'
@@ -199,9 +199,9 @@ export default function PackingScreen() {
                         fontWeight: 700,
                         transition: 'all 0.2s ease',
                         background: isActive ? 'var(--sys-blue)' : 'transparent',
-                        color: isActive ? '#fff' : 'var(--sys-label-secondary)',
+                        color: isActive ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
                         boxShadow: isActive ? '0 4px 12px rgba(10, 132, 255, 0.3)' : 'none',
-                        border: isActive ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
+                        border: isActive ? '1px solid rgba(var(--neutral-rgb), 0.2)' : '1px solid transparent'
                       }}
                     >
                       {c}
@@ -224,8 +224,8 @@ export default function PackingScreen() {
                 onClick={() => setShowAddForm(false)}
                 style={{ 
                   flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(255,255,255,0.08)', color: '#fff', 
-                  border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
                 }}
               >
                 Cancel
@@ -288,7 +288,7 @@ export default function PackingScreen() {
                             padding: '14px 12px',
                             borderRadius: '16px',
                             background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
-                            border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(255,255,255,0.08)',
+                            border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(var(--neutral-rgb), 0.08)',
                             transition: 'all 0.15s ease',
                             opacity: isDragging ? 0.4 : 1,
                             transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
@@ -328,8 +328,8 @@ export default function PackingScreen() {
                                   onChange={e => setEditText(e.target.value)}
                                   onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
                                   style={{
-                                    background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(10,132,255,0.4)',
-                                    borderRadius: '8px', padding: '8px 10px', color: '#fff',
+                                    background: 'rgba(var(--neutral-rgb), 0.07)', border: '1px solid rgba(10,132,255,0.4)',
+                                    borderRadius: '8px', padding: '8px 10px', color: 'var(--sys-label-primary)',
                                     fontSize: '16px', fontWeight: 500, outline: 'none', width: '100%'
                                   }}
                                 />
@@ -338,7 +338,7 @@ export default function PackingScreen() {
                                     <div style={{ 
                                         display: 'flex', 
                                         flexDirection: 'row', 
-                                        background: 'rgba(255,255,255,0.05)', 
+                                        background: 'rgba(var(--neutral-rgb), 0.05)',
                                         borderRadius: '12px', 
                                         padding: '3px',
                                         gap: '3px'
@@ -358,8 +358,8 @@ export default function PackingScreen() {
                                                 fontWeight: 700,
                                                 transition: 'all 0.2s ease',
                                                 background: isActive ? 'var(--sys-blue)' : 'transparent',
-                                                color: isActive ? '#fff' : 'var(--sys-label-secondary)',
-                                                border: isActive ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                                                color: isActive ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
+                                                border: isActive ? '1px solid rgba(var(--neutral-rgb), 0.1)' : 'none'
                                               }}
                                             >
                                               {c}
@@ -371,7 +371,7 @@ export default function PackingScreen() {
                               </div>
                             ) : (
                               <span style={{
-                                fontSize: '16px', color: item.completed ? 'var(--sys-label-tertiary)' : '#fff',
+                                fontSize: '16px', color: item.completed ? 'var(--sys-label-tertiary)' : 'var(--sys-label-primary)',
                                 textDecoration: item.completed ? 'line-through' : 'none',
                                 transition: 'all 0.2s ease', fontWeight: 500,
                                 display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
@@ -387,16 +387,16 @@ export default function PackingScreen() {
                                 <button onClick={commitEdit} style={{ background: 'rgba(48,209,88,0.15)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-green)', cursor: 'pointer', display: 'flex' }}>
                                   <Check size={16} />
                                 </button>
-                                <button onClick={() => setEditingId(null)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={() => setEditingId(null)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
                                   <X size={16} />
                                 </button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => startEdit(item)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={() => startEdit(item)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
                                   <Pencil size={16} />
                                 </button>
-                                <button onClick={() => deletePackingItem(item.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={() => deletePackingItem(item.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-red)', cursor: 'pointer', display: 'flex' }}>
                                   <Trash2 size={16} />
                                 </button>
                               </>

@@ -162,8 +162,8 @@ export default function NotesScreen() {
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="E.g., Packing List"
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                   fontSize: '17px', outline: 'none', width: '100%', boxSizing: 'border-box'
                 }}
               />
@@ -176,8 +176,8 @@ export default function NotesScreen() {
                 onChange={e => setNewContent(e.target.value)}
                 placeholder="Add your note details here... Links will become clickable automatically."
                 style={{
-                  background: 'rgba(255,255,255,0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
+                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                   fontSize: '15px', outline: 'none', width: '100%', minHeight: '120px',
                   resize: 'vertical', display: 'block', boxSizing: 'border-box'
                 }}
@@ -197,8 +197,8 @@ export default function NotesScreen() {
                 onClick={() => setShowAddForm(false)}
                 style={{ 
                   flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(255,255,255,0.08)', color: '#fff', 
-                  border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
                 }}
               >
                 Cancel
@@ -236,7 +236,7 @@ export default function NotesScreen() {
                   style={{
                     display: 'flex', flexDirection: 'column', gap: '12px',
                     padding: '20px', borderRadius: '20px',
-                    border: isEditing ? '1px solid rgba(10,132,255,0.4)' : (isOver ? '1px solid var(--sys-blue)' : '1px solid rgba(255,255,255,0.08)'),
+                    border: isEditing ? '1px solid rgba(10,132,255,0.4)' : (isOver ? '1px solid var(--sys-blue)' : '1px solid rgba(var(--neutral-rgb), 0.08)'),
                     opacity: isDragging ? 0.4 : 1,
                     transform: isOver ? (draggingIndex !== null && draggingIndex > index ? 'translateY(-4px)' : 'translateY(4px)') : 'none',
                     transition: 'all 0.15s ease',
@@ -252,8 +252,8 @@ export default function NotesScreen() {
                         onChange={e => setEditTitle(e.target.value)}
                         placeholder="Note Title"
                         style={{
-                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                          background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
+                          borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                           fontSize: '17px', fontWeight: 600, outline: 'none', width: '100%', boxSizing: 'border-box'
                         }}
                       />
@@ -262,17 +262,17 @@ export default function NotesScreen() {
                         onChange={e => setEditContent(e.target.value)}
                         placeholder="Content..."
                         style={{
-                          background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '10px', padding: '12px 14px', color: '#fff',
+                          background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
+                          borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
                           fontSize: '15px', outline: 'none', width: '100%', minHeight: '120px',
                           resize: 'vertical', display: 'block', boxSizing: 'border-box'
                         }}
                       />
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '10px 16px', borderRadius: '10px', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
+                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '10px 16px', borderRadius: '10px', color: 'var(--sys-label-primary)', cursor: 'pointer', fontWeight: 600 }}>
                           Cancel
                         </button>
-                        <button onClick={commitEdit} style={{ background: 'rgba(10,132,255,0.15)', border: '1px solid rgba(10,132,255,0.3)', padding: '10px 16px', borderRadius: '10px', color: '#0A84FF', cursor: 'pointer', fontWeight: 700 }}>
+                        <button onClick={commitEdit} style={{ background: 'rgba(10,132,255,0.15)', border: '1px solid rgba(10,132,255,0.3)', padding: '10px 16px', borderRadius: '10px', color: 'var(--sys-blue)', cursor: 'pointer', fontWeight: 700 }}>
                           Save
                         </button>
                       </div>
@@ -281,15 +281,15 @@ export default function NotesScreen() {
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         {note.title ? (
-                          <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: '#fff' }}>{note.title}</h3>
+                          <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--sys-label-primary)' }}>{note.title}</h3>
                         ) : (
                           <div style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', fontStyle: 'italic' }}>Untitled Note</div>
                         )}
                         <div style={{ display: 'flex', gap: '8px', flexShrink: 0, marginLeft: '12px' }}>
-                          <button onClick={() => startEdit(note)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', padding: '8px', borderRadius: '10px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                          <button onClick={() => startEdit(note)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '8px', borderRadius: '10px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
                             <Pencil size={16} />
                           </button>
-                          <button onClick={() => deleteGeneralNote(note.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '8px', borderRadius: '10px', color: '#FF453A', cursor: 'pointer', display: 'flex' }}>
+                          <button onClick={() => deleteGeneralNote(note.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '8px', borderRadius: '10px', color: 'var(--sys-red)', cursor: 'pointer', display: 'flex' }}>
                             <Trash2 size={16} />
                           </button>
                           <div 

@@ -1,3 +1,4 @@
+import ItemThumbnail from './ItemThumbnail';
 import React, { useState } from 'react';
 import { MapPin, Plane, BedDouble, Navigation, CalendarClock, GripVertical, ChevronDown, ChevronUp, MountainSnow, TrainFront, Utensils, StickyNote, Car, Hash, DollarSign, CreditCard, Trash2, Globe, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -25,11 +26,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
     const getTheme = () => {
       // Resilience: If hikeDetails exist, force it to be a hike theme regardless of type string
       if (item.hikeDetails) {
-        return { icon: <MountainSnow size={24} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
+        return { icon: <MountainSnow size={24} />, color: 'var(--sys-green)', bg: 'rgba(48, 209, 88, 0.1)' };
       }
 
       switch (item.type) {
-        case 'flight':   return { icon: <Plane size={24} />, color: '#0A84FF', bg: 'rgba(10, 132, 255, 0.1)' };
+        case 'flight':   return { icon: <Plane size={24} />, color: 'var(--sys-blue)', bg: 'rgba(10, 132, 255, 0.1)' };
         case 'hotel':    return { 
           icon: (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -37,7 +38,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
             </div>
           ), 
-          color: isCheckout ? '#FF3B30' : '#FF9F0A', 
+          color: isCheckout ? 'var(--sys-red-alt)' : 'var(--sys-orange)',
           bg: isCheckout ? 'rgba(255, 59, 48, 0.1)' : 'rgba(255, 159, 10, 0.1)' 
         };
         case 'rental-car': return { 
@@ -47,16 +48,16 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'RET' : 'PKUP'}</span>
             </div>
           ),
-          color: '#64D2FF', 
+          color: 'var(--sys-cyan)',
           bg: 'rgba(100, 210, 255, 0.1)' 
         };
-        case 'activity': return { icon: <Navigation size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
+        case 'activity': return { icon: <Navigation size={24} />, color: 'var(--sys-label-primary)', bg: 'rgba(var(--neutral-rgb), 0.05)' };
         case 'hike':
-        case 'hiking':   return { icon: <MountainSnow size={24} />, color: '#30D158', bg: 'rgba(48, 209, 88, 0.1)' };
-        case 'transit':  return { icon: <TrainFront size={24} />, color: '#5E5CE6', bg: 'rgba(94, 92, 230, 0.1)' };
-        case 'food':     return { icon: <Utensils size={24} />, color: '#BF5AF2', bg: 'rgba(191, 90, 242, 0.1)' };
-        case 'note':     return { icon: <StickyNote size={24} />, color: '#8E8E93', bg: 'rgba(142, 142, 147, 0.1)' };
-        default:         return { icon: <CalendarClock size={24} />, color: '#EBEBF5', bg: 'rgba(255, 255, 255, 0.05)' };
+        case 'hiking':   return { icon: <MountainSnow size={24} />, color: 'var(--sys-green)', bg: 'rgba(48, 209, 88, 0.1)' };
+        case 'transit':  return { icon: <TrainFront size={24} />, color: 'var(--sys-indigo)', bg: 'rgba(94, 92, 230, 0.1)' };
+        case 'food':     return { icon: <Utensils size={24} />, color: 'var(--sys-purple)', bg: 'rgba(191, 90, 242, 0.1)' };
+        case 'note':     return { icon: <StickyNote size={24} />, color: 'var(--sys-gray)', bg: 'rgba(142, 142, 147, 0.1)' };
+        default:         return { icon: <CalendarClock size={24} />, color: 'var(--sys-label-primary)', bg: 'rgba(var(--neutral-rgb), 0.05)' };
       }
     };
 
@@ -89,8 +90,8 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       tabIndex={0}
       style={{
         border: item.isStarred ? '1px solid rgba(255, 215, 0, 0.5)' : undefined,
-        borderLeft: item.isStarred ? '4px solid #FFD700' : `4px solid ${theme.color}`,
-        boxShadow: item.isStarred ? '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)' : undefined,
+        borderLeft: item.isStarred ? '4px solid var(--sys-gold)' : `4px solid ${theme.color}`,
+        boxShadow: item.isStarred ? '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(var(--neutral-rgb), 0.1)' : undefined,
         backgroundColor: tintedBackgrounds ? theme.bg : undefined,
         overflow: 'hidden',
         maxHeight: isExpanded ? '1000px' : '200px',
@@ -103,7 +104,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       }}
     >
       {(groupPosition === 'middle' || groupPosition === 'end') && (
-         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.05)', zIndex: 5 }} />
+         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(var(--neutral-rgb), 0.05)', zIndex: 5 }} />
       )}
       {/* Top row: date label | times | drag handle */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -130,14 +131,14 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               <div 
                 style={{ 
                   display: 'flex', alignItems: 'center', gap: '6px', 
-                  fontSize: '10px', fontWeight: 800, color: '#FFF', 
-                  background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: '6px',
-                  border: '1px solid rgba(255,255,255,0.08)'
+                  fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-primary)',
+                  background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 7px', borderRadius: '6px',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.08)'
                 }}
                 title={itemWeather.condition}
               >
-                <span style={{ color: '#FF9F0A' }}>H: {Math.round(itemWeather.tempHigh)}°</span>
-                <span style={{ color: '#0A84FF' }}>L: {Math.round(itemWeather.tempLow)}°</span>
+                <span style={{ color: 'var(--sys-orange)' }}>H: {Math.round(itemWeather.tempHigh)}°</span>
+                <span style={{ color: 'var(--sys-blue)' }}>L: {Math.round(itemWeather.tempLow)}°</span>
               </div>
             );
           })()}
@@ -162,7 +163,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             </div>
             {!isCheckout && item.endDate && item.endDate.includes('T') &&
               item.type !== 'hotel' && item.type !== 'rental-car' && (
-              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
                 {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
                 {(() => {
                   const s = item.startDate.split('T')[0];
@@ -171,7 +172,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                   const d1 = new Date(s);
                   const d2 = new Date(e);
                   const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
-                  return diff > 0 ? <span style={{ color: '#0A84FF', marginLeft: '2px' }}>+{diff}</span> : null;
+                  return diff > 0 ? <span style={{ color: 'var(--sys-blue)', marginLeft: '2px' }}>+{diff}</span> : null;
                 })()}
               </div>
             )}
@@ -189,22 +190,13 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
       {/* Body row: icon | title+location | chevron */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
-        <div style={{
-          width: '44px', height: '44px', borderRadius: '12px',
-          backgroundColor: theme.bg,
-          color: theme.color,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginRight: '12px',
-          flexShrink: 0
-        }}>
-          {theme.icon}
-        </div>
+        <ItemThumbnail imageUrl={item.imageUrl} title={item.title} icon={theme.icon} color={theme.color} background={theme.bg} onEdit={onPress} />
 
         {/* Title + location — flex:1, full width */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           {item.type !== 'note' && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#FFF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--sys-label-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
                 {item.title}
               </h3>
               <div 
@@ -215,7 +207,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', flexShrink: 0 }}
                 title={item.isStarred ? "Remove preferred activity star" : "Mark as preferred activity for the day"}
               >
-                <Star size={16} fill={item.isStarred ? '#FFD700' : 'none'} color={item.isStarred ? '#FFD700' : 'var(--sys-label-tertiary)'} />
+                <Star size={16} fill={item.isStarred ? 'var(--sys-gold)' : 'none'} color={item.isStarred ? 'var(--sys-gold)' : 'var(--sys-label-tertiary)'} />
               </div>
             </div>
           )}
@@ -235,7 +227,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               }
             }}
             onMouseEnter={e => {
-               if (typeof item.location.latitude === 'number') e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+               if (typeof item.location.latitude === 'number') e.currentTarget.style.background = 'rgba(var(--neutral-rgb), 0.06)';
             }}
             onMouseLeave={e => {
                e.currentTarget.style.background = 'transparent';
@@ -244,7 +236,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             <MapPin size={12} color="var(--sys-label-tertiary)" style={{ marginRight: '5px', marginTop: '3px', flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {item.location.name && item.location.name !== item.location.address && (
-                <span style={{ fontSize: '13px', color: '#FFF', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <span style={{ fontSize: '13px', color: 'var(--sys-label-primary)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {item.location.name}
                 </span>
               )}
@@ -280,10 +272,10 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       )}
 
       {isExpanded && (
-        <div className="expand-content" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="expand-content" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(var(--neutral-rgb), 0.05)' }}>
           {isCheckout ? (
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: '#FF9F0A', background: 'rgba(255,159,10,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-orange)', background: 'rgba(255,159,10,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
                 {item.type === 'hotel' ? 'CHECK-IN' : 'PICKUP'} {getTimeLabel(item.startDate)}
                 {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
               </div>
@@ -291,7 +283,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           ) : (item.type === 'hotel' || item.type === 'rental-car') && item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) ? (
             // Hotel/rental checkout date: show in expanded view (not shown collapsed)
             <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '6px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 8px', borderRadius: '6px' }}>
                 {item.type === 'hotel' ? 'CHECK-OUT' : 'RETURN'} {getTimeLabel(item.endDate)}
                 {` (${getDayLabel(item.endDate)})`}
               </div>
@@ -300,21 +292,21 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
 
           {(item.type === 'hiking' || item.type === 'hike') && item.hikeDetails && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(48, 209, 88, 0.15)', color: '#30D158', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800 }}>
+              <div style={{ background: 'rgba(48, 209, 88, 0.15)', color: 'var(--sys-green)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800 }}>
                 {item.hikeDetails.difficulty === 'Expert' ? '⬛ EXPERT' : item.hikeDetails.difficulty === 'Hard' ? '🟥 HARD' : item.hikeDetails.difficulty === 'Moderate' ? '🟦 MODERATE' : '🟩 EASY'}
               </div>
               {item.hikeDetails.distance && (
-                <div style={{ background: 'rgba(255,255,255,0.06)', color: '#EBEBF5', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-primary)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
                   ↔️ {item.hikeDetails.distance}
                 </div>
               )}
               {item.hikeDetails.elevation && (
-                <div style={{ background: 'rgba(255,255,255,0.06)', color: '#EBEBF5', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-primary)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
                   ⛰️ +{item.hikeDetails.elevation}
                 </div>
               )}
               {item.hikeDetails.duration && (
-                <div style={{ background: 'rgba(255,255,255,0.06)', color: '#EBEBF5', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-primary)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
                   ⏱️ {item.hikeDetails.duration}
                 </div>
               )}
@@ -329,7 +321,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                     win.open(item.hikeDetails!.allTrailsLink, '_blank', 'noopener,noreferrer');
                   }}
                   style={{ 
-                    background: 'rgba(48, 209, 88, 0.25)', color: '#30D158', padding: '4px 12px', 
+                    background: 'rgba(48, 209, 88, 0.25)', color: 'var(--sys-green)', padding: '4px 12px',
                     borderRadius: '8px', fontSize: '12px', fontWeight: 900, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: '4px',
                     border: '1px solid rgba(48, 209, 88, 0.3)',
@@ -352,7 +344,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                     window.open(item.foodDetails!.happyCowUrl!, '_blank', 'noopener,noreferrer');
                   }}
                   style={{ 
-                    background: 'rgba(48, 209, 88, 0.25)', color: '#30D158', padding: '4px 12px', 
+                    background: 'rgba(48, 209, 88, 0.25)', color: 'var(--sys-green)', padding: '4px 12px',
                     borderRadius: '8px', fontSize: '11px', fontWeight: 900, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: '4px',
                     border: '1px solid rgba(48, 209, 88, 0.3)',
@@ -370,7 +362,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                     window.open(item.foodDetails!.officialUrl!, '_blank', 'noopener,noreferrer');
                   }}
                   style={{ 
-                    background: 'rgba(10, 132, 255, 0.25)', color: '#0A84FF', padding: '4px 12px', 
+                    background: 'rgba(10, 132, 255, 0.25)', color: 'var(--sys-blue)', padding: '4px 12px',
                     borderRadius: '8px', fontSize: '11px', fontWeight: 900, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: '4px',
                     border: '1px solid rgba(10, 132, 255, 0.3)',
@@ -397,7 +389,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
               <Hash size={14} />
               <span style={{ fontWeight: 600 }}>Confirmation:</span>
-              <span style={{ color: '#fff', fontWeight: 700 }}>{item.confirmationNumber}</span>
+              <span style={{ color: 'var(--sys-label-primary)', fontWeight: 700 }}>{item.confirmationNumber}</span>
             </div>
           )}
 
@@ -408,9 +400,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                   background: item.type === 'hotel' ? 'rgba(255, 159, 10, 0.15)' : 
                              item.type === 'rental-car' ? 'rgba(175, 82, 222, 0.15)' :
                              'rgba(10, 132, 255, 0.15)', 
-                  color: item.type === 'hotel' ? '#FF9F0A' : 
+                  color: item.type === 'hotel' ? 'var(--sys-orange)' :
                          item.type === 'rental-car' ? '#AF52DE' :
-                         '#0A84FF', 
+                         'var(--sys-blue)',
                   padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
                 }}>
                   ✓ REFUNDABLE
@@ -419,7 +411,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               {(item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate) && (
                 <div style={{ 
                   background: 'rgba(255, 159, 10, 0.15)', 
-                  color: '#FF9F0A', 
+                  color: 'var(--sys-orange)',
                   padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
                 }}>
                   ⌛ REFUND UNTIL {(() => {
@@ -431,8 +423,8 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 </div>
               )}
               {(item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource) && (
-                <div style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--sys-label-secondary)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600 }}>
-                  via <span style={{ color: '#fff', fontWeight: 700 }}>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource}</span>
+                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-secondary)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600 }}>
+                  via <span style={{ color: 'var(--sys-label-primary)', fontWeight: 700 }}>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource}</span>
                 </div>
               )}
             </div>
@@ -444,14 +436,14 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
                   <DollarSign size={14} />
                   <span style={{ fontWeight: 600 }}>Cost:</span>
-                  <span style={{ color: '#fff', fontWeight: 700 }}>${(item.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span style={{ color: 'var(--sys-label-primary)', fontWeight: 700 }}>${(item.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )}
               {item.paidAmount !== undefined && item.paidAmount !== null && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
                   <CreditCard size={14} />
                   <span style={{ fontWeight: 600 }}>Paid:</span>
-                  <span style={{ color: (item.cost && item.paidAmount > item.cost) ? '#FF453A' : 'var(--sys-green)', fontWeight: 700 }}>
+                  <span style={{ color: (item.cost && item.paidAmount > item.cost) ? 'var(--sys-red)' : 'var(--sys-green)', fontWeight: 700 }}>
                     ${(item.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>

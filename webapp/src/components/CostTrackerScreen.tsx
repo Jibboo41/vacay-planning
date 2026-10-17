@@ -18,12 +18,12 @@ const CATEGORY_ICONS: Record<Expense['category'], any> = {
 };
 
 const CATEGORY_COLORS: Record<Expense['category'], string> = {
-  'Car Rental': '#64D2FF',
-  'Flights': '#0A84FF',
-  'Gas': '#FFD60A',
-  'Dining': '#BF5AF2',
-  'Lodging': '#FF9F0A',
-  'Souvenirs': '#FF2D55',
+  'Car Rental': 'var(--sys-cyan)',
+  'Flights': 'var(--sys-blue)',
+  'Gas': 'var(--sys-yellow)',
+  'Dining': 'var(--sys-purple)',
+  'Lodging': 'var(--sys-orange)',
+  'Souvenirs': 'var(--sys-pink)',
   'Other': 'var(--sys-label-secondary)',
 };
 
@@ -114,7 +114,7 @@ export default function CostTrackerScreen() {
           </h1>
           
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-1.5px', color: '#FFF' }}>
+            <span style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-1.5px', color: 'var(--sys-label-primary)' }}>
               ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
@@ -145,7 +145,7 @@ export default function CostTrackerScreen() {
               onClick={() => setShowSummary(!showSummary)}
               style={{ 
                 width: '100%', padding: '16px 20px', display: 'flex', alignItems: 'center', 
-                justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', border: 'none' 
+                justifyContent: 'space-between', background: 'rgba(var(--neutral-rgb), 0.03)', border: 'none'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -159,7 +159,7 @@ export default function CostTrackerScreen() {
               <div style={{ padding: '0 20px 16px 20px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ 
                   display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', 
-                  padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  padding: '12px 0', borderBottom: '1px solid rgba(var(--neutral-rgb), 0.08)',
                   fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-tertiary)', textTransform: 'uppercase'
                 }}>
                   <span>Category</span>
@@ -170,7 +170,7 @@ export default function CostTrackerScreen() {
                 {categoryBreakdown.map(cat => (
                   <div key={cat.category} style={{ 
                     display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', 
-                    padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                    padding: '14px 0', borderBottom: '1px solid rgba(var(--neutral-rgb), 0.04)',
                     fontSize: '14px', alignItems: 'center'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
@@ -216,13 +216,13 @@ export default function CostTrackerScreen() {
             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
               <div style={{ 
                 display: 'flex', alignItems: 'center', flex: 1,
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
+                background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
                 borderRadius: '12px', padding: '0 12px'
               }}>
                 <span style={{ color: 'var(--sys-label-tertiary)', fontSize: '16px', marginRight: '4px' }}>$</span>
                 <input 
                   type="number" placeholder="0.00" value={newAmount} onChange={e => setNewAmount(e.target.value)}
-                  style={{ flex: 1, padding: '12px 0', background: 'transparent', border: 'none', color: '#fff', outline: 'none' }}
+                  style={{ flex: 1, padding: '12px 0', background: 'transparent', border: 'none', color: 'var(--sys-label-primary)', outline: 'none' }}
                 />
               </div>
               <select 
@@ -253,8 +253,8 @@ export default function CostTrackerScreen() {
                 onClick={() => setShowAdd(false)} 
                 style={{ 
                   flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(255,255,255,0.08)', color: '#fff', 
-                  border: '1px solid rgba(255,255,255,0.1)', fontWeight: 700, fontSize: '15px' 
+                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
+                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
                 }}
               >
                 Cancel
@@ -282,15 +282,15 @@ export default function CostTrackerScreen() {
                   display: 'flex', alignItems: 'center', gap: '16px', 
                   padding: '16px', borderRadius: '16px',
                   transition: 'all 0.2s ease', cursor: 'pointer',
-                  border: '1px solid rgba(255,255,255,0.08)'
+                  border: '1px solid rgba(var(--neutral-rgb), 0.08)'
                 }}
               >
                 <div style={{ 
                   width: '42px', height: '42px', borderRadius: '12px', 
-                  background: `${CATEGORY_COLORS[exp.category]}15`, 
+                  background: `color-mix(in srgb, ${CATEGORY_COLORS[exp.category]} 8%, transparent)`,
                   color: CATEGORY_COLORS[exp.category],
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid ${CATEGORY_COLORS[exp.category]}30`
+                  border: `1px solid color-mix(in srgb, ${CATEGORY_COLORS[exp.category]} 19%, transparent)`
                 }}>
                   {CATEGORY_ICONS[exp.category]}
                 </div>
@@ -306,7 +306,7 @@ export default function CostTrackerScreen() {
 
                 <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <p style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#fff' }}>
+                    <p style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>
                       ${exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                     

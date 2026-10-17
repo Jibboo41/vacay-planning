@@ -13,6 +13,7 @@ export interface ItineraryItem {
   title: string;
   location: Location;
   description?: string;
+  imageUrl?: string;
   confirmationNumber?: string;
 }
 

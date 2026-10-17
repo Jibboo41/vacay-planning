@@ -2,8 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="icon" type="image/svg+xml" href="/vacay-mark.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/vacay-icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/vacay-apple-touch-icon.png" />
     <!-- iOS Safari: fills the full screen, no bounce scrolling on body -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="manifest" href="/manifest.json" />
@@ -13,6 +14,14 @@
     <meta name="apple-mobile-web-app-title" content="Vacay" />
     <!-- Theme color for browser chrome -->
     <meta name="theme-color" content="#000000" />
+    <script>
+      try {
+        var appearance = localStorage.getItem('vacay_appearance') === 'light' ? 'light' : 'dark';
+        document.documentElement.dataset.appearance = appearance;
+        document.documentElement.style.colorScheme = appearance;
+        document.querySelector('meta[name="theme-color"]').content = appearance === 'light' ? '#f0f2f8' : '#0f1014';
+      } catch (_) {}
+    </script>
     <!-- SEO -->
     <meta name="description" content="Plan your next adventure. View your travel itinerary and destinations on a map." />
     <title>Vacay — Travel Planner</title>
@@ -37,13 +46,14 @@
              fullMessage = 'Script Error: An external resource failed. Check console for details.';
           }
 
-          root.innerHTML = '<div style="background:#0F1014;color:#fff;padding:40px 20px;font-family:-apple-system, system-ui, sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">' +
+          var escapeHtml = function(value) { return String(value || '').replace(/[&<>"']/g, function(char) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]; }); };
+          root.innerHTML = '<div style="background:var(--sys-bg-base,#0F1014);color:var(--sys-label-primary,#fff);padding:40px 20px;font-family:-apple-system, system-ui, sans-serif;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">' +
             '<div style="font-size:4rem;margin-bottom:20px;">⚠️</div>' +
-            '<h1 style="color:#FF3B30;font-size:18px;font-weight:800;letter-spacing:0.05em;margin:0 0 10px 0;">SYSTEM FATAL ERROR</h1>' +
-            '<p style="font-size:14px;line-height:1.6;color:#fafafa;max-width:500px;margin:0 auto 20px auto;">' + fullMessage + '</p>' +
-            (stack ? '<div style="font-size:10px;color:#888;background:rgba(255,255,255,0.05);padding:15px;border-radius:12px;text-align:left;max-width:90%;overflow:auto;max-height:200px;margin-bottom:30px;font-family:monospace;white-space:pre-wrap;">' + stack + '</div>' : '') +
-            '<p style="font-size:11px;color:#555;margin-bottom:30px;">' + (url || 'unknown-file') + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
-            '<button onclick="window.location.reload()" style="padding:14px 28px;background:#fff;color:#000;border:none;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,0.3);">RELOAD APP</button>' +
+            '<h1 style="color:var(--sys-red,#FF3B30);font-size:18px;font-weight:800;letter-spacing:0.05em;margin:0 0 10px 0;">SYSTEM FATAL ERROR</h1>' +
+            '<p style="font-size:14px;line-height:1.6;color:var(--sys-label-primary,#fafafa);max-width:500px;margin:0 auto 20px auto;">' + escapeHtml(fullMessage) + '</p>' +
+            (stack ? '<div style="font-size:10px;color:var(--sys-label-secondary,#888);background:var(--sys-bg-elevated,rgba(255,255,255,0.05));padding:15px;border-radius:12px;text-align:left;max-width:90%;overflow:auto;max-height:200px;margin-bottom:30px;font-family:monospace;white-space:pre-wrap;">' + escapeHtml(stack) + '</div>' : '') +
+            '<p style="font-size:11px;color:var(--sys-label-secondary,#888);margin-bottom:30px;">' + escapeHtml(url || 'unknown-file') + ' (L:' + lineNo + ' C:' + columnNo + ')</p>' +
+            '<button onclick="window.location.reload()" style="padding:14px 28px;background:var(--sys-blue,#0a84ff);color:#fff;border:none;border-radius:14px;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 10px 20px rgba(0,0,0,0.3);">RELOAD APP</button>' +
             '</div>';
         }
         return false;
