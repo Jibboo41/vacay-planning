@@ -109,51 +109,36 @@ export default function NotesScreen() {
   };
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)' }}>
+    <div className="screen safe-area-inset">
       {/* Header */}
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Trip Notes</h1>
-          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>GENERAL REFERENCE</div>
+        <div className="screen-header__titles">
+          <h1 className="page-title">Trip Notes</h1>
+          <p className="page-subtitle">{generalNotes.length} note{generalNotes.length !== 1 ? 's' : ''} saved</p>
         </div>
       </header>
 
-      <div style={{ padding: '0 24px 12px 24px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {generalNotes.length} note{generalNotes.length !== 1 ? 's' : ''} saved
-          </p>
-      </div>
-
-      <div 
-        style={{ padding: '0 24px 120px 24px', touchAction: draggingIndex !== null ? 'none' : 'auto' }}
+      <div
+        className="screen-body"
+        style={{ touchAction: draggingIndex !== null ? 'none' : 'auto' }}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {/* New Note Area */}
         {!showAddForm ? (
-          <button 
+          <button
             onClick={() => setShowAddForm(true)}
-            className="btn-glass-blue"
-            style={{ 
-              width: '100%', padding: '16px', borderRadius: '16px', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              marginBottom: '24px', fontSize: '16px'
-            }}
+            className="btn btn--tonal btn--lg btn--block screen-action"
           >
             <Plus size={20} />
             New Note
           </button>
         ) : (
-          <div style={{
-            background: 'var(--sys-bg-elevated-2)', padding: '24px',
-            borderRadius: '24px', border: '1px solid var(--sys-blue)',
-            marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px',
-            boxShadow: '0 8px 32px rgba(10,132,255,0.15)'
-          }}>
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+          <div className="form-card">
+            <div className="edit-field-group">
               <label className="edit-field-label">Note Title (Optional)</label>
               <input
                 type="text"
@@ -161,45 +146,31 @@ export default function NotesScreen() {
                 value={newTitle}
                 onChange={e => setNewTitle(e.target.value)}
                 placeholder="E.g., Packing List"
-                style={{
-                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                  fontSize: '17px', outline: 'none', width: '100%', boxSizing: 'border-box'
-                }}
+                className="edit-field-input"
               />
             </div>
-            
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+
+            <div className="edit-field-group">
               <label className="edit-field-label">Content</label>
               <textarea
                 value={newContent}
                 onChange={e => setNewContent(e.target.value)}
                 placeholder="Add your note details here... Links will become clickable automatically."
-                style={{
-                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                  fontSize: '15px', outline: 'none', width: '100%', minHeight: '120px',
-                  resize: 'vertical', display: 'block', boxSizing: 'border-box'
-                }}
+                className="edit-field-input edit-field-input--tall"
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-              <button 
+            <div className="form-actions">
+              <button
                 onClick={handleAdd}
                 disabled={!newTitle.trim() && !newContent.trim()}
-                className="btn-glass-blue"
-                style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
+                className="btn btn--primary"
               >
                 Save Note
               </button>
-              <button 
+              <button
                 onClick={() => setShowAddForm(false)}
-                style={{ 
-                  flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
-                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
-                }}
+                className="btn"
               >
                 Cancel
               </button>
@@ -208,15 +179,12 @@ export default function NotesScreen() {
         )}
 
         {/* Notes List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="list-stack">
           {generalNotes.length === 0 ? (
-             <div style={{
-              textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
-             }}>
-              <StickyNote size={48} opacity={0.2} />
-              <p style={{ fontSize: '15px' }}>No general notes. Jot down ideas, lists, and contacts here!</p>
-             </div>
+            <div className="empty-state">
+              <div className="empty-state__icon"><StickyNote size={26} /></div>
+              <p className="empty-state__text">No general notes. Jot down ideas, lists, and contacts here!</p>
+            </div>
           ) : (
             generalNotes.map((note, index) => {
               const isEditing = editingId === note.id;
@@ -232,85 +200,59 @@ export default function NotesScreen() {
                   onDragEnter={() => handleDragEnter(index)}
                   onDragOver={(e) => e.preventDefault()}
                   onDragEnd={handleDragEnd}
-                  className="glass-card"
-                  style={{
-                    display: 'flex', flexDirection: 'column', gap: '12px',
-                    padding: '20px', borderRadius: '20px',
-                    border: isEditing ? '1px solid rgba(10,132,255,0.4)' : (isOver ? '1px solid var(--sys-blue)' : '1px solid rgba(var(--neutral-rgb), 0.08)'),
-                    opacity: isDragging ? 0.4 : 1,
-                    transform: isOver ? (draggingIndex !== null && draggingIndex > index ? 'translateY(-4px)' : 'translateY(4px)') : 'none',
-                    transition: 'all 0.15s ease',
-                    boxShadow: isOver ? '0 8px 24px rgba(10,132,255,0.2)' : '0 4px 12px rgba(0,0,0,0.1)',
-                    position: 'relative'
-                  }}
+                  className={`card note-row${isEditing ? ' note-row--editing' : ''}${isDragging ? ' note-row--dragging' : ''}${isOver ? ' note-row--drop-target' : ''}`}
+                  style={isOver ? { transform: draggingIndex !== null && draggingIndex > index ? 'translateY(-4px)' : 'translateY(4px)' } : undefined}
                 >
                   {isEditing ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div className="list-row__editor">
                       <input
                         autoFocus
                         value={editTitle}
                         onChange={e => setEditTitle(e.target.value)}
                         placeholder="Note Title"
-                        style={{
-                          background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-                          borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                          fontSize: '17px', fontWeight: 600, outline: 'none', width: '100%', boxSizing: 'border-box'
-                        }}
+                        className="edit-field-input"
                       />
                       <textarea
                         value={editContent}
                         onChange={e => setEditContent(e.target.value)}
                         placeholder="Content..."
-                        style={{
-                          background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-                          borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                          fontSize: '15px', outline: 'none', width: '100%', minHeight: '120px',
-                          resize: 'vertical', display: 'block', boxSizing: 'border-box'
-                        }}
+                        className="edit-field-input edit-field-input--tall"
                       />
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '10px 16px', borderRadius: '10px', color: 'var(--sys-label-primary)', cursor: 'pointer', fontWeight: 600 }}>
+                      <div className="form-actions form-actions--end">
+                        <button onClick={() => setEditingId(null)} className="btn">
                           Cancel
                         </button>
-                        <button onClick={commitEdit} style={{ background: 'rgba(10,132,255,0.15)', border: '1px solid rgba(10,132,255,0.3)', padding: '10px 16px', borderRadius: '10px', color: 'var(--sys-blue)', cursor: 'pointer', fontWeight: 700 }}>
+                        <button onClick={commitEdit} className="btn btn--primary">
                           Save
                         </button>
                       </div>
                     </div>
                   ) : (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div className="note-row__header">
                         {note.title ? (
-                          <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: 'var(--sys-label-primary)' }}>{note.title}</h3>
+                          <h3 className="note-row__title">{note.title}</h3>
                         ) : (
-                          <div style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', fontStyle: 'italic' }}>Untitled Note</div>
+                          <div className="note-row__untitled">Untitled Note</div>
                         )}
-                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0, marginLeft: '12px' }}>
-                          <button onClick={() => startEdit(note)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '8px', borderRadius: '10px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        <div className="list-row__actions">
+                          <button onClick={() => startEdit(note)} className="icon-btn icon-btn--sm" aria-label="Edit">
                             <Pencil size={16} />
                           </button>
-                          <button onClick={() => deleteGeneralNote(note.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '8px', borderRadius: '10px', color: 'var(--sys-red)', cursor: 'pointer', display: 'flex' }}>
+                          <button onClick={() => deleteGeneralNote(note.id)} className="icon-btn icon-btn--sm icon-btn--danger" aria-label="Delete">
                             <Trash2 size={16} />
                           </button>
-                          <div 
-                            className="drag-handle" 
-                            style={{ 
-                              background: 'transparent', border: 'none', padding: '8px 4px', color: 'var(--sys-label-tertiary)', 
-                              cursor: 'grab', display: 'flex', alignItems: 'center', marginLeft: '-4px'
-                            }}
+                          <div
+                            className="drag-handle note-row__grip"
                             onTouchStart={(e) => handleGripTouchStart(e, index)}
                           >
                             <GripVertical size={18} />
                           </div>
                         </div>
                       </div>
-                      
+
                       {note.content && (
-                        <div style={{
-                          fontSize: '15px', color: 'var(--sys-label-primary)', lineHeight: '1.5',
-                          whiteSpace: 'pre-wrap', marginTop: '4px',
-                          maxHeight: '300px', overflowY: 'auto', paddingRight: '8px'
-                        }}>
+                        <div className="note-row__content">
                           <Linkified text={note.content} />
                         </div>
                       )}

@@ -9,7 +9,7 @@
 ### Timeline photos, day plans, and appearance
 - **Timeline photos**: Click an item's icon or open Edit Details to choose a photo or paste an HTTPS image URL. Choose **Use category icon** to remove it. Unavailable images fall back to the category icon.
 - **Day descriptions**: Add a short overview above each day's activities. Plans are saved by calendar date, stay visible when categories are filtered, and are included in the Summary and Excel export. Empty days between trip stops can have plans too.
-- **Dark / Light**: Choose under **Settings → Appearance**. Dark keeps the existing colorful glass style; Light uses simple white surfaces, restrained blue accents, and readable dark text throughout the app. The choice is remembered on this device.
+- **Dark / Light**: Choose under **Settings → Appearance**. Dark uses quiet tonal surfaces over a soft wash of the selected theme's colors; Light uses simple white surfaces, restrained blue accents, and readable dark text throughout the app. The choice is remembered on this device.
 
 ### 🔹 Modern Nav Controls
 - **Minimalist Layout**: Icon-only floating menus (Sparkle Menu and View Switcher) for a clean, distraction-free aesthetic.
@@ -55,10 +55,11 @@
 - **Daily H/L Aggregation**: Timeline day headers display the range of high/low temps across all stops for that day.
 - **Animated Refresh**: Spinning animation on the weather update button provides tactile feedback.
 
-### 🔹 Glass UI & Themes
-- **Glass Blue Buttons**: All primary actions use a frosted glass treatment instead of solid opaque blue.
-- **10 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk — each with gradient swatch previews in the sidebar.
-- **Ambient Background**: Three animated color blobs behind all content, colors driven by selected theme.
+### 🔹 Visual Design & Themes
+- **Calm, layered surfaces**: Cards, lists, and forms sit on flat tonal surfaces that share one scale for corner radii, spacing, and type. Frosted glass is reserved for floating chrome: screen headers, the navigation bar and rail, and the Settings panel.
+- **Clear action hierarchy**: Solid blue is kept for a view's main action. Secondary actions are tonal, and destructive ones are tinted red.
+- **12 Themes**: Default, Sunset, Midnight, Forest, Aurora, Desert Rose, Deep Ocean, Vulcan, Sakura, Cyberpunk, Slate, and Black — chosen from swatches under **Settings → Appearance** while Dark is selected.
+- **Ambient Background**: Three blurred color blobs sit behind all content as a soft wash, with colors driven by the selected theme.
 
 ---
 
@@ -68,7 +69,7 @@
 - **Framework**: `React.js` via `Vite`
 - **State Management**: `Zustand` (Global `useTripStore.ts`)
 - **Routing**: `React Router v6`
-- **Component Styling**: Extensive custom vanilla CSS mimicking iOS Human Interface Guidelines (Glassmorphism, spring curves).
+- **Component Styling**: Custom vanilla CSS built on shared design tokens, with no CSS framework. `src/index.css` holds the tokens and app chrome, `src/ui.css` the reusable primitives (buttons, cards, list rows, forms, dialogs) and per-screen styles, and `src/appearance.css` the Dark and Light palettes with their overrides.
 - **Icons**: `Lucide-React`
 - **Map Vector Engine**: `react-leaflet` / `leaflet`
 

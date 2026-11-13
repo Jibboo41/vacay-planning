@@ -46,11 +46,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const NoTripState = () => (
-  <div style={{ padding: '80px 40px', textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-    <div style={{ marginBottom: '20px' }}><BrandMark /></div>
-    <h2 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '10px', color: 'var(--sys-label-primary)' }}>No Trip Active</h2>
-    <p style={{ color: 'var(--sys-label-secondary)', marginBottom: '30px', maxWidth: '300px' }}>Select a trip from the sidebar or trip selector to view your itinerary.</p>
-    <Link to="/trips" style={{ display: 'inline-flex', padding: '12px 24px', borderRadius: '12px', background: 'var(--sys-blue)', color: 'var(--on-accent)', fontWeight: 700, textDecoration: 'none' }}>
+  <div className="empty-state empty-state--page">
+    <BrandMark />
+    <h2 className="empty-state__title">No Trip Active</h2>
+    <p className="empty-state__text">Select a trip from the sidebar or trip selector to view your itinerary.</p>
+    <Link to="/trips" className="btn btn--primary">
       Go to Trip Selector
     </Link>
   </div>
@@ -63,22 +63,13 @@ const SyncStatus = () => {
   if (!saving && !error) return null;
 
   return (
-    <div style={{
-      position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)',
-      zIndex: 11000, display: 'flex', alignItems: 'center', gap: '8px',
-      padding: '8px 16px', borderRadius: '100px',
-      background: error ? 'var(--sys-red)' : 'var(--sys-bg-elevated)',
-      backdropFilter: 'blur(10px)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-      color: error ? 'var(--on-accent)' : 'var(--sys-label-primary)', fontSize: '11px', fontWeight: 800, letterSpacing: '0.05em',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.3)', pointerEvents: 'none',
-      transition: 'all 0.3s ease'
-    }}>
+    <div className={`sync-pill${error ? ' sync-pill--error' : ''}`} role="status">
       {error ? (
-        <><span>⚠️</span> <span>SYNC ERROR: {error}</span></>
+        <><span>⚠️</span> <span>Sync error: {error}</span></>
       ) : (
         <>
-          <div style={{ width: '12px', height: '12px', border: '2px solid rgba(var(--neutral-rgb), 0.3)', borderTopColor: 'var(--sys-label-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <span>SAVING TO CLOUD...</span>
+          <div className="sync-pill__spinner" />
+          <span>Saving to cloud…</span>
         </>
       )}
     </div>
@@ -217,14 +208,10 @@ function App() {
 
   if (error) {
     return (
-      <div style={{
-        height: '100vh', padding: '40px', backgroundColor: 'var(--error-surface)', color: 'var(--sys-red)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', gap: '16px'
-      }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>⚠️ APP ERROR</h2>
-        <p style={{ maxWidth: '400px', fontSize: '0.8rem', opacity: 0.8 }}>{error}</p>
-        <button onClick={() => window.location.reload()} style={{ padding: '12px 24px', backgroundColor: 'var(--sys-label-primary)', color: 'var(--sys-bg-base)', borderRadius: '12px' }}>RELOAD</button>
+      <div className="app-error" role="alert">
+        <h2>⚠️ App error</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()} className="btn btn--danger">Reload</button>
       </div>
     );
   }
@@ -257,9 +244,9 @@ function App() {
 
       <div className="app-content-root">
         {(loading || (userId && !initialized)) && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'var(--app-background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--sys-label-primary)', gap: '15px' }}>
+          <div className="app-splash" role="status">
             <BrandMark size={56} />
-            <div style={{ fontSize: '11px', letterSpacing: '0.2em', opacity: 0.8 }}>RESTORING TRIP...</div>
+            <div className="app-splash__label">Restoring trip…</div>
           </div>
         )}
 

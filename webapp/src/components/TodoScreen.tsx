@@ -28,11 +28,10 @@ export default function TodoScreen() {
 
   const categoryOptions = useMemo(() => listTodoCategories(todos), [todos]);
   const groupedTodoRows = useMemo(
-    () => groupTodosByCategory(todos).flatMap((group, groupIndex) =>
+    () => groupTodosByCategory(todos).flatMap(group =>
       group.todos.map((todo, todoIndex) => ({
         todo,
         group,
-        groupIndex,
         isFirstInGroup: todoIndex === 0,
       }))),
     [todos],
@@ -86,45 +85,31 @@ export default function TodoScreen() {
   const completedCount = todos.filter(t => t.completed).length;
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)' }}>
+    <div className="screen safe-area-inset">
       {/* Header */}
       <header ref={headerRef} className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Things to Do</h1>
-          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>TRIP CHECKLIST</div>
+        <div className="screen-header__titles">
+          <h1 className="page-title">Things to Do</h1>
+          <p className="page-subtitle">{completedCount} of {todos.length} tasks completed</p>
         </div>
       </header>
-      <div style={{ padding: '0 24px 12px 24px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {completedCount} of {todos.length} tasks completed
-          </p>
-      </div>
 
-      <div style={{ padding: '0 24px 120px 24px' }}>
+      <div className="screen-body">
         {/* New Todo Area */}
         {!showAddForm ? (
-          <button 
+          <button
             onClick={() => setShowAddForm(true)}
-            className="btn-glass-blue"
-            style={{ 
-              width: '100%', padding: '16px', borderRadius: '16px', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              marginBottom: '24px', fontSize: '16px'
-            }}
+            className="btn btn--tonal btn--lg btn--block screen-action"
           >
             <Plus size={20} />
             New Todo
           </button>
         ) : (
-          <div style={{
-            background: 'var(--sys-bg-elevated-2)', padding: '24px',
-            borderRadius: '24px', border: '1px solid var(--sys-blue)',
-            marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px'
-          }}>
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+          <div className="form-card">
+            <div className="edit-field-group">
               <label className="edit-field-label">What needs to be done?</label>
               <input
                 type="text"
@@ -132,15 +117,11 @@ export default function TodoScreen() {
                 value={newTodo}
                 onChange={e => setNewTodo(e.target.value)}
                 placeholder="Pack gear, Check in, etc."
-                style={{
-                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                  fontSize: '17px', outline: 'none', width: '100%'
-                }}
+                className="edit-field-input"
               />
             </div>
 
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+            <div className="edit-field-group">
               <span id="new-todo-category-label" className="edit-field-label">Category</span>
               <TodoCategoryPicker
                 labelId="new-todo-category-label"
@@ -150,54 +131,41 @@ export default function TodoScreen() {
               />
             </div>
 
-            <div className="edit-field-group" style={{ marginBottom: 0, width: '100%', overflow: 'hidden' }}>
+            {/* The clipping wrappers keep iOS Safari's date input from overflowing the card. */}
+            <div className="edit-field-group" style={{ width: '100%', overflow: 'hidden' }}>
               <label className="edit-field-label">Due Date (Optional)</label>
               <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
                 <input
                   type="date"
                   value={newDueDate}
                   onChange={e => setNewDueDate(e.target.value)}
-                  style={{
-                    background: 'rgba(var(--neutral-rgb), 0.07)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-                    borderRadius: '12px', padding: '14px 16px', color: 'var(--sys-label-primary)',
-                    fontSize: '16px', colorScheme: 'inherit', width: '100%',
-                    boxSizing: 'border-box', display: 'block', margin: 0
-                  }}
+                  className="edit-field-input"
+                  style={{ display: 'block', margin: 0 }}
                 />
               </div>
             </div>
-            
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+
+            <div className="edit-field-group">
               <label className="edit-field-label">Notes (Optional)</label>
               <textarea
                 value={newNotes}
                 onChange={e => setNewNotes(e.target.value)}
                 placeholder="Confirmation numbers, packing details, etc."
-                style={{
-                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                  fontSize: '15px', outline: 'none', width: '100%', minHeight: '60px',
-                  resize: 'vertical', display: 'block', boxSizing: 'border-box'
-                }}
+                className="edit-field-input"
               />
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
-              <button 
+            <div className="form-actions">
+              <button
                 onClick={handleAdd}
                 disabled={!newTodo.trim()}
-                className="btn-glass-blue"
-                style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
+                className="btn btn--primary"
               >
                 Save Task
               </button>
-              <button 
+              <button
                 onClick={() => setShowAddForm(false)}
-                style={{ 
-                  flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
-                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
-                }}
+                className="btn"
               >
                 Cancel
               </button>
@@ -206,17 +174,14 @@ export default function TodoScreen() {
         )}
 
         {/* Todo List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className="list-stack">
           {todos.length === 0 ? (
-            <div style={{
-              textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
-            }}>
-              <CheckSquare size={48} opacity={0.2} />
-              <p style={{ fontSize: '15px' }}>No tasks yet. Stay organized for your trip!</p>
+            <div className="empty-state">
+              <div className="empty-state__icon"><CheckSquare size={26} /></div>
+              <p className="empty-state__text">No tasks yet. Stay organized for your trip!</p>
             </div>
           ) : (
-            groupedTodoRows.map(({ todo, group, groupIndex, isFirstInGroup }) => {
+            groupedTodoRows.map(({ todo, group, isFirstInGroup }) => {
               const isEditing = editingId === todo.id;
               const isDragging = draggingId === todo.id;
               const isOver = overId === todo.id && draggingId !== null && draggingId !== todo.id;
@@ -226,31 +191,14 @@ export default function TodoScreen() {
               return (
                 <Fragment key={todo.id}>
                   {isFirstInGroup && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '0 4px',
-                        marginTop: groupIndex === 0 ? 0 : '18px',
-                        marginBottom: '2px',
-                      }}
-                    >
-                      <CategoryIcon size={15} color="var(--sys-blue)" aria-hidden="true" />
-                      <h2 style={{
-                        flex: 1,
-                        margin: 0,
-                        fontSize: '12px',
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                        color: 'var(--sys-label-secondary)',
-                      }}>
+                    <div className="section-heading">
+                      <CategoryIcon size={15} aria-hidden="true" />
+                      <h2 className="section-heading__label">
                         {group.category}
                       </h2>
                       <span
+                        className="section-heading__meta"
                         aria-label={`${completedInGroup} of ${group.todos.length} done`}
-                        style={{ fontSize: '11px', fontWeight: 700, color: 'var(--sys-label-tertiary)' }}
                       >
                         {completedInGroup}/{group.todos.length}
                       </span>
@@ -260,20 +208,7 @@ export default function TodoScreen() {
                     data-todo-item
                     data-todo-id={todo.id}
                     onPointerDown={isEditing ? undefined : event => startDrag(event, todo.id)}
-                    className="glass-card"
-                    style={{
-                      position: 'relative',
-                      display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
-                      padding: '14px 12px',
-                      borderRadius: '16px',
-                      background: isDragging
-                        ? 'rgba(10,132,255,0.04)'
-                        : isOver ? 'rgba(10,132,255,0.08)' : undefined,
-                      border: isDragging ? '1px dashed rgba(10,132,255,0.55)' : '1px solid rgba(var(--neutral-rgb), 0.08)',
-                      transition: 'background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease',
-                      opacity: isDragging ? 0.35 : 1,
-                      zIndex: isOver ? 2 : undefined,
-                    }}
+                    className={`card list-row${isEditing ? ' list-row--editing' : ''}${isDragging ? ' list-row--dragging' : ''}${isOver ? ' list-row--drop-target' : ''}`}
                   >
                   {isOver && (
                     <span className={`todo-drop-indicator todo-drop-indicator--${dropPosition}`} aria-hidden="true" />
@@ -282,7 +217,6 @@ export default function TodoScreen() {
                   <div
                     data-drag-handle
                     className={`todo-drag-handle ${isEditing ? 'todo-drag-handle--disabled' : ''}`}
-                    style={{ paddingTop: isEditing ? '10px' : 0 }}
                     title={isEditing ? undefined : 'Drag to reorder'}
                   >
                     <GripVertical size={18} aria-hidden="true" />
@@ -291,58 +225,40 @@ export default function TodoScreen() {
                   {/* Check */}
                   <button
                     onClick={() => toggleTodo(todo.id)}
-                    style={{
-                      background: 'transparent', border: 'none', padding: 0,
-                      color: todo.completed ? 'var(--sys-blue)' : 'var(--sys-label-tertiary)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0,
-                      paddingTop: isEditing ? '10px' : 0
-                    }}
+                    className={`check-toggle${todo.completed ? ' check-toggle--checked' : ''}`}
                   >
                     {todo.completed ? <CheckCircle2 size={22} /> : <Circle size={22} />}
                   </button>
 
                   {/* Content / Edit area */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="list-row__main">
                     {isEditing ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div className="list-row__editor">
                         <input
                           autoFocus
                           value={editText}
                           onChange={e => setEditText(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
-                          style={{
-                            background: 'rgba(var(--neutral-rgb), 0.07)', border: '1px solid rgba(10,132,255,0.4)',
-                            borderRadius: '8px', padding: '8px 10px', color: 'var(--sys-label-primary)',
-                            fontSize: '16px', fontWeight: 500, outline: 'none', width: '100%'
-                          }}
+                          className="text-input"
                         />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Calendar size={13} color="var(--sys-label-secondary)" />
-                          <span style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>Due:</span>
+                        <div className="list-row__due">
+                          <Calendar size={13} />
+                          <span>Due:</span>
                           <input
                             type="date"
                             value={editDueDate}
                             onChange={e => setEditDueDate(e.target.value)}
-                            style={{
-                              background: 'rgba(var(--neutral-rgb), 0.05)', border: 'none',
-                              borderRadius: '6px', padding: '3px 7px', color: 'var(--sys-label-primary)',
-                              fontSize: '12px', colorScheme: 'inherit'
-                            }}
+                            className="text-input text-input--sm"
                           />
                           {editDueDate && (
-                            <button onClick={() => setEditDueDate('')} style={{ fontSize: '11px', color: 'var(--sys-blue)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
+                            <button onClick={() => setEditDueDate('')} className="btn btn--ghost btn--sm">Clear</button>
                           )}
                         </div>
                         <textarea
                           value={editNotes}
                           onChange={e => setEditNotes(e.target.value)}
                           placeholder="Add notes..."
-                          style={{
-                            background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-                            borderRadius: '8px', padding: '8px 10px', color: 'var(--sys-label-primary)',
-                            fontSize: '14px', outline: 'none', width: '100%', minHeight: '50px',
-                            resize: 'vertical', marginTop: '2px', boxSizing: 'border-box'
-                          }}
+                          className="text-input"
                         />
                         <TodoCategoryPicker
                           compact
@@ -353,27 +269,16 @@ export default function TodoScreen() {
                       </div>
                     ) : (
                       <>
-                        <span style={{
-                          fontSize: '16px', color: todo.completed ? 'var(--sys-label-tertiary)' : 'var(--sys-label-primary)',
-                          textDecoration: todo.completed ? 'line-through' : 'none',
-                          transition: 'all 0.2s ease', fontWeight: 500,
-                          display: 'block', wordBreak: 'break-word', overflowWrap: 'anywhere'
-                        }}>
+                        <span className={`list-row__title${todo.completed ? ' list-row__title--done' : ''}`}>
                           {todo.text}
                         </span>
                         {todo.dueDate && (
-                          <div style={{
-                            fontSize: '11px', marginTop: '4px', fontWeight: 700,
-                            color: isOverdue(todo) ? 'var(--sys-red)' : 'var(--sys-label-secondary)'
-                          }}>
+                          <div className={`list-row__meta${isOverdue(todo) ? ' list-row__meta--alert' : ''}`}>
                             {isOverdue(todo) ? '⚠ ' : ''}Due: {new Date(todo.dueDate.replace(/-/g, '/')).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         )}
                         {todo.notes && (
-                          <div style={{
-                            fontSize: '13px', marginTop: '6px', color: 'var(--sys-label-secondary)',
-                            lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere'
-                          }}>
+                          <div className="list-row__note">
                             {todo.notes}
                           </div>
                         )}
@@ -382,22 +287,22 @@ export default function TodoScreen() {
                   </div>
 
                   {/* Actions */}
-                  <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+                  <div className="list-row__actions">
                     {isEditing ? (
                       <>
-                        <button onClick={commitEdit} style={{ background: 'rgba(48,209,88,0.15)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-green)', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={commitEdit} className="icon-btn icon-btn--sm icon-btn--success" aria-label="Save">
                           <Check size={16} />
                         </button>
-                        <button onClick={() => setEditingId(null)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => setEditingId(null)} className="icon-btn icon-btn--sm" aria-label="Cancel">
                           <X size={16} />
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(todo)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => startEdit(todo)} className="icon-btn icon-btn--sm" aria-label="Edit">
                           <Pencil size={16} />
                         </button>
-                        <button onClick={() => { if (window.confirm(`Delete "${todo.text}"?`)) deleteTodo(todo.id); }} aria-label="Delete" style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-red)', cursor: 'pointer', display: 'flex' }}>
+                        <button onClick={() => { if (window.confirm(`Delete "${todo.text}"?`)) deleteTodo(todo.id); }} aria-label="Delete" className="icon-btn icon-btn--sm icon-btn--danger">
                           <Trash2 size={16} />
                         </button>
                       </>

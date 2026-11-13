@@ -24,6 +24,27 @@
   --error-surface: #300;
   --day-description-bg: #1b2b42;
   --day-description-text: #c6dafa;
+
+  /* Semantic surfaces: content sits on solid tonal layers, glass is reserved for floating chrome. */
+  --surface-card: rgba(var(--panel-rgb), .72);
+  --surface-raised: rgba(var(--neutral-rgb), .07);
+  --surface-raised-hover: rgba(var(--neutral-rgb), .12);
+  --surface-selected: rgba(var(--neutral-rgb), .18);
+  --surface-overlay: rgb(var(--elevated-rgb));
+  --border-subtle: rgba(var(--neutral-rgb), .08);
+  --border-strong: rgba(var(--neutral-rgb), .16);
+  --chrome-surface: rgba(var(--chrome-rgb), .78);
+  --chrome-filter: saturate(180%) blur(22px);
+  --accent-hover: #2b95ff;
+  --accent-soft: rgba(10, 132, 255, .16);
+  --accent-soft-hover: rgba(10, 132, 255, .24);
+  --accent-on-soft: #7dbcff;
+  --danger-soft: rgba(255, 69, 58, .14);
+  --danger-soft-hover: rgba(255, 69, 58, .22);
+  --success-soft: rgba(48, 209, 88, .16);
+  --scrim: rgba(0, 0, 0, .55);
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, .04);
+  --shadow-overlay: 0 24px 80px rgba(0, 0, 0, .5);
 }
 
 :root[data-appearance="light"] {
@@ -67,6 +88,25 @@
   --error-surface: #fff0ef;
   --day-description-bg: #e5eefc;
   --day-description-text: #314e72;
+  --surface-card: #fff;
+  --surface-raised: rgba(var(--neutral-rgb), .06);
+  --surface-raised-hover: rgba(var(--neutral-rgb), .1);
+  --surface-selected: #fff;
+  --surface-overlay: #fff;
+  --border-subtle: var(--sys-separator);
+  --border-strong: #c7cedb;
+  --chrome-surface: #fff;
+  --chrome-filter: none;
+  --accent-hover: #0559ad;
+  --accent-soft: #e6effb;
+  --accent-soft-hover: #d9e8fb;
+  --accent-on-soft: var(--sys-blue);
+  --danger-soft: #fdecea;
+  --danger-soft-hover: #fbdcd9;
+  --success-soft: #e2f3ea;
+  --scrim: rgba(25, 32, 45, .34);
+  --shadow-card: 0 1px 2px rgba(25, 32, 45, .04), 0 3px 12px rgba(25, 32, 45, .04);
+  --shadow-overlay: 0 16px 60px rgba(25, 32, 45, .16);
 }
 
 html { background: var(--app-background); }
@@ -79,50 +119,19 @@ input, textarea, select, .edit-field-input { color-scheme: inherit; }
 input::placeholder, textarea::placeholder { color: var(--sys-label-tertiary); opacity: 1; }
 [hidden] { display: none !important; }
 
-/* Light is intentionally quiet: opaque surfaces, subtle borders, and no ambient blobs. */
+/* Light is intentionally quiet: opaque surfaces, subtle borders, and no ambient blobs.
+   Most of that comes from the surface tokens above; these are the remaining exceptions. */
 [data-appearance="light"] .ambient-bg { display: none; }
-[data-appearance="light"] :is(.travel-card, .glass-card, .trip-card) {
-  background: var(--sys-bg-elevated);
-  border-color: var(--sys-separator);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: 0 3px 12px rgba(25, 32, 45, .045);
-}
-[data-appearance="light"] :is(.screen-header, .day-timeline-strip, .desktop-trip-banner, .desktop-side-rail, .mobile-tab-bar) {
+[data-appearance="light"] .settings-panel {
   background: var(--sys-bg-elevated);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  box-shadow: none;
+  box-shadow: var(--shadow-overlay);
 }
-[data-appearance="light"] :is(.modal-sheet, .modal-content, .settings-panel, .add-menu, .more-menu) {
-  background: var(--sys-bg-elevated);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: 0 16px 60px rgba(25, 32, 45, .16);
-}
-[data-appearance="light"] :is(.btn-glass-blue, .header-icon-btn, .google-signin-btn) {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-}
-[data-appearance="light"] .btn-glass-blue {
-  color: var(--sys-blue);
-  background: #e6effb;
-  border-color: #cedff4;
-}
-[data-appearance="light"] .btn-glass-blue:hover { background: #d9e8fb; }
 [data-appearance="light"] .edit-field-input { background: #f7f8fb; border-color: var(--sys-separator); }
 [data-appearance="light"] .edit-field-input:focus { background: #fff; border-color: var(--sys-blue); }
 [data-appearance="light"] .settings-switch::after { background: var(--on-accent); }
 [data-appearance="light"] .settings-theme__swatch { color: var(--on-accent); }
-[data-appearance="light"] .leaflet-popup-content-wrapper,
-[data-appearance="light"] .leaflet-popup-tip {
-  background: var(--sys-bg-elevated) !important;
-  color: var(--sys-label-primary) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  box-shadow: 0 8px 28px rgba(25, 32, 45, .14) !important;
-}
 .leaflet-bar a { background: var(--sys-bg-elevated); color: var(--sys-label-primary); border-color: var(--sys-separator); }
 .leaflet-bar a:hover { background: var(--sys-bg-elevated-2); }
 .leaflet-control-attribution { background: var(--sys-bg-elevated) !important; color: var(--sys-label-secondary); }
@@ -135,9 +144,7 @@ input::placeholder, textarea::placeholder { color: var(--sys-label-tertiary); op
   background-size: 16px;
 }
 
-[data-appearance="light"] .summary-day-card { background: var(--sys-bg-elevated) !important; box-shadow: 0 3px 12px rgba(25, 32, 45, .045) !important; backdrop-filter: none !important; }
-.summary-day-description { padding: 12px 14px; margin-bottom: 14px; border-radius: 12px; color: var(--day-description-text); background: var(--day-description-bg); font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
-[data-appearance="light"] .map-screen > .screen-header { background: var(--sys-bg-elevated) !important; }
+.summary-day-description { padding: 12px 14px; margin-bottom: 14px; border-radius: var(--radius-md); color: var(--day-description-text); background: var(--day-description-bg); font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .appearance-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .appearance-option { padding: 10px; border-radius: 14px; border: 1px solid var(--sys-separator); text-align: left; }
@@ -151,7 +158,7 @@ input::placeholder, textarea::placeholder { color: var(--sys-label-tertiary); op
 .appearance-option--light .appearance-option__sample { background: #f0f2f8; border: 1px solid #dce0e9; }
 .appearance-option--light .appearance-option__sample span { background: #fff; }
 
-.item-thumbnail { display: flex; justify-content: center; align-items: center; width: 44px; height: 44px; border-radius: 12px; margin-right: 12px; flex-shrink: 0; overflow: hidden; padding: 0; }
+.item-thumbnail { display: flex; justify-content: center; align-items: center; width: 44px; height: 44px; border-radius: var(--radius-md); margin-right: 12px; flex-shrink: 0; overflow: hidden; padding: 0; }
 .item-thumbnail--photo { width: 72px; height: 72px; }
 .item-thumbnail img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .item-image-field { padding-bottom: 18px; border-bottom: 1px solid var(--sys-separator); }
@@ -167,8 +174,8 @@ input::placeholder, textarea::placeholder { color: var(--sys-label-tertiary); op
 .field-hint, .field-optional { font-size: 12px; color: var(--sys-label-secondary); }
 .field-error { color: var(--sys-red); font-size: 13px; padding: 8px 0; overflow-wrap: anywhere; }
 
-.day-description { margin: 4px 20px 16px; }
-.day-description--filled { padding: 14px 16px; border-radius: 14px; background: var(--day-description-bg); }
+.day-description { margin: 2px var(--page-gutter) 12px; }
+.day-description--filled { padding: 12px 14px; border-radius: var(--radius-lg); background: var(--day-description-bg); }
 .day-description__heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .day-description__heading span, .day-description__heading button, .day-description__add { display: inline-flex; align-items: center; gap: 7px; color: var(--sys-blue); font-size: 12px; }
 .day-description__heading span { font-weight: 700; }

@@ -68,29 +68,15 @@ export default function TodoCategoryPicker({
     setAdding(false);
   };
 
-  const chipStyle = (selected: boolean): React.CSSProperties => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    minHeight: compact ? '32px' : '38px',
-    padding: compact ? '6px 9px' : '8px 12px',
-    borderRadius: '999px',
-    border: selected
-      ? '1px solid rgba(10,132,255,0.65)'
-      : '1px solid rgba(var(--neutral-rgb), 0.12)',
-    background: selected ? 'rgba(10,132,255,0.18)' : 'rgba(var(--neutral-rgb), 0.06)',
-    color: selected ? 'var(--sys-label-primary)' : 'var(--sys-label-secondary)',
-    fontSize: compact ? '11px' : '12px',
-    fontWeight: 700,
-    cursor: 'pointer',
-  });
+  const chipClass = (selected: boolean, modifier = '') =>
+    `choice-chip${compact ? ' choice-chip--sm' : ''}${selected ? ' choice-chip--selected' : ''}${modifier}`;
 
   return (
     <div
       role="group"
       aria-labelledby={labelId}
       aria-label={labelId ? undefined : 'Category'}
-      style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}
+      className="choice-chips"
     >
       {allOptions.map(category => {
         const Icon = getTodoCategoryIcon(category);
@@ -103,7 +89,7 @@ export default function TodoCategoryPicker({
             type="button"
             aria-pressed={selected}
             onClick={() => select(category)}
-            style={chipStyle(selected)}
+            className={chipClass(selected)}
           >
             <Icon size={compact ? 13 : 15} aria-hidden="true" />
             {category}
@@ -112,7 +98,7 @@ export default function TodoCategoryPicker({
       })}
 
       {adding ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flexBasis: '100%' }}>
+        <div className="choice-chips__draft">
           <input
             autoFocus
             aria-label="New category name"
@@ -131,31 +117,14 @@ export default function TodoCategoryPicker({
                 cancel();
               }
             }}
-            style={{
-              minWidth: 0,
-              flex: 1,
-              height: compact ? '36px' : '40px',
-              background: 'rgba(var(--neutral-rgb), 0.07)',
-              border: '1px solid rgba(var(--neutral-rgb), 0.12)',
-              borderRadius: '10px',
-              padding: '8px 10px',
-              color: 'var(--sys-label-primary)',
-              fontSize: compact ? '12px' : '14px',
-              outline: 'none',
-            }}
+            className="text-input"
           />
           <button
             type="button"
             aria-label="Add category"
             onClick={commit}
             disabled={!draft.trim()}
-            style={{
-              ...chipStyle(true),
-              width: compact ? '34px' : '38px',
-              justifyContent: 'center',
-              padding: 0,
-              opacity: draft.trim() ? 1 : 0.45,
-            }}
+            className={chipClass(true, ' choice-chip--icon')}
           >
             <Check size={16} />
           </button>
@@ -163,7 +132,7 @@ export default function TodoCategoryPicker({
             type="button"
             aria-label="Cancel new category"
             onClick={cancel}
-            style={{ ...chipStyle(false), width: compact ? '34px' : '38px', justifyContent: 'center', padding: 0 }}
+            className={chipClass(false, ' choice-chip--icon')}
           >
             <X size={16} />
           </button>
@@ -176,7 +145,7 @@ export default function TodoCategoryPicker({
             previousValueRef.current = value;
             setAdding(true);
           }}
-          style={{ ...chipStyle(false), borderStyle: 'dashed' }}
+          className={chipClass(false, ' choice-chip--dashed')}
         >
           <Plus size={compact ? 13 : 15} aria-hidden="true" />
           New

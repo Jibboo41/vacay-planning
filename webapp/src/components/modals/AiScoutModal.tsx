@@ -69,30 +69,31 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div 
-        className="modal-sheet glass-effect shimmering-border" 
+    <div className="modal-backdrop modal-backdrop--center" onClick={onClose}>
+      <div
+        className="modal-sheet modal-sheet--dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Dining Scout"
         onClick={e => e.stopPropagation()}
-        style={{ maxWidth: '500px', alignSelf: 'center', borderRadius: '28px', overflow: 'hidden' }}
+        style={{ maxWidth: '500px' }}
       >
-        <button className="modal-close" onClick={onClose}>
-          <X size={24} />
-        </button>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-          <div className={`ai-status-dot ${step === 'loading' ? 'active' : ''}`} />
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--sys-label-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Utensils size={20} className="text-ai" /> Dining Scout
+        <div className="modal-header">
+          <h2 className="modal-title modal-title--icon">
+            <Utensils size={20} /> Dining Scout
           </h2>
+          <button className="icon-btn icon-btn--round" onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
         </div>
 
         {step === 'select' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', lineHeight: '1.5' }}>
+          <div className="modal-form">
+            <p className="modal-lede modal-lede--flush">
               Where should we look for food? Pick a reference stop on your trip to scout the surrounding area.
             </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '4px' }}>
+
+            <div className="list-stack scout-scroll">
               {candidateStops.map(stop => {
                 const date = new Date(stop.startDate);
                 const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -100,24 +101,15 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
                   <button
                     key={stop.id}
                     onClick={() => runScout(stop)}
-                    className="glass-card"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px',
-                      borderRadius: '12px', border: '1px solid rgba(var(--neutral-rgb), 0.08)',
-                      textAlign: 'left', width: '100%', cursor: 'pointer', transition: 'all 0.2s ease'
-                    }}
+                    className="card card--inset card--interactive scout-stop"
                   >
-                    <div style={{ 
-                      width: '40px', height: '40px', borderRadius: '10px', 
-                      background: 'rgba(var(--neutral-rgb), 0.05)', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', color: 'var(--sys-label-tertiary)' 
-                    }}>
+                    <div className="scout-stop__icon">
                       <MapPin size={20} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '10px', fontWeight: 900, color: 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{dayLabel}</div>
-                      <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-primary)' }}>{stop.title}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', opacity: 0.8 }}>{stop.location.name}</div>
+                    <div className="scout-stop__main">
+                      <div className="scout-stop__day">{dayLabel}</div>
+                      <div className="scout-stop__title">{stop.title}</div>
+                      <div className="scout-stop__place">{stop.location.name}</div>
                     </div>
                   </button>
                 );
@@ -127,93 +119,86 @@ export default function AiScoutModal({ onClose, onAdd }: AiScoutModalProps) {
         )}
 
         {step === 'loading' && (
-          <div style={{ padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-            <div className="spinning" style={{ position: 'relative', width: '64px', height: '64px' }}>
-              <div style={{ 
-                position: 'absolute', inset: 0, borderRadius: '50%', 
-                border: '4px solid rgba(191, 90, 242, 0.1)', borderTopColor: 'var(--sys-purple)'
-              }} />
-              <Utensils size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', color: 'var(--sys-purple)' }} />
+          <div className="scout-loading" role="status">
+            <div className="spinning scout-loading__spinner">
+              <div />
+              <Utensils size={24} />
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-label-primary)', marginBottom: '8px' }}>Scouting Near {selectedStop?.location.name}</h3>
-              <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)' }}>Searching HappyCow & local gems...</p>
+            <div>
+              <h3 className="scout-loading__title">Scouting Near {selectedStop?.location.name}</h3>
+              <p className="modal-subtitle">Searching HappyCow & local gems...</p>
             </div>
           </div>
         )}
 
         {step === 'results' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="modal-form">
              {error ? (
-              <div style={{ padding: '20px', borderRadius: '12px', background: 'rgba(255,59,48,0.1)', border: '1px solid rgba(255,59,48,0.2)', color: 'var(--sys-red)' }}>
-                <p style={{ fontWeight: 700, marginBottom: '4px' }}>Scouting failed</p>
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>{error}</div>
-                <button onClick={() => setStep('select')} style={{ marginTop: '12px', fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-primary)', textDecoration: 'underline' }}>Try another location</button>
+              <div className="banner banner--danger scout-error" role="alert">
+                <p>Scouting failed</p>
+                <div>{error}</div>
+                <button onClick={() => setStep('select')} className="btn btn--sm">Try another location</button>
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', color: 'var(--sys-label-secondary)' }}>Top Vegetarian Picks Found</span>
-                  <button onClick={() => setStep('select')} style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-blue)' }}>Change Location</button>
+                <div className="card-heading">
+                  <span className="modal-subtitle">Top Vegetarian Picks Found</span>
+                  <button onClick={() => setStep('select')} className="btn btn--ghost btn--sm">Change Location</button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '55vh', overflowY: 'auto', paddingRight: '4px' }}>
+                <div className="list-stack scout-scroll">
                   {results.map((res, i) => (
-                    <div 
-                      key={i} 
-                      className="glass-card" 
-                      style={{ 
-                        padding: '16px', borderRadius: '16px', 
-                        border: '1px solid rgba(var(--neutral-rgb), 0.08)',
-                        display: 'flex', flexDirection: 'column', gap: '8px'
-                      }}
+                    <div
+                      key={i}
+                      className="card card--inset card--pad scout-result"
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--sys-label-primary)', marginBottom: '4px' }}>{res.name}</h3>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--sys-purple)', fontWeight: 700 }}>
+                      <div className="scout-result__header">
+                        <div className="scout-stop__main">
+                          <h3 className="scout-result__name">{res.name}</h3>
+                          <div className="scout-result__meta">
+                            <div className="scout-result__rating">
                               <Star size={12} fill="var(--sys-purple)" /> {res.rating}
                             </div>
                             {res.distance && (
-                              <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
+                              <div>
                                 <Navigation size={11} /> {res.distance}
                               </div>
                             )}
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="list-row__actions">
                           {res.happyCowUrl && (
-                            <button onClick={() => window.open(res.happyCowUrl, '_blank')} className="header-icon-btn" style={{ width: '36px', height: '36px', borderRadius: '10px' }} title="HappyCow">
+                            <button onClick={() => window.open(res.happyCowUrl, '_blank')} className="icon-btn" title="HappyCow" aria-label="Open on HappyCow">
                               <ExternalLink size={16} />
                             </button>
                           )}
                           {res.officialUrl && (
-                            <button onClick={() => window.open(res.officialUrl, '_blank')} className="header-icon-btn" style={{ width: '36px', height: '36px', borderRadius: '10px' }} title="Website">
+                            <button onClick={() => window.open(res.officialUrl, '_blank')} className="icon-btn" title="Website" aria-label="Open website">
                               <Globe size={16} />
                             </button>
                           )}
-                          <button 
+                          <button
                             onClick={() => handleAdd(res)}
-                            className="header-icon-btn"
-                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--sys-blue)', color: 'var(--on-accent)', borderColor: 'rgba(var(--neutral-rgb), 0.2)' }}
+                            className="icon-btn icon-btn--solid"
+                            title="Add to timeline"
+                            aria-label={`Add ${res.name} to timeline`}
                           >
                             <Plus size={20} />
                           </button>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                        <MapPin size={12} color="var(--sys-label-tertiary)" />
-                        <span style={{ fontSize: '12px', color: 'var(--sys-label-secondary)' }}>{res.address}</span>
+                      <div className="scout-result__address">
+                        <MapPin size={12} />
+                        <span>{res.address}</span>
                       </div>
 
-                      <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', lineHeight: '1.4', fontStyle: 'italic', borderLeft: '2px solid var(--sys-purple)', paddingLeft: '8px' }}>
+                      <p className="scout-result__quote">
                         "{res.description}"
                       </p>
 
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 800, background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 8px', borderRadius: '6px', color: 'var(--sys-label-tertiary)' }}>
+                      <div>
+                        <span className="item-chip">
                           {res.cuisineType.toUpperCase()}
                         </span>
                       </div>

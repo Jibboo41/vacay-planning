@@ -433,8 +433,8 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
 
   return (
     <>
-      <header ref={headerRef} className="screen-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '0' }}>
+      <header ref={headerRef} className="screen-header screen-header--stacked">
+        <div className="screen-header__row">
           <button 
             className="header-icon-btn legacy-menu-button"
             onClick={() => setSidebarOpen(true)}
@@ -442,12 +442,12 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
           >
             <Menu size={24} />
           </button>
-          <h1 className="page-title" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.7rem' }}>
+          <h1 className="page-title screen-header__titles">
             {title || currentTrip?.title || 'Itinerary'}
           </h1>
         </div>
 
-        <div className="day-timeline-strip" style={{ background: 'transparent', backdropFilter: 'none', borderBottom: 'none', padding: '0 0 4px 0' }}>
+        <div className="day-timeline-strip">
           <div className="day-pill-bar" ref={pillBarRef}>
             {dayGroups.map((group) => (
               <button
@@ -476,17 +476,16 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
 
           return (
               <div key={`${currentTripId}-${group.dateKey}`}>
-                <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="day-section-header" data-day-key={group.dateKey} ref={el => { dayRefs.current[group.dateKey] = el; }}>
+                  <div className="day-section-header__start">
                     <span className="day-section-label">{group.label}</span>
-                    <button 
+                    <button
                       onClick={() => handleOpenMap(group)}
-                      className="btn-glass-blue"
-                      style={{ padding: '6px 10px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', border: '1px solid rgba(10,132,255,0.3)', background: 'rgba(10,132,255,0.1)' }}
+                      className="btn btn--tonal btn--sm"
                       title="Open Directions in Google Maps"
                     >
                       <Map size={14} />
-                      <span style={{ fontWeight: 700 }}>Map Day</span>
+                      Map Day
                     </button>
                   </div>
                   {isWeatherRefreshing ? (
@@ -494,8 +493,8 @@ export default function TimelineScreen({ title }: TimelineScreenProps = {}) {
                       <RefreshCw size={14} color="var(--sys-blue)" />
                     </div>
                   ) : (high !== null && low !== null && (
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--sys-label-secondary)', letterSpacing: '0.02em' }}>
-                      <span style={{ color: 'var(--sys-orange)' }}>H: {high}°</span> <span style={{ color: 'var(--sys-blue)' }}>L: {low}°</span>
+                    <span className="day-section-temps">
+                      <span className="temp-high">H: {high}°</span> <span className="temp-low">L: {low}°</span>
                     </span>
                   ))}
                 </div>

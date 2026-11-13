@@ -461,28 +461,27 @@ export default function MapViewScreen() {
   }
 
   return (
-    <div className="map-screen" style={{ position: 'relative', display: 'flex', flexDirection: 'column', height: 'var(--map-screen-height, 100dvh)', width: '100%', zIndex: 10, overflow: 'hidden' }}>
-      <div className="screen-header" style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, background: 'rgba(var(--chrome-rgb), 0.45)' }}>
-        <button 
+    <div className="map-screen">
+      <div className="screen-header map-screen__header">
+        <button
           className="header-icon-btn legacy-menu-button"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open sidebar"
         >
           <Menu size={24} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--sys-label-primary)', margin: 0 }}>
-            Destinations
-          </h1>
-          <p style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
+        <div className="screen-header__titles">
+          <h1 className="page-title">Destinations</h1>
+          <p className="page-subtitle">
             {mappable.length} stop{mappable.length !== 1 ? 's' : ''} · {dayKeys.length} day{dayKeys.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button 
-          className="header-icon-btn btn-glass-blue"
-          style={{ borderRadius: '14px', marginLeft: 'auto' }}
+        <button
+          className="icon-btn icon-btn--lg icon-btn--accent"
           onClick={handleRefresh}
           disabled={routeStatus === 'loading'}
+          aria-label="Recalculate routes"
+          title="Recalculate routes"
         >
           <RefreshCw size={20} className={routeStatus === 'loading' ? 'spinning' : ''} />
         </button>
@@ -543,23 +542,16 @@ export default function MapViewScreen() {
             alt={item.title}
           >
             <Popup className="custom-popup">
-              <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <p style={{ 
-                  fontSize: '11px', 
-                  color: TYPE_COLORS[item.type] || 'var(--sys-blue)', 
-                  fontWeight: 900, 
-                  letterSpacing: '0.08em', 
-                  marginBottom: '6px', 
-                  textTransform: 'uppercase' 
-                }}>
+              <div className="map-popup">
+                <p className="map-popup__kicker" style={{ color: TYPE_COLORS[item.type] || 'var(--sys-blue)' }}>
                   {new Date(item._renderDate.replace('T', ' ').replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                   {item._isCheckout ? ' • CHECK-OUT' : ''}
                 </p>
-                <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '4px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
+                <p className="map-popup__title">
                   {item.title} {item._isCheckout ? '(Checkout)' : ''}
                 </p>
                 {item.location.address && (
-                  <p style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', marginBottom: '14px', lineHeight: 1.5, fontWeight: 500 }}>
+                  <p className="map-popup__address">
                     {item.location.address}
                   </p>
                 )}
@@ -567,14 +559,7 @@ export default function MapViewScreen() {
                   href={mapsUrl(item.location.latitude!, item.location.longitude!, item.title)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-glass-blue"
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
-                    fontWeight: 700, textDecoration: 'none', gap: '8px',
-                    background: 'rgba(10, 132, 255, 0.5)', border: '1px solid rgba(10, 132, 255, 0.65)',
-                    color: 'var(--sys-label-primary)'
-                  }}
+                  className="btn btn--primary btn--sm btn--block map-popup__action"
                 >
                   <span>{isIOS() ? ' Maps' : 'Google Maps'}</span>
                    <ArrowRight size={14} />
@@ -612,26 +597,18 @@ export default function MapViewScreen() {
               })}
             >
               <Popup className="custom-popup">
-                <div style={{ minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <p style={{ fontWeight: 900, color: 'var(--sys-label-secondary)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>
+                <div className="map-popup">
+                  <p className="map-popup__kicker">
                     Destination
                   </p>
-                  <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '12px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
+                  <p className="map-popup__title">
                     {landing.name}
                   </p>
                   <a
                     href={mapsUrl(landing.lat, landing.lng, landing.name)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-glass-blue"
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '10px 16px', borderRadius: '12px', fontSize: '13px', 
-                      fontWeight: 700, textDecoration: 'none', 
-                      background: 'rgba(10, 132, 255, 0.5)',
-                      borderColor: 'rgba(10, 132, 255, 0.65)',
-                      color: 'var(--sys-label-primary)'
-                    }}
+                    className="btn btn--primary btn--sm btn--block map-popup__action"
                   >
                     Open in Maps
                   </a>
@@ -643,77 +620,44 @@ export default function MapViewScreen() {
       </MapContainer>
 
       {routeStatus === 'loading' && (
-        <div style={{
-          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(10, 132, 255, 0.2)', backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          color: 'var(--sys-label-primary)', fontSize: '13px', fontWeight: 700,
-          padding: '12px 24px', borderRadius: '24px',
-          zIndex: 2000, whiteSpace: 'nowrap',
-          boxShadow: '0 8px 32px rgba(10, 132, 255, 0.25)',
-          border: '1.5px solid rgba(10, 132, 255, 0.4)',
-          display: 'flex', alignItems: 'center', gap: '10px'
-        }}>
-          <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} />
+        <div className="map-toast" role="status">
+          <Loader size={18} className="spinning" />
           <span>Syncing regional routes…</span>
         </div>
       )}
 
       {routeStatus === 'error' && (
-        <div style={{
-          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(255, 59, 48, 0.2)', backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          color: 'var(--sys-label-primary)', fontSize: '13px', fontWeight: 700,
-          padding: '12px 24px', borderRadius: '24px',
-          zIndex: 2000, whiteSpace: 'nowrap',
-          boxShadow: '0 8px 32px rgba(255, 59, 48, 0.25)',
-          border: '1.5px solid rgba(255, 59, 48, 0.4)',
-          display: 'flex', alignItems: 'center', gap: '10px'
-        }}>
+        <div className="map-toast map-toast--danger" role="alert">
           <X size={18} onClick={() => setRouteStatus('done')} style={{ cursor: 'pointer' }} />
           <span>Route calculation failed. Check logs.</span>
         </div>
       )}
 
       {routeStatus === 'done' && (
-        <div style={{
-          position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))',
-          left: '16px', background: 'var(--sys-bg-elevated)', backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)', borderRadius: '18px',
-          padding: '12px 14px', zIndex: 1000, display: 'flex', flexDirection: 'column',
-          gap: '8px', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)', maxHeight: '40vh', overflowY: 'auto'
-        }}>
-          <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em', marginBottom: '2px' }}>VISIBILITY BY DAY</div>
-          
+        <div className="map-legend">
+          <div className="map-legend__title">Visibility by day</div>
+
           {allTripDayKeys.map((key, i) => {
             const isHidden = hiddenDayFilters.includes(key);
             const d = new Date(`${key}T12:00:00`);
             const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
             return (
-              <div 
-                key={key} 
+              <div
+                key={key}
                 onClick={() => toggleDayFilter(key)}
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '10px', 
-                  cursor: 'pointer', opacity: isHidden ? 0.35 : 1,
-                  transition: 'all 0.2s ease'
-                }}
+                className={`map-legend__day${isHidden ? ' map-legend__day--hidden' : ''}`}
               >
-                <div style={{ width: '28px', height: '6px', borderRadius: '3px', background: DAY_PALETTE[i % DAY_PALETTE.length], flexShrink: 0 }} />
-                <span style={{ color: 'var(--sys-label-primary)', fontSize: '12px', fontWeight: 600 }}>{label}</span>
+                <div className="map-legend__swatch" style={{ background: DAY_PALETTE[i % DAY_PALETTE.length] }} />
+                <span>{label}</span>
               </div>
             );
           })}
 
-          <div style={{ height: '1px', background: 'rgba(var(--neutral-rgb), 0.1)', margin: '4px 0' }} />
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '28px', height: '0', borderTop: '2px dashed rgba(180, 180, 200, 0.4)', flexShrink: 0 }} />
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--sys-label-tertiary)' }}>Between Days</span>
+          <div className="map-legend__divider" />
+
+          <div className="map-legend__note">
+            <div className="map-legend__dash" />
+            <span>Between Days</span>
           </div>
         </div>
       )}

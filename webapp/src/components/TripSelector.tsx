@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore';
-import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Calendar, ChevronRight, LogOut, Copy, Pencil, Plane, Trash2 } from 'lucide-react';
 import { auth } from '../core/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -111,25 +111,29 @@ const TripSelector: React.FC = () => {
   }, [trips, currentTripId, setCurrentTrip]);
 
   return (
-    <div className="trip-selector-screen">
+    <div className="screen trip-selector-screen">
       <header className="screen-header">
-        <h1 style={{ flex: 1, fontSize: '2rem', fontWeight: 800, margin: 0, letterSpacing: '-1px' }}>My Trips</h1>
-        <button onClick={handleLogout} className="logout-btn" aria-label="Logout">
+        <div className="screen-header__titles">
+          <h1 className="page-title">My Trips</h1>
+          <p className="page-subtitle">{trips.length} trip{trips.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button onClick={handleLogout} className="icon-btn icon-btn--lg icon-btn--round" aria-label="Logout" title="Sign out">
           <LogOut size={18} />
         </button>
       </header>
 
-      <main className="trip-list-container">
-        <div className="trip-list">
+      <main className="screen-body">
+        <div className="list-stack">
         {trips.length === 0 ? (
           <div className="empty-state">
-            <p>No trips yet. Plan your first adventure!</p>
+            <div className="empty-state__icon"><Plane size={26} /></div>
+            <p className="empty-state__text">No trips yet. Plan your first adventure!</p>
           </div>
         ) : (
           trips.map(trip => (
             <div 
               key={trip.id} 
-              className={`trip-card ${currentTripId === trip.id ? 'active' : ''}`}
+              className={`card card--interactive trip-card ${currentTripId === trip.id ? 'active' : ''}`}
               onClick={() => handleSelectTrip(trip.id)}
             >
               <div className="trip-info">
@@ -158,24 +162,27 @@ const TripSelector: React.FC = () => {
                   <>
                     <button 
                       onClick={(e) => handleStartRename(e, trip.id, trip.title)}
-                      className="duplicate-trip-btn"
+                      className="icon-btn icon-btn--plain duplicate-trip-btn"
                       title="Rename"
+                      aria-label={`Rename ${trip.title}`}
                     >
                       <Pencil size={18} />
                     </button>
                     <button 
-                      onClick={(e) => handleDuplicateTrip(e, trip.id)} 
-                      className="duplicate-trip-btn"
+                      onClick={(e) => handleDuplicateTrip(e, trip.id)}
+                      className="icon-btn icon-btn--plain duplicate-trip-btn"
                       title="Duplicate Trip"
+                      aria-label={`Duplicate ${trip.title}`}
                     >
                       <Copy size={18} />
                     </button>
                     <button 
-                      onClick={(e) => handleDeleteTrip(e, trip.id)} 
-                      className="delete-trip-btn"
+                      onClick={(e) => handleDeleteTrip(e, trip.id)}
+                      className="icon-btn icon-btn--plain delete-trip-btn"
                       title="Delete"
+                      aria-label={`Delete ${trip.title}`}
                     >
-                      <Trash2 size={20} />
+                      <Trash2 size={18} />
                     </button>
                   </>
                 )}
@@ -185,32 +192,33 @@ const TripSelector: React.FC = () => {
           ))
         )}
 
-        <button 
-          onClick={() => setIsAdding(true)} 
-          className="btn-glass-blue add-trip-btn-large"
+        <button
+          onClick={() => setIsAdding(true)}
+          className="btn btn--tonal btn--lg btn--block add-trip-btn-large"
         >
-          <Plus size={24} />
+          <Plus size={20} />
           <span>Plan New Trip</span>
         </button>
         </div>
       </main>
 
       {isAdding && (
-        <div className="modal-overlay" onClick={() => setIsAdding(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <h2>New Trip</h2>
-            <form onSubmit={handleAddTrip}>
-              <input 
+        <div className="modal-backdrop modal-backdrop--center" onClick={() => setIsAdding(false)}>
+          <div className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="new-trip-title" onClick={e => e.stopPropagation()}>
+            <h2 id="new-trip-title" className="modal-title">New Trip</h2>
+            <form onSubmit={handleAddTrip} className="modal-form">
+              <input
                 autoFocus
-                type="text" 
+                type="text"
+                aria-label="Trip title"
                 placeholder="Trip Title (e.g., Japan Summer 2025)"
                 value={newTripTitle}
                 onChange={e => setNewTripTitle(e.target.value)}
-                style={{ fontSize: '16px' }}
+                className="edit-field-input"
               />
-              <div className="modal-actions">
-                <button type="button" onClick={() => setIsAdding(false)} disabled={isCreating}>Cancel</button>
-                <button type="submit" className="submit-btn" disabled={!newTripTitle.trim() || isCreating}>
+              <div className="modal-footer">
+                <button type="button" className="btn" onClick={() => setIsAdding(false)} disabled={isCreating}>Cancel</button>
+                <button type="submit" className="btn btn--primary submit-btn" disabled={!newTripTitle.trim() || isCreating}>
                   {isCreating ? 'Creating...' : 'Create'}
                 </button>
               </div>
@@ -218,190 +226,6 @@ const TripSelector: React.FC = () => {
           </div>
         </div>
       )}
-
-      <style>{`
-        .trip-selector-screen {
-          min-height: 100vh;
-          background: transparent;
-          color: var(--sys-label-primary);
-          box-sizing: border-box;
-        }
-
-        .trip-list-container {
-          padding: 24px;
-          padding-bottom: 120px;
-        }
-
-        .logout-btn {
-          background: rgba(var(--neutral-rgb), 0.1);
-          border: none; color: var(--sys-label-secondary);
-          width: 40px; height: 40px;
-          border-radius: 20px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-        }
-
-        .trip-list {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .trip-card {
-          background: rgba(var(--neutral-rgb), 0.03);
-          border: 1px solid rgba(var(--neutral-rgb), 0.08);
-          border-radius: 24px;
-          padding: 24px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .trip-card::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(var(--neutral-rgb), 0.05) 0%, transparent 100%);
-          pointer-events: none;
-        }
-
-        .trip-card:hover {
-          background: rgba(var(--neutral-rgb), 0.07);
-          transform: translateY(-4px);
-          border-color: rgba(var(--neutral-rgb), 0.15);
-          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-        }
-
-        .trip-card.active {
-          border-color: var(--sys-blue);
-          background: rgba(10, 132, 255, 0.06);
-          box-shadow: 0 0 0 1px var(--sys-blue), 0 15px 45px rgba(0, 0, 0, 0.25);
-        }
-
-        .trip-info h3 { margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 600; }
-        
-        .trip-meta {
-          display: flex;
-          gap: 12px;
-          color: var(--sys-label-secondary);
-          font-size: 0.9rem;
-          align-items: center;
-        }
-
-        .trip-meta span { display: flex; align-items: center; gap: 4px; }
-
-        .trip-actions {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-        }
-
-        .duplicate-trip-btn {
-          background: transparent;
-          border: none;
-          color: rgba(var(--neutral-rgb), 0.4);
-          padding: 8px;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-        .duplicate-trip-btn:hover {
-          color: var(--sys-label-primary) !important;
-          background: rgba(var(--neutral-rgb), 0.1);
-        }
-
-        .delete-trip-btn {
-          background: transparent;
-          border: none;
-          color: rgba(255, 69, 58, 0.4);
-          padding: 8px;
-          border-radius: 8px;
-          transition: all 0.2s;
-        }
-        .delete-trip-btn:hover {
-          color: var(--sys-red) !important;
-          background: rgba(255, 69, 58, 0.15);
-        }
-
-        .chevron { color: rgba(var(--neutral-rgb), 0.2); transition: color 0.2s; }
-        .trip-card:hover .chevron { color: rgba(var(--neutral-rgb), 0.6); }
-
-        .add-trip-btn-large {
-          margin-top: 16px;
-          border-radius: 20px;
-          padding: 20px;
-          font-size: 1.1rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          transition: all 0.2s ease;
-        }
-
-        .add-trip-btn-large:hover { transform: translateY(-2px); }
-
-        .empty-state {
-          padding: 40px;
-          text-align: center;
-          color: var(--sys-label-secondary);
-          border: 2px dashed rgba(var(--neutral-rgb), 0.05);
-          border-radius: 24px;
-          margin-bottom: 24px;
-        }
-
-        .modal-overlay {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(5px);
-          display: flex; align-items: center; justify-content: center;
-          z-index: 1000;
-          padding: 20px;
-        }
-
-        .modal-content {
-          background: var(--sys-bg-elevated);
-          width: 100%;
-          max-width: 400px;
-          border-radius: 24px;
-          padding: 24px;
-          border: 1px solid rgba(var(--neutral-rgb), 0.1);
-        }
-
-        .modal-content h2 { margin: 0 0 20px 0; font-size: 1.5rem; }
-
-        .modal-content input {
-          width: 100%;
-          background: var(--sys-bg-elevated-2);
-          border: none;
-          border-radius: 12px;
-          padding: 16px;
-          color: var(--sys-label-primary);
-          font-size: 16px;
-          margin-bottom: 24px;
-          outline: none;
-        }
-
-        .modal-content input:focus { box-shadow: 0 0 0 2px rgba(var(--neutral-rgb), 0.1); }
-
-        .modal-actions {
-          display: flex; gap: 12px;
-        }
-
-        .modal-actions button {
-          flex: 1; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer;
-        }
-
-        .modal-actions button:first-child { background: var(--sys-bg-elevated-2); color: var(--sys-label-secondary); }
-        .submit-btn { background: var(--sys-label-primary); color: var(--sys-bg-base); }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-      `}</style>
     </div>
   );
 };

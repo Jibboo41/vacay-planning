@@ -16,67 +16,48 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
 
   return (
     <div
-      className={`glass-card fade-in ${isExpanded ? 'expanded' : ''}`}
+      className={`travel-card travel-card--note fade-in ${isExpanded ? 'expanded' : ''}`}
       onClick={() => setIsExpanded(!isExpanded)}
       role="button"
       tabIndex={0}
-      style={{
-        borderLeft: '4px solid var(--sys-label-tertiary)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        overflow: 'hidden',
-        maxHeight: isExpanded ? '800px' : item.imageUrl ? '180px' : '120px',
-        padding: '16px',
-        borderRadius: '16px',
-        margin: '0 16px 12px',
-        position: 'relative',
-        background: isExpanded ? 'rgba(var(--neutral-rgb), 0.05)' : undefined
-      }}
+      style={{ maxHeight: isExpanded ? '800px' : item.imageUrl ? '180px' : '120px' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-secondary)', background: 'rgba(var(--neutral-rgb), 0.05)', padding: '2px 7px', borderRadius: '6px', letterSpacing: '0.05em' }}>
+      <div className="travel-card__meta">
+        <span className="item-chip">
           {item.title.toUpperCase()}
         </span>
-        <div 
+        <div
           className="drag-handle"
           onClick={(e: any) => e.stopPropagation()}
           onTouchStart={onGripTouchStart}
         >
-          <GripVertical size={16} color="var(--sys-label-tertiary)" />
+          <GripVertical size={16} />
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+      <div className="travel-card__body travel-card__body--top">
         <ItemThumbnail imageUrl={item.imageUrl} title={item.title} icon={<StickyNote size={20} />} color="var(--sys-label-secondary)" background="var(--glass-bg-light)" onEdit={onPress} />
 
         {/* Title hidden as requested since it's in the badge */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="travel-card__main">
           {item.description && (
-            <div style={{
-              fontSize: '14px', color: 'var(--sys-label-secondary)',
-              lineHeight: '1.5', margin: '4px 0 0 0',
-              maxHeight: '100px', overflowY: 'auto'
-            }}>
+            <div className="travel-card__note-text">
               <Linkified text={item.description} />
             </div>
           )}
         </div>
 
-        <div style={{ padding: '4px', opacity: 0.4 }}>
+        <div className="travel-card__chevron">
           {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
       </div>
 
       {isExpanded && (
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(var(--neutral-rgb), 0.05)' }}>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button 
+        <div className="travel-card__details">
+          <div className="travel-card__actions">
+            <button
               onClick={(e) => { e.stopPropagation(); onPress(); }}
-              className="details-btn btn-glass-blue"
-              style={{
-                flex: 1, padding: '12px', borderRadius: '12px',
-                fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}
+              className="details-btn btn btn--tonal btn--grow"
             >
               Edit Note
             </button>
@@ -87,15 +68,7 @@ export default function NoteCard({ item, onPress, onGripTouchStart }: NoteCardPr
                   useTripStore.getState().deleteItem(item.id);
                 }
               }}
-              style={{ 
-                width: '46px', height: '46px', borderRadius: '12px',
-                color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.2s ease', border: '1px solid rgba(255, 69, 58, 0.2)',
-                cursor: 'pointer', flexShrink: 0
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
+              className="icon-btn icon-btn--lg icon-btn--danger"
               aria-label="Delete"
             >
               <Trash2 size={18} />

@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import './ui.css'
 import './appearance.css'
 import { applyAppearance, readAppearance } from './core/appearance'
 

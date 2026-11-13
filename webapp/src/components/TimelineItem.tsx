@@ -35,9 +35,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         case 'flight':   return { icon: <Plane size={24} />, color: 'var(--sys-blue)', bg: 'rgba(10, 132, 255, 0.1)' };
         case 'hotel':    return { 
           icon: (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-               <BedDouble size={20} style={{ marginBottom: '0px' }} />
-               <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'OUT' : 'IN'}</span>
+            <div className="item-icon-stack">
+               <BedDouble size={20} />
+               <span>{isCheckout ? 'OUT' : 'IN'}</span>
             </div>
           ), 
           color: isCheckout ? 'var(--sys-red-alt)' : 'var(--sys-orange)',
@@ -45,9 +45,9 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         };
         case 'rental-car': return { 
           icon: (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-               <Car size={20} style={{ marginBottom: '0px' }} />
-               <span style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.5px', marginTop: '-2px' }}>{isCheckout ? 'RET' : 'PKUP'}</span>
+            <div className="item-icon-stack">
+               <Car size={20} />
+               <span>{isCheckout ? 'RET' : 'PKUP'}</span>
             </div>
           ),
           color: 'var(--sys-cyan)',
@@ -84,101 +84,88 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
   };
 
 
+  const hasCoordinates = typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number';
+  // Show the place name once: a second line is only worth it when there is a distinct address.
+  const placeName = item.location.name && item.location.name !== item.location.address ? item.location.name : '';
+  const addressLine = item.location.address || (placeName ? '' : 'No location');
+  const cardClassName = [
+    'travel-card fade-in',
+    isExpanded && 'expanded',
+    item.isStarred && 'travel-card--starred',
+    tintedBackgrounds && 'travel-card--tinted',
+    groupPosition && groupPosition !== 'single' && `travel-card--group-${groupPosition}`,
+  ].filter(Boolean).join(' ');
+
   return (
     <div
-      className={`travel-card fade-in ${isExpanded ? 'expanded' : ''}`}
+      className={cardClassName}
       onClick={() => setIsExpanded(!isExpanded)}
       role="button"
       tabIndex={0}
-      style={{
-        border: item.isStarred ? '1px solid rgba(255, 215, 0, 0.5)' : undefined,
-        borderLeft: item.isStarred ? '4px solid var(--sys-gold)' : `4px solid ${theme.color}`,
-        boxShadow: item.isStarred ? '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(var(--neutral-rgb), 0.1)' : undefined,
-        backgroundColor: tintedBackgrounds ? theme.bg : undefined,
-        overflow: 'hidden',
-        maxHeight: isExpanded ? '1000px' : undefined,
-        marginTop: (groupPosition === 'middle' || groupPosition === 'end') ? '-12px' : '0px',
-        borderTopLeftRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
-        borderTopRightRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
-        borderBottomLeftRadius: (groupPosition === 'middle' || groupPosition === 'start') ? '0' : '20px',
-        borderBottomRightRadius: (groupPosition === 'middle' || groupPosition === 'start') ? '0' : '20px',
-        zIndex: groupPosition === 'start' ? 2 : groupPosition === 'middle' ? 1 : 0,
-      }}
+      style={{ '--item-color': theme.color, '--item-tint': theme.bg } as React.CSSProperties}
     >
-      {(groupPosition === 'middle' || groupPosition === 'end') && (
-         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(var(--neutral-rgb), 0.05)', zIndex: 5 }} />
-      )}
+      {(groupPosition === 'middle' || groupPosition === 'end') && <div className="travel-card__seam" />}
       {/* Top row: date label | times | drag handle */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-secondary)', letterSpacing: '0.05em' }}>
+      <div className="travel-card__meta">
+        <div className="travel-card__meta-group">
+          <span className="travel-card__date">
             {getDayLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}
           </span>
-          
+
           {/* Weather Badge */}
           {(() => {
             if (!weather || !item.location.latitude || !item.location.longitude) return null;
             if (item.type !== 'hotel' && item.type !== 'activity' && item.type !== 'hiking' && item.type !== 'hike') return null;
-            
+
             const dateKey = getDayKey(isCheckout && item.endDate ? item.endDate : item.startDate);
-            const itemWeather = weather.forecast.find(f => 
-              f.date === dateKey && 
-              f.lat?.toFixed(3) === item.location.latitude?.toFixed(3) && 
+            const itemWeather = weather.forecast.find(f =>
+              f.date === dateKey &&
+              f.lat?.toFixed(3) === item.location.latitude?.toFixed(3) &&
               f.lon?.toFixed(3) === item.location.longitude?.toFixed(3)
             );
-            
+
             if (!itemWeather) return null;
-            
+
             return (
-              <div 
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '6px', 
-                  fontSize: '10px', fontWeight: 800, color: 'var(--sys-label-primary)',
-                  background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 7px', borderRadius: '6px',
-                  border: '1px solid rgba(var(--neutral-rgb), 0.08)'
-                }}
-                title={itemWeather.condition}
-              >
-                <span style={{ color: 'var(--sys-orange)' }}>H: {Math.round(itemWeather.tempHigh)}°</span>
-                <span style={{ color: 'var(--sys-blue)' }}>L: {Math.round(itemWeather.tempLow)}°</span>
+              <div className="item-chip" title={itemWeather.condition}>
+                <span className="temp-high">H: {Math.round(itemWeather.tempHigh)}°</span>
+                <span className="temp-low">L: {Math.round(itemWeather.tempLow)}°</span>
               </div>
             );
           })()}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, background: theme.bg, padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-              {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') :
-                item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
-                item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
-                item.type === 'flight' ? 'TAKEOFF' : 
-                item.type === 'note' ? item.title.toUpperCase() : 'START'}
-              {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+        <div className="travel-card__meta-group travel-card__meta-group--end">
+          <div className="item-chip item-chip--tone">
+            {item.type === 'hotel' ? (isCheckout ? 'CHECK-OUT' : 'CHECK-IN') :
+              item.type === 'rental-car' ? (isCheckout ? 'RETURN' : 'PICKUP') :
+              item.type === 'food' ? (item.foodDetails?.mealType?.toUpperCase() || 'DINING') :
+              item.type === 'flight' ? 'TAKEOFF' :
+              item.type === 'note' ? item.title.toUpperCase() : 'START'}
+            {item.type !== 'food' && ` ${getTimeLabel(isCheckout && item.endDate ? item.endDate : item.startDate)}`}
+            {(() => {
+              if (item.type === 'hotel' && !isCheckout && item.endDate) {
+                const nDays = Math.round((new Date(item.endDate).getTime() - new Date(item.startDate).getTime()) / (1000 * 60 * 60 * 24));
+                if (nDays > 0) return ` (${nDays} ${nDays === 1 ? 'night' : 'nights'})`;
+              }
+              return '';
+            })()}
+          </div>
+          {!isCheckout && item.endDate && item.endDate.includes('T') &&
+            item.type !== 'hotel' && item.type !== 'rental-car' && (
+            <div className="item-chip">
+              {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
               {(() => {
-                if (item.type === 'hotel' && !isCheckout && item.endDate) {
-                  const nDays = Math.round((new Date(item.endDate).getTime() - new Date(item.startDate).getTime()) / (1000 * 60 * 60 * 24));
-                  if (nDays > 0) return ` (${nDays} ${nDays === 1 ? 'night' : 'nights'})`;
-                }
-                return '';
+                const s = item.startDate.split('T')[0];
+                const e = item.endDate.split('T')[0];
+                if (s === e) return null;
+                const d1 = new Date(s);
+                const d2 = new Date(e);
+                const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
+                return diff > 0 ? <span className="item-chip__offset">+{diff}</span> : null;
               })()}
             </div>
-            {!isCheckout && item.endDate && item.endDate.includes('T') &&
-              item.type !== 'hotel' && item.type !== 'rental-car' && (
-              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 7px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-                {item.type === 'flight' ? 'LANDING' : 'END'} {getTimeLabel(item.endDate)}
-                {(() => {
-                  const s = item.startDate.split('T')[0];
-                  const e = item.endDate.split('T')[0];
-                  if (s === e) return null;
-                  const d1 = new Date(s);
-                  const d2 = new Date(e);
-                  const diff = Math.round((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
-                  return diff > 0 ? <span style={{ color: 'var(--sys-blue)', marginLeft: '2px' }}>+{diff}</span> : null;
-                })()}
-              </div>
-            )}
-          </div>
+          )}
 
           <div
             className="drag-handle"
@@ -191,37 +178,31 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       </div>
 
       {/* Body row: icon | title+location | chevron */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+      <div className="travel-card__body">
         <ItemThumbnail imageUrl={item.imageUrl} title={item.title} icon={theme.icon} color={theme.color} background={theme.bg} onEdit={onPress} />
 
         {/* Title + location — flex:1, full width */}
-        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <div className="travel-card__main">
           {item.type !== 'note' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--sys-label-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
+            <div className="travel-card__title-row">
+              <h3 className="travel-card__title">
                 {item.title}
               </h3>
               {supportsActivityBooking(item.type) && <ActivityBookingBadge item={item} onEdit={onPress} />}
-              <div 
+              <div
+                className={`travel-card__star${item.isStarred ? ' travel-card__star--on' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   useTripStore.getState().updateItem(item.id, { isStarred: !item.isStarred });
                 }}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px', flexShrink: 0 }}
                 title={item.isStarred ? "Remove preferred activity star" : "Mark as preferred activity for the day"}
               >
-                <Star size={16} fill={item.isStarred ? 'var(--sys-gold)' : 'none'} color={item.isStarred ? 'var(--sys-gold)' : 'var(--sys-label-tertiary)'} />
+                <Star size={16} fill={item.isStarred ? 'currentColor' : 'none'} />
               </div>
             </div>
           )}
           <div
-            style={{
-              display: 'flex', alignItems: 'flex-start',
-              cursor: (typeof item.location.latitude === 'number') ? 'pointer' : 'default',
-              padding: '1px 0',
-              transition: 'background 0.2s',
-              overflow: 'hidden'
-            }}
+            className={`travel-card__location${hasCoordinates ? ' travel-card__location--link' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               if (typeof item.location.latitude === 'number' && typeof item.location.longitude === 'number') {
@@ -229,23 +210,11 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 navigate('/map');
               }
             }}
-            onMouseEnter={e => {
-               if (typeof item.location.latitude === 'number') e.currentTarget.style.background = 'rgba(var(--neutral-rgb), 0.06)';
-            }}
-            onMouseLeave={e => {
-               e.currentTarget.style.background = 'transparent';
-            }}
           >
-            <MapPin size={12} color="var(--sys-label-tertiary)" style={{ marginRight: '5px', marginTop: '3px', flexShrink: 0 }} />
-            <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              {item.location.name && item.location.name !== item.location.address && (
-                <span style={{ fontSize: '13px', color: 'var(--sys-label-primary)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {item.location.name}
-                </span>
-              )}
-              <span style={{ fontSize: '12px', color: 'var(--sys-label-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {item.location.address || item.location.name || 'No location'}
-              </span>
+            <MapPin size={12} />
+            <div className="travel-card__location-text">
+              {placeName && <span className="travel-card__place">{placeName}</span>}
+              {addressLine && <span className="travel-card__address">{addressLine}</span>}
             </div>
           </div>
         </div>
@@ -253,7 +222,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         {/* Chevron (Hide for notes if they don't have confirmation/cost/paid info) */}
         {!(item.type === 'note' && !item.confirmationNumber && item.cost === undefined && item.paidAmount === undefined) && (
           <div
-            style={{ padding: '8px', paddingLeft: '6px', opacity: 0.4, cursor: 'pointer', zIndex: 10, flexShrink: 0 }}
+            className="travel-card__chevron"
             onClick={(e) => {
               e.stopPropagation();
               setIsExpanded(!isExpanded);
@@ -267,28 +236,24 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
       {supportsActivityBooking(item.type) && <ActivityBookingTiming item={item} />}
 
       {item.type === 'note' && item.description && (
-        <div style={{ 
-          fontSize: '14px', color: 'var(--sys-label-secondary)', 
-          lineHeight: '1.5', margin: '4px 0 8px 56px',
-          maxHeight: '120px', overflowY: 'auto'
-        }}>
+        <div className="travel-card__note">
           <Linkified text={item.description} />
         </div>
       )}
 
       {isExpanded && (
-        <div className="expand-content" style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(var(--neutral-rgb), 0.05)' }}>
+        <div className="expand-content travel-card__details">
           {isCheckout ? (
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-orange)', background: 'rgba(255,159,10,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+            <div className="travel-card__chips">
+              <div className="item-chip item-chip--md item-chip--tone tone-orange">
                 {item.type === 'hotel' ? 'CHECK-IN' : 'PICKUP'} {getTimeLabel(item.startDate)}
                 {item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) && ` (${getDayLabel(item.startDate)})`}
               </div>
             </div>
           ) : (item.type === 'hotel' || item.type === 'rental-car') && item.endDate && getDayKey(item.startDate) !== getDayKey(item.endDate) ? (
             // Hotel/rental checkout date: show in expanded view (not shown collapsed)
-            <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--sys-label-secondary)', background: 'rgba(var(--neutral-rgb), 0.06)', padding: '2px 8px', borderRadius: '6px' }}>
+            <div className="travel-card__chips">
+              <div className="item-chip item-chip--md">
                 {item.type === 'hotel' ? 'CHECK-OUT' : 'RETURN'} {getTimeLabel(item.endDate)}
                 {` (${getDayLabel(item.endDate)})`}
               </div>
@@ -296,28 +261,29 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           ) : null}
 
           {(item.type === 'hiking' || item.type === 'hike') && item.hikeDetails && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-              <div style={{ background: 'rgba(48, 209, 88, 0.15)', color: 'var(--sys-green)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 800 }}>
+            <div className="travel-card__chips">
+              <div className="item-chip item-chip--md item-chip--tone tone-green">
                 {item.hikeDetails.difficulty === 'Expert' ? '⬛ EXPERT' : item.hikeDetails.difficulty === 'Hard' ? '🟥 HARD' : item.hikeDetails.difficulty === 'Moderate' ? '🟦 MODERATE' : '🟩 EASY'}
               </div>
               {item.hikeDetails.distance && (
-                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-primary)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <div className="item-chip item-chip--md item-chip--strong">
                   ↔️ {item.hikeDetails.distance}
                 </div>
               )}
               {item.hikeDetails.elevation && (
-                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-primary)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <div className="item-chip item-chip--md item-chip--strong">
                   ⛰️ +{item.hikeDetails.elevation}
                 </div>
               )}
               {item.hikeDetails.duration && (
-                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-primary)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 600 }}>
+                <div className="item-chip item-chip--md item-chip--strong">
                   ⏱️ {item.hikeDetails.duration}
                 </div>
               )}
               {item.hikeDetails.allTrailsLink && (
-                <div 
+                <div
                   role="button"
+                  className="item-chip item-chip--md item-chip--tone item-chip--link tone-green"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -325,53 +291,34 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                     const win = window.top || window;
                     win.open(item.hikeDetails!.allTrailsLink, '_blank', 'noopener,noreferrer');
                   }}
-                  style={{ 
-                    background: 'rgba(48, 209, 88, 0.25)', color: 'var(--sys-green)', padding: '4px 12px',
-                    borderRadius: '8px', fontSize: '12px', fontWeight: 900, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '4px',
-                    border: '1px solid rgba(48, 209, 88, 0.3)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-                  }}
                 >
                   🔗 AllTrails
                 </div>
               )}
             </div>
           )}
-          
+
           {item.type === 'food' && item.foodDetails && (item.foodDetails.happyCowUrl || item.foodDetails.officialUrl) && (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <div className="travel-card__chips">
               {item.foodDetails.happyCowUrl && (
-                <div 
+                <div
                   role="button"
+                  className="item-chip item-chip--md item-chip--tone item-chip--link tone-green"
                   onClick={(e) => {
                     e.preventDefault(); e.stopPropagation();
                     window.open(item.foodDetails!.happyCowUrl!, '_blank', 'noopener,noreferrer');
-                  }}
-                  style={{ 
-                    background: 'rgba(48, 209, 88, 0.25)', color: 'var(--sys-green)', padding: '4px 12px',
-                    borderRadius: '8px', fontSize: '11px', fontWeight: 900, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '4px',
-                    border: '1px solid rgba(48, 209, 88, 0.3)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                   }}
                 >
                   🥗 HappyCow
                 </div>
               )}
               {item.foodDetails.officialUrl && (
-                <div 
+                <div
                   role="button"
+                  className="item-chip item-chip--md item-chip--tone item-chip--link tone-blue"
                   onClick={(e) => {
                     e.preventDefault(); e.stopPropagation();
                     window.open(item.foodDetails!.officialUrl!, '_blank', 'noopener,noreferrer');
-                  }}
-                  style={{ 
-                    background: 'rgba(10, 132, 255, 0.25)', color: 'var(--sys-blue)', padding: '4px 12px',
-                    borderRadius: '8px', fontSize: '11px', fontWeight: 900, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: '4px',
-                    border: '1px solid rgba(10, 132, 255, 0.3)',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
                   }}
                 >
                   <Globe size={11} /> Website
@@ -381,44 +328,30 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           )}
 
           {item.type !== 'note' && item.description && (
-            <div style={{ 
-              fontSize: '14px', color: 'var(--sys-label-secondary)', 
-              lineHeight: '1.5', margin: '0 0 20px 0',
-              maxHeight: '260px', overflowY: 'auto', paddingRight: '4px'
-            }}>
+            <div className="travel-card__description">
               <Linkified text={item.description} />
             </div>
           )}
 
           {item.confirmationNumber && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
-              <Hash size={14} />
-              <span style={{ fontWeight: 600 }}>Confirmation:</span>
-              <span style={{ color: 'var(--sys-label-primary)', fontWeight: 700 }}>{item.confirmationNumber}</span>
+            <div className="travel-card__facts">
+              <div className="travel-card__fact">
+                <Hash size={14} />
+                <span>Confirmation:</span>
+                <strong>{item.confirmationNumber}</strong>
+              </div>
             </div>
           )}
 
           {(item.type === 'hotel' || item.type === 'rental-car' || item.type === 'flight') && (item.hotelDetails || item.rentalDetails || item.flightDetails) && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+            <div className="travel-card__chips">
               {(item.hotelDetails?.refundable || item.rentalDetails?.refundable || item.flightDetails?.refundable) && (
-                <div style={{ 
-                  background: item.type === 'hotel' ? 'rgba(255, 159, 10, 0.15)' : 
-                             item.type === 'rental-car' ? 'rgba(175, 82, 222, 0.15)' :
-                             'rgba(10, 132, 255, 0.15)', 
-                  color: item.type === 'hotel' ? 'var(--sys-orange)' :
-                         item.type === 'rental-car' ? '#AF52DE' :
-                         'var(--sys-blue)',
-                  padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
-                }}>
+                <div className={`item-chip item-chip--md item-chip--tone ${item.type === 'hotel' ? 'tone-orange' : item.type === 'rental-car' ? 'tone-purple' : 'tone-blue'}`}>
                   ✓ REFUNDABLE
                 </div>
               )}
               {(item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate) && (
-                <div style={{ 
-                  background: 'rgba(255, 159, 10, 0.15)', 
-                  color: 'var(--sys-orange)',
-                  padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 800 
-                }}>
+                <div className="item-chip item-chip--md item-chip--tone tone-orange">
                   ⌛ REFUND UNTIL {(() => {
                     const dStr = item.hotelDetails?.refundableCutoffDate || item.rentalDetails?.refundableCutoffDate || item.flightDetails?.refundableCutoffDate;
                     if (!dStr) return '';
@@ -428,42 +361,38 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                 </div>
               )}
               {(item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource) && (
-                <div style={{ background: 'rgba(var(--neutral-rgb), 0.06)', color: 'var(--sys-label-secondary)', padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600 }}>
-                  via <span style={{ color: 'var(--sys-label-primary)', fontWeight: 700 }}>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource}</span>
+                <div className="item-chip item-chip--md">
+                  via <strong>{item.hotelDetails?.bookingSource || item.rentalDetails?.bookingSource || item.flightDetails?.bookingSource}</strong>
                 </div>
               )}
             </div>
           )}
 
           {(item.cost !== undefined || item.paidAmount !== undefined) && (
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+            <div className="travel-card__facts">
               {item.cost !== undefined && item.cost !== null && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
+                <div className="travel-card__fact">
                   <DollarSign size={14} />
-                  <span style={{ fontWeight: 600 }}>Cost:</span>
-                  <span style={{ color: 'var(--sys-label-primary)', fontWeight: 700 }}>${(item.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>Cost:</span>
+                  <strong>${(item.cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                 </div>
               )}
               {item.paidAmount !== undefined && item.paidAmount !== null && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--sys-label-secondary)' }}>
+                <div className="travel-card__fact">
                   <CreditCard size={14} />
-                  <span style={{ fontWeight: 600 }}>Paid:</span>
-                  <span style={{ color: (item.cost && item.paidAmount > item.cost) ? 'var(--sys-red)' : 'var(--sys-green)', fontWeight: 700 }}>
+                  <span>Paid:</span>
+                  <strong className={(item.cost && item.paidAmount > item.cost) ? 'is-over' : 'is-paid'}>
                     ${(item.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
+                  </strong>
                 </div>
               )}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button 
+          <div className="travel-card__actions">
+            <button
               onClick={(e) => { e.stopPropagation(); onPress(); }}
-              className="details-btn btn-glass-blue"
-              style={{
-                flex: 1, padding: '12px', borderRadius: '12px',
-                fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}
+              className="details-btn btn btn--tonal btn--grow"
             >
               Edit
             </button>
@@ -474,15 +403,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
                   useTripStore.getState().deleteItem(item.id);
                 }
               }}
-              style={{ 
-                width: '46px', height: '46px', borderRadius: '12px',
-                color: 'var(--sys-red)', background: 'rgba(255, 69, 58, 0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.2s ease', border: '1px solid rgba(255, 69, 58, 0.2)',
-                cursor: 'pointer', flexShrink: 0
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.2)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 69, 58, 0.1)'}
+              className="icon-btn icon-btn--lg icon-btn--danger"
               aria-label="Delete"
             >
               <Trash2 size={18} />

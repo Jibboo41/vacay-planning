@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type CSSProperties } from 'react';
 import { Plus, Wallet, ShoppingBag, Utensils, Plane, TrainFront, Car, Menu, Bed, Activity, ChevronRight, Fuel, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { Expense } from '../core/models';
@@ -90,88 +90,71 @@ export default function CostTrackerScreen() {
     setShowAdd(false);
   };
 
-  return (
-    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', background: 'transparent' }}>
-      <header className="screen-header">
-        <button 
-          className="header-icon-btn legacy-menu-button"
-          onClick={() => setSidebarOpen(true)}
-        >
-          <Menu size={24} />
-        </button>
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-          <h1 style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
-            Trip Financials
-          </h1>
-          
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span style={{ fontSize: '38px', fontWeight: 900, letterSpacing: '-1.5px', color: 'var(--sys-label-primary)' }}>
-              ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
+  const paidShare = totalCost > 0 ? Math.min(100, Math.max(0, (totalPaid / totalCost) * 100)) : 0;
+  const money = (value: number) => `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-          <div style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--sys-green)' }} />
-              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--sys-label-secondary)' }}>
-                ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} paid
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--sys-blue)' }} />
-              <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--sys-label-secondary)' }}>
-                ${remainingCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} left
-              </span>
-            </div>
+  return (
+    <div className="screen safe-area-inset">
+      <header className="screen-header screen-header--stacked cost-header">
+        <div className="screen-header__row">
+          <button
+            className="header-icon-btn legacy-menu-button"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu size={24} />
+          </button>
+          <div className="screen-header__titles">
+            <h1 className="page-title">Trip Financials</h1>
           </div>
+        </div>
+
+        <div className="cost-summary">
+          <span className="cost-summary__total">{money(totalCost)}</span>
+          <div className="cost-summary__legend">
+            <span><i className="cost-summary__dot cost-summary__dot--paid" />{money(totalPaid)} paid</span>
+            <span><i className="cost-summary__dot cost-summary__dot--left" />{money(remainingCost)} left</span>
+          </div>
+        </div>
+        <div className="progress cost-summary__bar" role="img" aria-label={`${Math.round(paidShare)}% of the trip cost is paid`}>
+          <div className={`progress__bar${paidShare >= 100 ? ' progress__bar--complete' : ''}`} style={{ width: `${paidShare}%` }} />
         </div>
       </header>
 
-      <div style={{ padding: '24px', paddingBottom: '120px' }}>
-        
+      <div className="screen-body">
+
         {/* Category Summary Table */}
         {categoryBreakdown.length > 0 && (
-          <div className="glass-card" style={{ borderRadius: '24px', marginBottom: '24px', overflow: 'hidden' }}>
-            <button 
+          <div className="card cost-breakdown">
+            <button
               onClick={() => setShowSummary(!showSummary)}
-              style={{ 
-                width: '100%', padding: '16px 20px', display: 'flex', alignItems: 'center', 
-                justifyContent: 'space-between', background: 'rgba(var(--neutral-rgb), 0.03)', border: 'none'
-              }}
+              className="cost-breakdown__toggle"
+              aria-expanded={showSummary}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Wallet size={18} color="var(--sys-blue)" />
-                <span style={{ fontWeight: 800, fontSize: '14px', letterSpacing: '0.05em' }}>CATEGORY BREAKDOWN</span>
-              </div>
+              <span className="cost-breakdown__label">
+                <Wallet size={16} />
+                Category Breakdown
+              </span>
               {showSummary ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
-            
+
             {showSummary && (
-              <div style={{ padding: '0 20px 16px 20px', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ 
-                  display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', 
-                  padding: '12px 0', borderBottom: '1px solid rgba(var(--neutral-rgb), 0.08)',
-                  fontSize: '11px', fontWeight: 800, color: 'var(--sys-label-tertiary)', textTransform: 'uppercase'
-                }}>
+              <div className="cost-table">
+                <div className="cost-table__row cost-table__row--head">
                   <span>Category</span>
-                  <span style={{ textAlign: 'right' }}>Total</span>
-                  <span style={{ textAlign: 'right' }}>Paid</span>
-                  <span style={{ textAlign: 'right' }}>Left</span>
+                  <span>Total</span>
+                  <span>Paid</span>
+                  <span>Left</span>
                 </div>
                 {categoryBreakdown.map(cat => (
-                  <div key={cat.category} style={{ 
-                    display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr', 
-                    padding: '14px 0', borderBottom: '1px solid rgba(var(--neutral-rgb), 0.04)',
-                    fontSize: '14px', alignItems: 'center'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                  <div key={cat.category} className="cost-table__row">
+                    <div className="cost-table__category">
                       <span style={{ color: CATEGORY_COLORS[cat.category] }}>{CATEGORY_ICONS[cat.category]}</span>
-                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat.category}</span>
+                      <span>{cat.category}</span>
                     </div>
-                    <span style={{ textAlign: 'right', fontWeight: 600 }}>${cat.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    <span style={{ textAlign: 'right', fontWeight: 600, color: 'var(--sys-green)' }}>${cat.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    <span style={{ textAlign: 'right', fontWeight: 800, color: cat.remaining > 0 ? 'var(--sys-blue)' : 'var(--sys-label-tertiary)' }}>
-                      ${cat.remaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span>{money(cat.total)}</span>
+                    <span className="cost-table__paid">{money(cat.paid)}</span>
+                    <span className={cat.remaining > 0 ? 'cost-table__left' : 'cost-table__settled'}>
+                      {money(cat.remaining)}
                     </span>
                   </div>
                 ))}
@@ -182,71 +165,51 @@ export default function CostTrackerScreen() {
 
         {/* Add Button / Form */}
         {!showAdd ? (
-          <button 
+          <button
             onClick={() => setShowAdd(true)}
-            className="btn-glass-blue"
-            style={{ 
-              width: '100%', padding: '16px', borderRadius: '16px', 
-              fontSize: '16px', display: 'flex', alignItems: 'center', 
-              justifyContent: 'center', gap: '8px', marginBottom: '32px',
-            }}
+            className="btn btn--tonal btn--lg btn--block screen-action"
           >
             <Plus size={20} /> Add Manual Expense
           </button>
         ) : (
-          <div className="glass-card" style={{ 
-            padding: '24px', borderRadius: '24px', 
-            marginBottom: '32px', border: '1px solid var(--sys-blue)'
-          }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 20px 0' }}>New Expense</h3>
-            <input 
+          <div className="form-card">
+            <h3 className="form-card__title">New Expense</h3>
+            <input
               type="text" placeholder="What was it for?" value={newTitle} onChange={e => setNewTitle(e.target.value)}
               className="edit-field-input"
-              style={{ marginBottom: '16px' }}
             />
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ 
-                display: 'flex', alignItems: 'center', flex: 1,
-                background: 'rgba(var(--neutral-rgb), 0.05)', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-                borderRadius: '12px', padding: '0 12px'
-              }}>
-                <span style={{ color: 'var(--sys-label-tertiary)', fontSize: '16px', marginRight: '4px' }}>$</span>
-                <input 
+            <div className="form-row">
+              <div className="input-affix">
+                <span>$</span>
+                <input
                   type="number" placeholder="0.00" value={newAmount} onChange={e => setNewAmount(e.target.value)}
-                  style={{ flex: 1, padding: '12px 0', background: 'transparent', border: 'none', color: 'var(--sys-label-primary)', outline: 'none' }}
                 />
               </div>
-              <select 
+              <select
                 value={newCategory} onChange={e => setNewCategory(e.target.value as any)}
                 className="edit-field-input"
-                style={{ flex: 1 }}
               >
                 {EXPENSE_CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
             </div>
-            <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%', marginBottom: '24px' }}>
-              <input 
+            <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
+              <input
                 type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
                 className="edit-field-input"
               />
             </div>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={handleAdd} 
-                className="btn-glass-blue" 
-                style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
+            <div className="form-actions">
+              <button
+                onClick={handleAdd}
+                className="btn btn--primary"
               >
                 Save
               </button>
-              <button 
-                onClick={() => setShowAdd(false)} 
-                style={{ 
-                  flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
-                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
-                }}
+              <button
+                onClick={() => setShowAdd(false)}
+                className="btn"
               >
                 Cancel
               </button>
@@ -255,10 +218,10 @@ export default function CostTrackerScreen() {
         )}
 
         {/* Expense List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="list-stack">
           {allExpenses.map((exp: Expense) => {
             return (
-              <div 
+              <div
                 key={exp.id}
                 onClick={() => {
                   if (exp.linkedItemId) {
@@ -268,56 +231,41 @@ export default function CostTrackerScreen() {
                     setEditingExpense(exp);
                   }
                 }}
-                className="glass-card"
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '16px', 
-                  padding: '16px', borderRadius: '16px',
-                  transition: 'all 0.2s ease', cursor: 'pointer',
-                  border: '1px solid rgba(var(--neutral-rgb), 0.08)'
-                }}
+                className="card card--interactive expense-row"
+                style={{ '--item-color': CATEGORY_COLORS[exp.category] } as CSSProperties}
               >
-                <div style={{ 
-                  width: '42px', height: '42px', borderRadius: '12px', 
-                  background: `color-mix(in srgb, ${CATEGORY_COLORS[exp.category]} 8%, transparent)`,
-                  color: CATEGORY_COLORS[exp.category],
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: `1px solid color-mix(in srgb, ${CATEGORY_COLORS[exp.category]} 19%, transparent)`
-                }}>
+                <div className="expense-row__icon">
                   {CATEGORY_ICONS[exp.category]}
                 </div>
-                
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+                <div className="expense-row__main">
+                  <h4 className="expense-row__title">
                     {exp.title}
                   </h4>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: 'var(--sys-label-tertiary)', fontWeight: 500 }}>
+                  <p className="expense-row__meta">
                     {exp.date || 'No date'} · {exp.category}
                   </p>
                 </div>
 
-                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <p style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>
-                      ${exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </p>
-                    
-                    {exp.paidAmount > 0 && (
-                      <span style={{ fontSize: '10px', fontWeight: 800, color: exp.paidAmount > exp.amount ? 'var(--sys-red)' : 'var(--sys-green)', textTransform: 'uppercase' }}>
-                        Paid ${exp.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    )}
+                <div className="expense-row__amounts">
+                  <p className="expense-row__amount">
+                    {money(exp.amount)}
+                  </p>
 
-                    {!exp.paid && exp.amount > exp.paidAmount && (
-                      <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 800, textTransform: 'uppercase' }}>
-                        Due ${(exp.amount - exp.paidAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div style={{ color: 'var(--sys-label-quaternary)' }}>
-                    <ChevronRight size={18} />
-                  </div>
+                  {exp.paidAmount > 0 && (
+                    <span className={`expense-row__status ${exp.paidAmount > exp.amount ? 'expense-row__status--over' : 'expense-row__status--paid'}`}>
+                      Paid {money(exp.paidAmount)}
+                    </span>
+                  )}
+
+                  {!exp.paid && exp.amount > exp.paidAmount && (
+                    <span className="expense-row__status expense-row__status--due">
+                      Due {money(exp.amount - exp.paidAmount)}
+                    </span>
+                  )}
                 </div>
+
+                <ChevronRight size={18} className="expense-row__chevron" />
               </div>
             );
           })}

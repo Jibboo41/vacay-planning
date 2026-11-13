@@ -104,77 +104,68 @@ export default function WeatherScreen() {
   }, [items.length]);
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', position: 'relative' }}>
+    <div className="screen safe-area-inset" style={{ position: 'relative' }}>
       {/* Detail Modal Overlay */}
       {selectedDay && (
-        <div 
-          className="modal-overlay"
-          style={{ 
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)',
-            zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '24px', animation: 'fadeIn 0.2s ease-out'
-          }}
+        <div
+          className="modal-backdrop modal-backdrop--center"
           onClick={() => setSelectedDay(null)}
         >
-          <div 
+          <div
             className="weather-detail-dialog"
-            style={{ 
-              width: '100%', maxWidth: '400px', background: 'var(--glass-bg)',
-              borderRadius: '32px', border: '1px solid rgba(var(--neutral-rgb), 0.1)',
-              padding: '32px', position: 'relative', boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center'
-            }}
+            role="dialog"
+            aria-modal="true"
             onClick={e => e.stopPropagation()}
           >
-            <button 
+            <button
               onClick={() => setSelectedDay(null)}
-              style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(var(--neutral-rgb), 0.1)', border: 'none', borderRadius: '50%', padding: '8px', color: 'var(--sys-label-primary)' }}
+              className="icon-btn icon-btn--round weather-detail-dialog__close"
+              aria-label="Close"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--sys-blue)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>
+            <span className="weather-detail-dialog__kicker">
               {selectedDay.isHistorical ? 'Historical Average' : 'Live Forecast'}
             </span>
 
-            <h2 style={{ fontSize: '24px', fontWeight: 800, margin: '0 0 24px 0', color: 'var(--sys-label-primary)' }}>
+            <h2 className="weather-detail-dialog__date">
               {new Date(`${selectedDay.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
             </h2>
 
-            <div style={{ fontSize: '80px', margin: '20px 0', filter: 'drop-shadow(0 0 20px rgba(var(--neutral-rgb), 0.2))' }}>
-              {selectedDay.isHistorical ? <CloudSun size={80} opacity={0.5} /> : (selectedDay.icon || '⛅')}
+            <div className="weather-detail-dialog__icon">
+              {selectedDay.isHistorical ? <CloudSun size={72} opacity={0.5} /> : (selectedDay.icon || '⛅')}
             </div>
 
-            <div style={{ marginBottom: '32px' }}>
-              <span style={{ fontSize: '48px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>{selectedDay.tempHigh}°</span>
-              <span style={{ fontSize: '24px', fontWeight: 600, color: 'var(--sys-label-secondary)', marginLeft: '12px' }}>/ {selectedDay.tempLow}°</span>
-              <p style={{ margin: '8px 0 0 0', fontSize: '16px', fontWeight: 700, color: 'var(--sys-blue)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <div className="weather-detail-dialog__temps">
+              <span className="weather-detail-dialog__high">{selectedDay.tempHigh}°</span>
+              <span className="weather-detail-dialog__low">/ {selectedDay.tempLow}°</span>
+              <p className="weather-detail-dialog__condition">
                 {selectedDay.isHistorical ? 'Normal Conditions' : selectedDay.condition}
               </p>
             </div>
 
-            <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ padding: '16px', background: 'rgba(var(--neutral-rgb), 0.03)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: 'var(--sys-sky)' }}>
+            <div className="weather-detail-dialog__stats">
+              <div className="stat-tile">
+                <div className="stat-tile__label" style={{ color: 'var(--sys-sky)' }}>
                    <Droplets size={16} />
-                   <span style={{ fontSize: '11px', fontWeight: 800 }}>RAIN</span>
+                   <span>Rain</span>
                 </div>
-                <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>{(selectedDay.rainfall || 0).toFixed(2)}"</span>
+                <span className="stat-tile__value">{(selectedDay.rainfall || 0).toFixed(2)}"</span>
               </div>
-              <div style={{ padding: '16px', background: 'rgba(var(--neutral-rgb), 0.03)', borderRadius: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: 'var(--sys-label-secondary)' }}>
+              <div className="stat-tile">
+                <div className="stat-tile__label">
                    <Snowflake size={16} />
-                   <span style={{ fontSize: '11px', fontWeight: 800 }}>SNOW</span>
+                   <span>Snow</span>
                 </div>
-                <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--sys-label-primary)' }}>{(selectedDay.snowfall || 0).toFixed(2)}"</span>
+                <span className="stat-tile__value">{(selectedDay.snowfall || 0).toFixed(2)}"</span>
               </div>
             </div>
 
             {selectedDay.lat !== undefined && dailyLocations.find(dl => dl.date === selectedDay.date && Math.abs(dl.lat - selectedDay.lat!) < 0.001) && (
-              <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--sys-label-secondary)' }}>
+              <div className="weather-detail-dialog__place">
                  <MapPin size={14} />
-                 <span style={{ fontSize: '13px', fontWeight: 600 }}>{dailyLocations.find(dl => dl.date === selectedDay.date && Math.abs(dl.lat - selectedDay.lat!) < 0.001)?.name}</span>
+                 <span>{dailyLocations.find(dl => dl.date === selectedDay.date && Math.abs(dl.lat - selectedDay.lat!) < 0.001)?.name}</span>
               </div>
             )}
           </div>
@@ -184,110 +175,95 @@ export default function WeatherScreen() {
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 800, letterSpacing: '-0.5px', color: 'var(--sys-label-primary)', margin: 0 }}>
-            Local Weather
-          </h1>
-          <p style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', marginTop: '-1px', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div className="screen-header__titles">
+          <h1 className="page-title">Local Weather</h1>
+          <p className="page-subtitle">
             {weather?.lastUpdated ? `Updated ${formatLastUpdated(weather.lastUpdated)}` : 'No sync data'}
           </p>
         </div>
-        <button 
-          className="header-icon-btn btn-glass-blue"
-          style={{ borderRadius: '14px', marginLeft: 'auto' }}
+        <button
+          className="icon-btn icon-btn--lg icon-btn--accent"
           onClick={handleUpdate}
           disabled={loading || isWeatherRefreshing}
+          aria-label="Refresh forecast"
+          title="Refresh forecast"
         >
           <RefreshCw size={20} className={(loading || isWeatherRefreshing) ? 'spinning' : ''} />
         </button>
       </header>
 
-      <div style={{ padding: '16px', paddingBottom: '120px' }}>
+      <div className="screen-body">
         {dailyLocations.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-            <AlertCircle size={48} opacity={0.2} />
-            <p style={{ fontSize: '15px' }}>Add a location with coordinates to see the weather forecast.</p>
+          <div className="empty-state">
+            <div className="empty-state__icon"><AlertCircle size={26} /></div>
+            <p className="empty-state__text">Add a location with coordinates to see the weather forecast.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="list-stack">
             {error && (
-               <div style={{ padding: '16px', background: 'rgba(255, 69, 58, 0.1)', borderRadius: '16px', border: '1px solid rgba(255, 69, 58, 0.2)', display: 'flex', gap: '12px', alignItems: 'center', color: 'var(--sys-red)' }}>
+               <div className="banner banner--danger" role="alert">
                   <AlertCircle size={20} />
-                  <span style={{ fontSize: '14px' }}>{error}</span>
+                  <span>{error}</span>
                </div>
             )}
 
             {weather?.forecast.map(day => {
               const isHot = day.tempHigh > 80;
               const isCold = day.tempHigh < 50;
-              const cardBg = isHot ? 'rgba(255, 159, 10, 0.08)' : isCold ? 'rgba(10, 132, 255, 0.08)' : 'rgba(var(--neutral-rgb), 0.04)';
-              const borderCol = isHot ? 'rgba(255, 159, 10, 0.2)' : isCold ? 'rgba(10, 132, 255, 0.2)' : 'rgba(var(--neutral-rgb), 0.1)';
               const loc = dailyLocations.find((dl: any) => dl.date === day.date && day.lat !== undefined && Math.abs(dl.lat - day.lat) < 0.001);
               const hasHistorical = !!day.isHistorical;
               const primaryIcon = day.icon || '⛅';
+              const tone = isHot ? ' weather-row--hot' : isCold ? ' weather-row--cold' : '';
 
               return (
-                <div 
+                <div
                   key={`${day.date}-${day.lat}-${day.lon}`}
-                  className="glass-effect clickable"
+                  className={`card card--interactive weather-row clickable${tone}`}
                   onClick={() => setSelectedDay(day)}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '16px', 
-                    padding: '16px 20px', borderRadius: '20px', 
-                    background: cardBg,
-                    border: `1px solid ${borderCol}`,
-                    backdropFilter: 'blur(40px)',
-                    WebkitBackdropFilter: 'blur(40px)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                  }}
                 >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
+                  <div className="weather-row__main">
+                    <div className="weather-row__heading">
+                      <h4 className="weather-row__date">
                         {new Date(`${day.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
                       </h4>
                       {hasHistorical && (
-                        <span style={{ fontSize: '9px', fontWeight: 900, color: 'rgba(var(--neutral-rgb), 0.4)', background: 'rgba(var(--neutral-rgb), 0.05)', padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.05em' }}>
+                        <span className="item-chip">
                           HISTORICAL
                         </span>
                       )}
                     </div>
                     {loc && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px', color: 'var(--sys-blue)', opacity: 0.9 }}>
+                      <div className="weather-row__place">
                          <MapPin size={12} />
-                         <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                         <span>
                             {loc.name}
                          </span>
                       </div>
                     )}
-                    <div style={{ margin: '14px 0 0 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-primary)', background: 'rgba(var(--neutral-rgb), 0.05)', padding: '4px 10px', borderRadius: '10px' }}>
-                        <Thermometer size={14} color="var(--sys-blue)" /> {day.tempHigh}°
+                    <div className="weather-row__temps">
+                      <div className="weather-row__high">
+                        <Thermometer size={14} /> {day.tempHigh}°
                       </div>
-                      <span style={{ fontSize: '13px', color: 'var(--sys-label-secondary)', fontWeight: 600 }}>/ {day.tempLow}°</span>
+                      <span className="weather-row__low">/ {day.tempLow}°</span>
                     </div>
                   </div>
-                  
-                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                      <span style={{ fontSize: '32px', filter: 'drop-shadow(0 0 12px rgba(var(--neutral-rgb), 0.2))' }}>
-                        {hasHistorical ? <CloudSun size={28} opacity={0.5} /> : (primaryIcon)}
-                      </span>
+
+                  <div className="weather-row__side">
+                    <div className="weather-row__icon">
+                      {hasHistorical ? <CloudSun size={28} opacity={0.5} /> : (primaryIcon)}
                     </div>
-                    <p style={{ margin: 0, fontSize: '10px', fontWeight: 900, color: isHot ? 'var(--sys-orange)' : isCold ? 'var(--sys-blue)' : 'var(--sys-label-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                    <p className="weather-row__condition">
                       {day.isHistorical ? 'HISTORICAL AVG' : day.condition}
                     </p>
                     {day.isHistorical && (
-                      <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                      <div className="weather-row__precip">
                         {(day.rainfall || 0) > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-sky)', fontSize: '11px', fontWeight: 700 }}>
+                          <div style={{ color: 'var(--sys-sky)' }}>
                             <Droplets size={12} /> {day.rainfall?.toFixed(2)}"
                           </div>
                         )}
                         {(day.snowfall || 0) > 0 && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-label-secondary)', fontSize: '11px', fontWeight: 700 }}>
+                          <div>
                             <Snowflake size={12} /> {day.snowfall?.toFixed(2)}"
                           </div>
                         )}
@@ -299,9 +275,9 @@ export default function WeatherScreen() {
             })}
 
             {(!weather || loading) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="list-stack">
                 {[1,2,3].map(i => (
-                  <div key={i} className="skeleton-line" style={{ height: '100px', borderRadius: '24px', opacity: 0.1 }} />
+                  <div key={i} className="skeleton-line" style={{ height: '96px' }} />
                 ))}
               </div>
             )}

@@ -67,15 +67,15 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
       <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ height: '80vh', display: 'flex', flexDirection: 'column' }}>
         <div className="modal-pull-indicator" />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexShrink: 0 }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 800 }}>Add from Email</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="var(--sys-label-primary)" /></button>
+        <div className="modal-header">
+          <h2 className="modal-title">Add from Email</h2>
+          <button onClick={onClose} className="icon-btn icon-btn--round" aria-label="Close"><X size={18} /></button>
         </div>
 
         {parsedItems ? <>
-          <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginBottom: '16px' }}>Check the dates and times before adding these items.</p>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {parsedItems.map((item, index) => <div key={`${item.id}-${index}`} style={{ marginBottom: '20px' }}>
+          <p className="modal-lede">Check the dates and times before adding these items.</p>
+          <div className="modal-form modal-form--fill">
+            {parsedItems.map((item, index) => <div key={`${item.id}-${index}`} className="card card--inset card--pad">
               <strong>{item.title}</strong>
               {(['startDate', 'endDate'] as const).map(field => (field === 'startDate' || item.endDate) && <label key={field} className="edit-field-group" style={{ marginTop: '8px' }}>
                 <span className="edit-field-label">{field === 'startDate' ? 'Start date and time' : 'End date and time'}</span>
@@ -84,53 +84,40 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
             </div>)}
           </div>
           {error && <p className="field-error" role="alert">{error}</p>}
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-            <button type="button" onClick={() => { setParsedItems(null); setError(null); }} style={{ flex: 1, padding: '16px' }}>Back</button>
-            <button type="button" className="btn-glass-blue" style={{ flex: 2, padding: '16px', borderRadius: '14px' }} onClick={() => {
+          <div className="modal-footer modal-footer--safe">
+            <button type="button" className="btn btn--lg" onClick={() => { setParsedItems(null); setError(null); }}>Back</button>
+            <button type="button" className="btn btn--primary btn--lg" style={{ flex: 2 }} onClick={() => {
               if (parsedItems.some(item => !item.startDate || !isDayKey(item.startDate.slice(0, 10)) || Number.isNaN(new Date(item.startDate).getTime()) || (item.endDate && (!isDayKey(item.endDate.slice(0, 10)) || Number.isNaN(new Date(item.endDate).getTime()) || item.endDate < item.startDate)))) { setError('Check that each start date is valid and each end is after its start.'); return; }
               parsedItems.forEach(item => onAdd(item)); onClose();
             }}>Add items</button>
           </div>
         </> : <>
-        <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginBottom: '20px', flexShrink: 0 }}>
+        <p className="modal-lede">
           Paste a booking confirmation or itinerary email and we'll extract all the details automatically.
         </p>
 
         <textarea
           placeholder="Paste email content here..."
+          aria-label="Email content"
           value={emailText}
           onChange={e => setEmailText(e.target.value)}
-          style={{
-            width: '100%', flex: 1, padding: '16px', borderRadius: '12px',
-            background: 'var(--sys-bg-elevated-2)', border: '1px solid var(--sys-separator)',
-            color: 'var(--sys-label-primary)', fontSize: '16px', resize: 'none', lineHeight: '1.5',
-            minHeight: '180px', marginBottom: '16px', outline: 'none'
-          }}
+          className="edit-field-input modal-fill-input"
         />
 
         {error && (
-          <p style={{ fontSize: '13px', color: 'var(--sys-red)', marginBottom: '12px', flexShrink: 0 }}>{error}</p>
+          <p className="field-error" role="alert">{error}</p>
         )}
 
-        <button
-          onClick={handleParse}
-          disabled={isLoading || !emailText.trim()}
-          className={emailText.trim() ? "btn-glass-blue" : ""}
-          style={{
-            width: '100%', padding: '16px', borderRadius: '14px',
-            fontSize: '16px', fontWeight: 700,
-            display: 'flex', justifyContent: 'center', alignItems: 'center',
-            opacity: isLoading ? 0.7 : (!emailText.trim() ? 0.5 : 1), marginBottom: '24px',
-            flexShrink: 0,
-            background: !emailText.trim() ? 'rgba(var(--neutral-rgb), 0.05)' : undefined,
-            border: !emailText.trim() ? '1px solid rgba(var(--neutral-rgb), 0.08)' : undefined,
-            color: !emailText.trim() ? 'var(--sys-label-secondary)' : 'var(--sys-label-primary)',
-            boxShadow: !emailText.trim() ? 'none' : undefined
-          }}
-        >
-          {isLoading ? <Loader size={20} style={{ marginRight: '8px', animation: 'spin 1s linear infinite' }} /> : <Sparkles size={20} style={{ marginRight: '8px' }} />}
-          {isLoading ? 'Parsing...' : 'Parse with AI'}
-        </button>
+        <div className="modal-footer modal-footer--safe">
+          <button
+            onClick={handleParse}
+            disabled={isLoading || !emailText.trim()}
+            className="btn btn--primary btn--lg"
+          >
+            {isLoading ? <Loader size={20} className="spinning" /> : <Sparkles size={20} />}
+            {isLoading ? 'Parsing...' : 'Parse with AI'}
+          </button>
+        </div>
         </>}
       </div>
     </div>

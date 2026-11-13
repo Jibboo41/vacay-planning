@@ -118,46 +118,31 @@ export default function PackingScreen() {
   }, [packingItems]);
 
   return (
-    <div className="safe-area-inset" style={{ minHeight: 'var(--screen-min-height, 100vh)', touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
+    <div className="screen safe-area-inset" style={{ touchAction: draggingIndex !== null ? 'none' : 'auto' }}>
       {/* Header */}
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Packing List</h1>
-          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>GEAR & LUGGAGE</div>
+        <div className="screen-header__titles">
+          <h1 className="page-title">Packing List</h1>
+          <p className="page-subtitle">{completedCount} of {packingItems.length} items packed</p>
         </div>
       </header>
 
-      <div style={{ padding: '0 24px 12px 24px' }}>
-          <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginTop: '-2px', margin: 0 }}>
-            {completedCount} of {packingItems.length} items packed
-          </p>
-      </div>
-
-      <div style={{ padding: '0 24px 120px 24px' }}>
+      <div className="screen-body">
         {/* New Item Area */}
         {!showAddForm ? (
-          <button 
+          <button
             onClick={() => setShowAddForm(true)}
-            className="btn-glass-blue"
-            style={{ 
-              width: '100%', padding: '16px', borderRadius: '16px', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              marginBottom: '24px', fontSize: '16px'
-            }}
+            className="btn btn--tonal btn--lg btn--block screen-action"
           >
             <Plus size={20} />
             Add Gear
           </button>
         ) : (
-          <div style={{
-            background: 'var(--sys-bg-elevated-2)', padding: '24px',
-            borderRadius: '24px', border: '1px solid var(--sys-blue)',
-            marginBottom: '32px', display: 'flex', flexDirection: 'column', gap: '16px'
-          }}>
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+          <div className="form-card">
+            <div className="edit-field-group">
               <label className="edit-field-label">Item Name</label>
               <input
                 type="text"
@@ -166,43 +151,22 @@ export default function PackingScreen() {
                 onChange={e => setNewItemText(e.target.value)}
                 placeholder="Hiking boots, Passport, etc."
                 onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
-                style={{
-                  background: 'rgba(var(--neutral-rgb), 0.07)', border: 'none',
-                  borderRadius: '10px', padding: '12px 14px', color: 'var(--sys-label-primary)',
-                  fontSize: '17px', outline: 'none', width: '100%'
-                }}
+                className="edit-field-input"
               />
             </div>
 
-            <div className="edit-field-group" style={{ marginBottom: 0 }}>
+            <div className="edit-field-group">
               <label className="edit-field-label">Category</label>
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'row', 
-                background: 'rgba(var(--neutral-rgb), 0.05)',
-                borderRadius: '14px', 
-                padding: '4px',
-                gap: '4px'
-              }}>
+              <div className="segmented">
                 {categories.map(c => {
                   const isActive = newCategory === c;
                   return (
                     <button
                       key={c}
                       type="button"
+                      aria-pressed={isActive}
                       onClick={() => setNewCategory(c)}
-                      style={{
-                        flex: 1,
-                        padding: '10px 4px',
-                        borderRadius: '10px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        transition: 'all 0.2s ease',
-                        background: isActive ? 'var(--sys-blue)' : 'transparent',
-                        color: isActive ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
-                        boxShadow: isActive ? '0 4px 12px rgba(10, 132, 255, 0.3)' : 'none',
-                        border: isActive ? '1px solid rgba(var(--neutral-rgb), 0.2)' : '1px solid transparent'
-                      }}
+                      className="segmented__item"
                     >
                       {c}
                     </button>
@@ -211,22 +175,17 @@ export default function PackingScreen() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
+            <div className="form-actions">
+              <button
                 onClick={handleAdd}
                 disabled={!newItemText.trim()}
-                className="btn-glass-blue"
-                style={{ flex: 1, padding: '16px', borderRadius: '14px', fontSize: '15px' }}
+                className="btn btn--primary"
               >
                 Add to List
               </button>
-              <button 
+              <button
                 onClick={() => setShowAddForm(false)}
-                style={{ 
-                  flex: 1, padding: '16px', borderRadius: '14px', 
-                  background: 'rgba(var(--neutral-rgb), 0.08)', color: 'var(--sys-label-primary)',
-                  border: '1px solid rgba(var(--neutral-rgb), 0.1)', fontWeight: 700, fontSize: '15px'
-                }}
+                className="btn"
               >
                 Cancel
               </button>
@@ -235,17 +194,14 @@ export default function PackingScreen() {
         )}
 
         <div
-          style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}
+          className="list-sections"
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
           {packingItems.length === 0 ? (
-            <div style={{
-              textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px'
-            }}>
-              <Package size={48} opacity={0.2} />
-              <p style={{ fontSize: '15px' }}>Your packing list is empty. Start adding gear!</p>
+            <div className="empty-state">
+              <div className="empty-state__icon"><Package size={26} /></div>
+              <p className="empty-state__text">Your packing list is empty. Start adding gear!</p>
             </div>
           ) : (
             categories.map(cat => {
@@ -254,18 +210,15 @@ export default function PackingScreen() {
 
               return (
                 <div key={cat}>
-                  <div style={{ 
-                    display: 'flex', alignItems: 'center', gap: '8px', 
-                    marginBottom: '14px', paddingLeft: '4px' 
-                  }}>
-                    <Luggage size={14} color="var(--sys-blue)" />
-                    <h3 style={{ 
-                      fontSize: '13px', fontWeight: 800, color: 'var(--sys-label-secondary)', 
-                      textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 
-                    }}>{cat}</h3>
+                  <div className="section-heading">
+                    <Luggage size={15} aria-hidden="true" />
+                    <h3 className="section-heading__label">{cat}</h3>
+                    <span className="section-heading__meta" aria-label={`${items.filter(item => item.completed).length} of ${items.length} packed`}>
+                      {items.filter(item => item.completed).length}/{items.length}
+                    </span>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div className="list-stack">
                     {items.map(item => {
                       // We need the absolute index in packingItems for drag/drop
                       const index = packingItems.findIndex(p => p.id === item.id);
@@ -282,26 +235,10 @@ export default function PackingScreen() {
                           onDragEnter={() => handleDragEnter(index)}
                           onDragEnd={handleDragEnd}
                           onDragOver={e => e.preventDefault()}
-                          className="glass-card"
-                          style={{
-                            display: 'flex', alignItems: isEditing ? 'flex-start' : 'center', gap: '12px',
-                            padding: '14px 12px',
-                            borderRadius: '16px',
-                            background: isOver ? 'rgba(10,132,255,0.1)' : undefined,
-                            border: isOver ? '1px solid rgba(10,132,255,0.4)' : '1px solid rgba(var(--neutral-rgb), 0.08)',
-                            transition: 'all 0.15s ease',
-                            opacity: isDragging ? 0.4 : 1,
-                            transform: isDragging ? 'scale(1.02) translateY(-4px)' : 'none',
-                            boxShadow: isDragging ? '0 8px 32px rgba(0,0,0,0.3)' : undefined,
-                            zIndex: isDragging ? 2 : 1
-                          }}
+                          className={`card list-row${isEditing ? ' list-row--editing' : ''}${isDragging ? ' list-row--lifted' : ''}${isOver ? ' list-row--drop-target' : ''}`}
                         >
                           <div
-                            style={{ 
-                              color: 'var(--sys-label-tertiary)', cursor: 'grab', flexShrink: 0, 
-                              paddingTop: isEditing ? '10px' : 0,
-                              touchAction: 'none'
-                            }}
+                            className="list-row__grip"
                             onTouchStart={e => handleGripTouchStart(e, index)}
                           >
                             <GripVertical size={18} />
@@ -309,94 +246,61 @@ export default function PackingScreen() {
 
                           <button
                             onClick={() => togglePackingItem(item.id)}
-                            style={{
-                              background: 'transparent', border: 'none', padding: 0,
-                              color: item.completed ? 'var(--sys-blue)' : 'var(--sys-label-tertiary)',
-                              cursor: 'pointer', display: 'flex', alignItems: 'center', flexShrink: 0,
-                              paddingTop: isEditing ? '10px' : 0
-                            }}
+                            className={`check-toggle${item.completed ? ' check-toggle--checked' : ''}`}
                           >
                             {item.completed ? <CheckCircle2 size={22} /> : <Circle size={22} />}
                           </button>
 
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="list-row__main">
                             {isEditing ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <div className="list-row__editor">
                                 <input
                                   autoFocus
                                   value={editText}
                                   onChange={e => setEditText(e.target.value)}
                                   onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingId(null); }}
-                                  style={{
-                                    background: 'rgba(var(--neutral-rgb), 0.07)', border: '1px solid rgba(10,132,255,0.4)',
-                                    borderRadius: '8px', padding: '8px 10px', color: 'var(--sys-label-primary)',
-                                    fontSize: '16px', fontWeight: 500, outline: 'none', width: '100%'
-                                  }}
+                                  className="text-input"
                                 />
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <span style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, marginLeft: '4px' }}>Category:</span>
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        flexDirection: 'row', 
-                                        background: 'rgba(var(--neutral-rgb), 0.05)',
-                                        borderRadius: '12px', 
-                                        padding: '3px',
-                                        gap: '3px'
-                                      }}>
-                                        {categories.map(c => {
-                                          const isActive = editCategory === c;
-                                          return (
-                                            <button
-                                              key={c}
-                                              type="button"
-                                              onClick={() => setEditCategory(c)}
-                                              style={{
-                                                flex: 1,
-                                                padding: '6px 2px',
-                                                borderRadius: '8px',
-                                                fontSize: '10px',
-                                                fontWeight: 700,
-                                                transition: 'all 0.2s ease',
-                                                background: isActive ? 'var(--sys-blue)' : 'transparent',
-                                                color: isActive ? 'var(--on-accent)' : 'var(--sys-label-secondary)',
-                                                border: isActive ? '1px solid rgba(var(--neutral-rgb), 0.1)' : 'none'
-                                              }}
-                                            >
-                                              {c}
-                                            </button>
-                                          );
-                                        })}
-                                    </div>
+                                <div className="segmented" role="group" aria-label="Category">
+                                  {categories.map(c => {
+                                    const isActive = editCategory === c;
+                                    return (
+                                      <button
+                                        key={c}
+                                        type="button"
+                                        aria-pressed={isActive}
+                                        onClick={() => setEditCategory(c)}
+                                        className="segmented__item segmented__item--sm"
+                                      >
+                                        {c}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             ) : (
-                              <span style={{
-                                fontSize: '16px', color: item.completed ? 'var(--sys-label-tertiary)' : 'var(--sys-label-primary)',
-                                textDecoration: item.completed ? 'line-through' : 'none',
-                                transition: 'all 0.2s ease', fontWeight: 500,
-                                display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                              }}>
+                              <span className={`list-row__title list-row__title--truncate${item.completed ? ' list-row__title--done' : ''}`}>
                                 {item.text}
                               </span>
                             )}
                           </div>
 
-                          <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
+                          <div className="list-row__actions">
                             {isEditing ? (
                               <>
-                                <button onClick={commitEdit} style={{ background: 'rgba(48,209,88,0.15)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-green)', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={commitEdit} className="icon-btn icon-btn--sm icon-btn--success" aria-label="Save">
                                   <Check size={16} />
                                 </button>
-                                <button onClick={() => setEditingId(null)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={() => setEditingId(null)} className="icon-btn icon-btn--sm" aria-label="Cancel">
                                   <X size={16} />
                                 </button>
                               </>
                             ) : (
                               <>
-                                <button onClick={() => startEdit(item)} style={{ background: 'rgba(var(--neutral-rgb), 0.06)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-label-secondary)', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={() => startEdit(item)} className="icon-btn icon-btn--sm" aria-label="Edit">
                                   <Pencil size={16} />
                                 </button>
-                                <button onClick={() => deletePackingItem(item.id)} style={{ background: 'rgba(255, 69, 58, 0.1)', border: 'none', padding: '7px', borderRadius: '9px', color: 'var(--sys-red)', cursor: 'pointer', display: 'flex' }}>
+                                <button onClick={() => deletePackingItem(item.id)} className="icon-btn icon-btn--sm icon-btn--danger" aria-label="Delete">
                                   <Trash2 size={16} />
                                 </button>
                               </>

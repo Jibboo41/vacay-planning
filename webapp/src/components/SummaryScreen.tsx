@@ -100,61 +100,59 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
   }
 
   return (
-    <div style={{ display: 'flex', marginBottom: '12px' }}>
+    <div className="summary-item">
       {/* Icon Column */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: '12px', flexShrink: 0 }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: theme.bg, color: theme.color, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          {React.cloneElement(theme.icon as React.ReactElement<any>, { size: 16 })}
-        </div>
+      <div className="summary-item__icon" style={{ backgroundColor: theme.bg, color: theme.color }}>
+        {React.cloneElement(theme.icon as React.ReactElement<any>, { size: 16 })}
       </div>
 
       {/* Content Column */}
-      <div style={{ flex: 1, padding: '8px 12px', borderRadius: '12px', background: 'rgba(var(--neutral-rgb), 0.02)' }}>
+      <div className="summary-item__main">
         {timeText && (
-          <div style={{ fontSize: '10px', fontWeight: 800, color: theme.color, letterSpacing: '0.05em', marginBottom: '2px' }}>
+          <div className="summary-item__time" style={{ color: theme.color }}>
             {timeText}
           </div>
         )}
-        <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--sys-label-primary)', margin: '0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <h3 className="summary-item__title">
           {item._segments ? `${item._segments.length} Flight segments` : item.title}
           {item.isStarred && <Star size={14} fill="var(--sys-gold)" color="var(--sys-gold)" />}
         </h3>
-        
+
         {item._segments ? (
-          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div className="summary-item__segments">
             {item._segments.map((seg, idx) => (
-              <div key={seg.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--sys-label-secondary)', fontSize: '13px' }}>
-                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--sys-blue)', opacity: 0.5 }} />
+              <div key={seg.id}>
+                <i />
                 <span>{seg.title}</span>
                 {idx < (item._segments?.length || 0) - 1 && <ArrowRight size={12} opacity={0.3} />}
               </div>
             ))}
           </div>
         ) : item.location.name && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', color: 'var(--sys-label-tertiary)', fontSize: '13px', marginBottom: '4px' }}>
-            <MapPin size={12} style={{ marginTop: '2px', marginRight: '4px', flexShrink: 0 }} />
-            <span style={{ lineHeight: '1.4' }}>{item.location.name}</span>
+          <div className="summary-item__location">
+            <MapPin size={12} />
+            <span>{item.location.name}</span>
           </div>
         )}
 
         {/* Hike Details */}
         {item.type === 'hiking' && item.hikeDetails && (
-          <div style={{ display: 'flex', gap: '12px', marginTop: '6px', color: 'var(--sys-green)', fontSize: '12px', fontWeight: 600 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div className="summary-item__stats">
+            <div>
               <Gauge size={12} /> {(item.hikeDetails as any).difficulty.toUpperCase()}
             </div>
             {item.hikeDetails.distance && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div>
                 <Ruler size={12} /> {item.hikeDetails.distance}
               </div>
             )}
             {item.hikeDetails.elevation && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div>
                 <Activity size={12} /> {item.hikeDetails.elevation}
               </div>
             )}
             {item.hikeDetails.duration && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div>
                 <Timer size={12} /> {item.hikeDetails.duration}
               </div>
             )}
@@ -163,11 +161,7 @@ function SummaryItemCard({ item, isCheckout }: SummaryItemProps) {
 
         {/* Note Description (Specific to Summary) */}
         {item.type === 'note' && item.description && (
-          <div style={{
-            fontSize: '13px', color: 'var(--sys-label-secondary)',
-            lineHeight: '1.5', marginTop: '6px', borderTop: '1px solid rgba(var(--neutral-rgb), 0.05)',
-            paddingTop: '6px'
-          }}>
+          <div className="summary-item__note">
             <Linkified text={item.description} />
           </div>
         )}
@@ -266,46 +260,46 @@ export default function SummaryScreen() {
   };
 
   return (
-    <div style={{ minHeight: 'var(--screen-min-height, 100vh)' }}>
+    <div className="screen">
       <header className="screen-header">
         <button className="header-icon-btn legacy-menu-button" onClick={() => setSidebarOpen(true)}>
           <Menu size={24} />
         </button>
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Trip Outline</h1>
-          <div style={{ fontSize: '11px', color: 'var(--sys-label-secondary)', fontWeight: 600, letterSpacing: '0.05em', marginTop: '2px' }}>READ-ONLY SUMMARY</div>
+        <div className="screen-header__titles">
+          <h1 className="page-title">Trip Outline</h1>
+          <p className="page-subtitle">Read-only summary</p>
         </div>
       </header>
 
-      <main style={{ padding: '0 20px 100px 20px', position: 'relative' }}>
+      <main className="screen-body">
         {dayGroups.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--sys-label-secondary)' }}>
-            <p style={{ margin: 0, fontSize: '15px' }}>No items in your itinerary yet.</p>
+          <div className="empty-state">
+            <p className="empty-state__text">No items in your itinerary yet.</p>
           </div>
         ) : (
-          <div style={{ position: 'relative', marginTop: '20px' }}>
-            
+          <div className="summary-stack">
+
             {/* The AI Summary Block */}
-            <div style={{ background: 'rgba(10, 132, 255, 0.1)', border: '1px solid rgba(10, 132, 255, 0.2)', padding: '20px', borderRadius: '16px', marginBottom: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                <Sparkles size={20} color="var(--sys-blue)" />
-                <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--sys-blue)', margin: 0 }}>AI Trip Synopsis</h2>
+            <div className="ai-panel">
+              <div className="ai-panel__heading">
+                <Sparkles size={18} />
+                <h2>AI Trip Synopsis</h2>
               </div>
-              
+
               {currentTripAiSummary ? (
                 <>
-                  <div style={{ color: 'var(--sys-label-primary)', fontSize: '15px', lineHeight: '1.6' }}>
+                  <div className="ai-panel__text">
                     <Linkified text={currentTripAiSummary} />
                   </div>
-                  <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn-glass-blue" style={{ marginTop: '16px', fontSize: '13px', padding: '6px 14px', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating} className="btn btn--tonal btn--sm ai-panel__action">
                     {isGenerating ? 'Regenerating...' : 'Regenerate'}
                   </button>
                 </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <p style={{ color: 'var(--sys-label-secondary)', fontSize: '14px', marginBottom: '16px' }}>Generate a magical summary of this trip outline using AI.</p>
-                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn-glass-blue" style={{ fontSize: '14px', padding: '10px 20px', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    {isGenerating ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={16} />}
+                <div className="ai-panel__empty">
+                  <p>Generate a magical summary of this trip outline using AI.</p>
+                  <button onClick={handleGenerateSummary} disabled={isGenerating || items.length === 0} className="btn btn--primary">
+                    {isGenerating ? <Loader size={16} className="spinning" /> : <Sparkles size={16} />}
                     {isGenerating ? 'Synthesizing...' : 'Generate Summary'}
                   </button>
                 </div>
@@ -318,27 +312,23 @@ export default function SummaryScreen() {
               const low = dayForecasts.length > 0 ? Math.min(...dayForecasts.map(w => w.tempLow)) : null;
               
               return (
-                <div className="summary-day-card" key={group.dateKey} style={{ background: 'rgba(var(--neutral-rgb), 0.04)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(var(--neutral-rgb), 0.10)', borderRadius: '16px', padding: '16px', marginBottom: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(var(--neutral-rgb), 0.05)' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '10px', background: 'rgba(var(--neutral-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--sys-label-primary)', fontSize: '13px', fontWeight: 800 }}>
+                <div className="card summary-day-card" key={group.dateKey}>
+                  <div className="summary-day-card__header">
+                    <div className="summary-day-card__index">
                       {groupIdx + 1}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0, marginLeft: '12px' }}>
-                      <h2 style={{ fontSize: '17px', fontWeight: 800, color: 'var(--sys-label-primary)', margin: 0, letterSpacing: '0.2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {group.label}
-                      </h2>
-                    </div>
+                    <h2 className="summary-day-card__title">
+                      {group.label}
+                    </h2>
                     {high !== null && low !== null && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '8px', borderLeft: '1px solid rgba(var(--neutral-rgb), 0.1)' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1 }}>
-                          <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--sys-orange)' }}>H: {Math.round(high)}°</span>
-                          <span style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 700 }}>L: {Math.round(low)}°</span>
-                        </div>
-                      </div>
+                      <span className="day-section-temps">
+                        <span className="temp-high">H: {Math.round(high)}°</span>
+                        <span className="temp-low">L: {Math.round(low)}°</span>
+                      </span>
                     )}
                   </div>
                   {dayDescriptions[group.dateKey] && <p className="summary-day-description">{dayDescriptions[group.dateKey]}</p>}
-                  <div style={{ marginLeft: '4px' }}>
+                  <div className="summary-day-card__items">
                     {group.items.map((item, idx) => (
                       <SummaryItemCard key={item.id + (item._isCheckout ? '-out' + idx : '-' + idx)} item={item as ItineraryItem} isCheckout={item._isCheckout} />
                     ))}

@@ -50,12 +50,13 @@ export default function EditManualExpenseModal() {
   return (
     <div className="modal-backdrop" onClick={() => setEditingExpense(null)}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Edit Expense</h2>
-          <button onClick={() => setEditingExpense(null)}><X size={22} color="var(--sys-label-secondary)" /></button>
+        <div className="modal-pull-indicator" />
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Expense</h2>
+          <button onClick={() => setEditingExpense(null)} className="icon-btn icon-btn--round" aria-label="Close"><X size={18} /></button>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div className="modal-form">
           <div className="edit-field-group">
             <label className="edit-field-label">Title</label>
             <input 
@@ -65,8 +66,8 @@ export default function EditManualExpenseModal() {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div className="edit-field-group" style={{ flex: 1 }}>
+          <div className="form-row">
+            <div className="edit-field-group">
               <label className="edit-field-label">Estimated Cost ($)</label>
               <input 
                 className="edit-field-input"
@@ -74,7 +75,7 @@ export default function EditManualExpenseModal() {
                 placeholder="0.00"
               />
             </div>
-            <div className="edit-field-group" style={{ flex: 1 }}>
+            <div className="edit-field-group">
               <label className="edit-field-label">Amount Paid ($)</label>
               <input 
                 className="edit-field-input"
@@ -84,8 +85,8 @@ export default function EditManualExpenseModal() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <div className="edit-field-group" style={{ flex: 1 }}>
+          <div className="form-row">
+            <div className="edit-field-group">
               <label className="edit-field-label">Category</label>
               <select 
                 className="edit-field-input"
@@ -94,7 +95,7 @@ export default function EditManualExpenseModal() {
                 {EXPENSE_CATEGORIES.map(value => <option key={value} value={value}>{value}</option>)}
               </select>
             </div>
-            <div className="edit-field-group" style={{ flex: 1 }}>
+            <div className="edit-field-group">
               <label className="edit-field-label">Date (Optional)</label>
               <div style={{ borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
                 <input 
@@ -107,18 +108,18 @@ export default function EditManualExpenseModal() {
           </div>
         </div>
 
-        <div style={{ marginTop: '30px', display: 'flex', gap: '12px' }}>
-          <button 
+        <div className="modal-footer modal-footer--safe">
+          <button
             onClick={handleSave}
-            className="btn-glass-blue"
-            style={{ flex: 1, padding: '16px', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+            className="btn btn--primary btn--lg"
           >
             <Save size={18} />
             Save Changes
           </button>
-          <button 
+          <button
             onClick={handleDelete}
-            style={{ padding: '16px', borderRadius: '14px', background: 'rgba(255, 69, 58, 0.1)', border: 'none', color: 'var(--sys-red)' }}
+            className="icon-btn icon-btn--danger modal-footer__icon"
+            aria-label="Delete expense"
           >
             <Trash2 size={20} />
           </button>

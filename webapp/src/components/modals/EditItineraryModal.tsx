@@ -223,12 +223,12 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         className="modal-sheet"
         role="dialog" aria-modal="true" aria-label="Edit itinerary details"
         onClick={e => e.stopPropagation()}
-        style={{ paddingBottom: 0 }}
       >
+        <div className="modal-pull-indicator" />
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexShrink: 0, paddingTop: '4px' }}>
-          <h2 style={{ fontSize: '22px', fontWeight: 800 }}>Edit Details</h2>
-          <button onClick={onClose} disabled={saving || imageBusy} aria-label="Close item editor"><X size={22} color="var(--sys-label-secondary)" /></button>
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Details</h2>
+          <button onClick={onClose} disabled={saving || imageBusy} className="icon-btn icon-btn--round" aria-label="Close item editor"><X size={18} /></button>
         </div>
 
         {/* Scrollable form body */}
@@ -345,7 +345,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                   <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Landing Date (opt)' : 'End Date (opt)'}</label>
-                      {endDate && <button onClick={() => setEndDate('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+                      {endDate && <button onClick={() => setEndDate('')} className="link-button">Clear</button>}
                     </div>
                   <input
                     className="edit-field-input"
@@ -360,7 +360,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                 <div className="edit-field-group" style={{ flex: '0 0 auto' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                       <label className="edit-field-label" style={{ margin: 0 }}>{type === 'flight' ? 'Landing Time' : 'End Time'}</label>
-                      {endTime && <button onClick={() => setEndTime('')} style={{ fontSize: '10px', color: 'var(--sys-blue)', fontWeight: 600 }}>Clear</button>}
+                      {endTime && <button onClick={() => setEndTime('')} className="link-button">Clear</button>}
                     </div>
                   <input
                     className="edit-field-input"
@@ -404,15 +404,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
 
               {/* Conditional Hotel/Rental/Flight Details */}
               {(type === 'hotel' || type === 'rental-car' || type === 'flight') && (
-                <div style={{ 
-                  background: type === 'hotel' ? 'rgba(10, 132, 255, 0.08)' : 
-                              type === 'rental-car' ? 'rgba(175, 82, 222, 0.08)' :
-                              'rgba(10, 132, 255, 0.08)', 
-                  padding: '16px', borderRadius: '16px', marginBottom: '16px', 
-                  border: type === 'hotel' ? '1px solid rgba(10, 132, 255, 0.2)' : 
-                          type === 'rental-car' ? '1px solid rgba(175, 82, 222, 0.2)' :
-                          '1px solid rgba(10, 132, 255, 0.2)' 
-                }}>
+                <div className={`form-panel ${type === 'rental-car' ? 'tone-purple' : 'tone-blue'}`}>
                    <div className="edit-field-group" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: refundable ? '16px' : '12px' }}>
                     <label className="edit-field-label" style={{ margin: 0 }}>Refundable Booking?</label>
                     <input 
@@ -468,20 +460,13 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                 )}
                 
                 {showSuggestions && suggestions.length > 0 && (
-                  <div 
-                    style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, 
-                      background: 'var(--sys-bg-elevated-3)', border: '1px solid rgba(var(--neutral-rgb), 0.15)',
-                      borderRadius: '12px', marginTop: '6px', zIndex: 100, overflow: 'hidden',
-                      boxShadow: '0 12px 40px rgba(0,0,0,0.6)'
-                    }}
-                  >
+                  <div className="suggestions">
                     {suggestions.map((s, i) => {
                       const sName = s.name || s.display_name.split(',')[0];
                       return (
-                        <div 
+                        <div
                           key={i}
-                          style={{ padding: '12px 14px', borderBottom: i === suggestions.length - 1 ? 'none' : '1px solid rgba(var(--neutral-rgb), 0.05)', cursor: 'pointer' }}
+                          className="suggestions__item"
                           onClick={() => {
                               setLocationName(sName);
                               setAddress(s.display_name);
@@ -490,8 +475,8 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                               setShowSuggestions(false);
                           }}
                         >
-                          <div style={{ fontWeight: 700, color: 'var(--sys-label-primary)', fontSize: '14px', marginBottom: '2px' }}>{sName}</div>
-                          <div style={{ color: 'var(--sys-label-secondary)', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.display_name}</div>
+                          <div className="suggestions__name">{sName}</div>
+                          <div className="suggestions__detail">{s.display_name}</div>
                         </div>
                       );
                     })}
@@ -518,12 +503,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
 
               {/* Conditional Hike Details */}
               {(type === 'hiking' || type === 'hike') && (
-                <div style={{ background: 'rgba(52, 199, 89, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(52, 199, 89, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '18px' }}>🥾</span>
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--sys-green-alt)' }}>TRAIL STATS</span>
-                    </div>
+                <div className="form-panel tone-green">
+                  <div className="form-panel__title">
+                    <span style={{ fontSize: '18px' }}>🥾</span>
+                    <span>Trail Stats</span>
                   </div>
 
                   <div className="edit-field-group" style={{ position: 'relative' }}>
@@ -537,17 +520,15 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
                         placeholder="Paste AllTrails URL..." 
                         style={{ background: 'rgba(52, 199, 89, 0.05)', borderColor: 'rgba(52, 199, 89, 0.3)' }}
                       />
-                      <button 
+                      <button
                         type="button"
                         onClick={handleParseAllTrails}
                         disabled={isParsingAllTrails || !allTrailsUrl.trim()}
-                        style={{
-                          background: 'var(--sys-green-alt)', color: 'var(--sys-bg-base)', border: 'none', borderRadius: '10px',
-                          padding: '0 16px', fontWeight: 700, cursor: isParsingAllTrails ? 'default' : 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (!allTrailsUrl.trim() || isParsingAllTrails) ? 0.6 : 1
-                        }}
+                        className="icon-btn icon-btn--success form-panel__action"
+                        aria-label="Import trail stats from AllTrails"
+                        title="Import trail stats"
                       >
-                        {isParsingAllTrails ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={18} />}
+                        {isParsingAllTrails ? <Loader size={18} className="spinning" /> : <Sparkles size={18} />}
                       </button>
                     </div>
                   </div>
@@ -584,12 +565,10 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               )}
 
               {type === 'food' && (
-                <div style={{ background: 'rgba(191, 90, 242, 0.08)', padding: '16px', borderRadius: '16px', marginBottom: '16px', border: '1px solid rgba(191, 90, 242, 0.2)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <Utensils size={18} color="var(--sys-purple)" />
-                      <span style={{ fontSize: '14px', fontWeight: 800, color: 'var(--sys-purple)' }}>DINING DISCOVERY</span>
-                    </div>
+                <div className="form-panel tone-purple">
+                  <div className="form-panel__title">
+                    <Utensils size={18} />
+                    <span>Dining Discovery</span>
                   </div>
 
                   <div className="edit-field-group">
@@ -638,16 +617,11 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
         {saveError && <p className="field-error" role="alert">{saveError}</p>}
 
         {/* Save button — fixed at bottom */}
-        <div style={{ flexShrink: 0, paddingTop: '16px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))' }}>
+        <div className="modal-footer modal-footer--safe">
           <button
             onClick={handleSave}
             disabled={saving || imageBusy}
-            className="btn-glass-blue"
-            style={{
-              width: '100%', padding: '16px', borderRadius: '14px',
-              fontSize: '16px',
-              display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-            }}
+            className="btn btn--primary btn--lg"
           >
             {saving ? <Loader size={18} className="spinning" /> : <Save size={18} />}
             {saving ? 'Saving…' : 'Save Changes'}
