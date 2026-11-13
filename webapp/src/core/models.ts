@@ -37,6 +37,13 @@ export interface FlightDetails {
   bookingSource?: string;
 }
 
+export interface ActivityBooking {
+  status: 'booked' | 'not-booked' | 'not-required';
+  opensBefore?: { amount: number; unit: 'days' | 'weeks' | 'months' };
+  bookBy?: string;
+  url?: string;
+}
+
 export interface ItineraryItem {
   id: string;
   type: 'flight' | 'hotel' | 'activity' | 'hiking' | 'hike' | 'transit' | 'food' | 'note' | 'rental-car' | 'unknown';
@@ -53,6 +60,7 @@ export interface ItineraryItem {
   hotelDetails?: HotelDetails;
   rentalDetails?: RentalDetails;
   flightDetails?: FlightDetails;
+  activityBooking?: ActivityBooking;
   /** Manual sort order within a day — set after user drag-reorders */
   sortOrder?: number;
   /** Independent sort order for the end-event of multi-day items (e.g. Hotel Checkout) */
@@ -98,7 +106,7 @@ export interface Expense {
   title: string;
   amount: number;       // Estimated cost
   paidAmount: number;   // Actually paid
-  category: 'Car Rental' | 'Flights' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other';
+  category: 'Car Rental' | 'Flights' | 'Transit' | 'Gas' | 'Dining' | 'Lodging' | 'Souvenirs' | 'Other';
   date?: string;
   paid: boolean;        // Settlement status
   linkedItemId?: string; // Links to an ItineraryItem.id 

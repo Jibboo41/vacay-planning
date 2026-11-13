@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isDayKey, timelineDates, validateImageUrl } from '../src/core/timelineDetails';
+import { formatTimelineDayLabel, isDayKey, timelineDates, validateImageUrl } from '../src/core/timelineDetails';
 
 describe('calendar descriptions', () => {
+  it('shows the saved year and its actual weekday for future travel dates', () => {
+    expect(formatTimelineDayLabel('2026-06-26')).toBe('Fri 6/26/2026');
+    expect(formatTimelineDayLabel('2027-06-26')).toBe('Sat 6/26/2027');
+    expect(formatTimelineDayLabel('2027-06-25')).toBe('Fri 6/25/2027');
+    expect(formatTimelineDayLabel('2027-02-29')).toBe('Date TBD');
+  });
   it('includes unplanned days between arrival and checkout', () => {
     expect(timelineDates(['2026-10-17', '2026-10-20'], {})).toEqual(['2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20']);
   });

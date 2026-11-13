@@ -6,6 +6,14 @@ export function isDayKey(value: string): boolean {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+/** Format the actual calendar year alongside the weekday so dates are unambiguous. */
+export function formatTimelineDayLabel(dayKey: string): string {
+  if (!isDayKey(dayKey)) return 'Date TBD';
+  const date = new Date(`${dayKey}T12:00:00Z`);
+  const weekday = date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+  return `${weekday} ${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
+}
+
 /** Descriptions belong to calendar dates, independently of item order or filters. */
 export function timelineDates(itemDates: string[], descriptions: Record<string, string>): string[] {
   const dates = new Set(itemDates.filter(isDayKey));

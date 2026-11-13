@@ -69,6 +69,13 @@ describe('day description persistence', () => {
 });
 
 describe('item image saves', () => {
+  it('persists activity booking details and supports clearing the status', async () => {
+    const activityBooking = { status: 'not-booked' as const, opensBefore: { amount: 90, unit: 'days' as const }, bookBy: '2027-07-01', url: 'https://example.com/book' };
+    expect(await useTripStore.getState().updateItem('walk', { activityBooking })).toBe(true);
+    expect(sdk.updateDoc.mock.calls[0][1].items[0].activityBooking).toEqual(activityBooking);
+    expect(await useTripStore.getState().updateItem('walk', { activityBooking: undefined })).toBe(true);
+    expect(sdk.updateDoc.mock.calls[1][1].items[0]).not.toHaveProperty('activityBooking');
+  });
   it('persists a URL and removes it when the icon is selected', async () => {
     expect(await useTripStore.getState().updateItem('walk', { imageUrl: 'https://example.com/photo.jpg' })).toBe(true);
     expect(sdk.updateDoc.mock.calls[0][1].items[0].imageUrl).toBe('https://example.com/photo.jpg');

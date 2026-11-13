@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Sparkles, Loader, Utensils } from 'lucide-react';
-import type { ItineraryItem } from '../../core/models';
+import type { ActivityBooking, ItineraryItem } from '../../core/models';
 import { parseAllTrailsUrl } from '../../data/api';
 import ItemImageField from '../ItemImageField';
 import { uploadItemImage } from '../../data/itemImages';
 import { validateImageUrl } from '../../core/timelineDetails';
 import { useTripStore } from '../../store/useTripStore';
+import ActivityBookingFields from '../ActivityBookingFields';
+import { supportsActivityBooking, validateActivityBooking } from '../../core/activityBooking';
 
 interface EditItineraryModalProps {
   item: ItineraryItem;
@@ -29,6 +31,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
   const [imageBusy, setImageBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [activityBooking, setActivityBooking] = useState<ActivityBooking | undefined>(item.activityBooking);
 
   const [groupId] = useState(item.groupId || '');
   const [sortOrder] = useState<number | undefined>(item.sortOrder);
@@ -109,6 +112,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
     let uploaded: Awaited<ReturnType<typeof uploadItemImage>> | undefined;
     try {
     if (useTripStore.getState().currentTripId !== editingTripId) throw new Error('The active trip changed. Reopen this item to edit it.');
+    const savedBooking = supportsActivityBooking(type) && activityBooking ? validateActivityBooking(activityBooking, date || item.startDate) : undefined;
     let savedImageUrl = validateImageUrl(imageUrl);
     if (imageFile) { uploaded = await uploadItemImage(imageFile); savedImageUrl = uploaded.url; }
     if (useTripStore.getState().currentTripId !== editingTripId) throw new Error('The active trip changed. Reopen this item to edit it.');
@@ -119,6 +123,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
       title: title.trim(),
       imageUrl: savedImageUrl || undefined,
       type,
+      activityBooking: savedBooking,
       startDate: startDateString,
       endDate: endDateString,
       confirmationNumber: confirmationNumber || undefined,
@@ -266,6 +271,7 @@ export default function EditItineraryModal({ item, onClose, onSave }: EditItiner
               <option value="note">Note / Reminder</option>
             </select>
           </div>
+          {supportsActivityBooking(type) && <ActivityBookingFields value={activityBooking} startDate={date || item.startDate} onChange={setActivityBooking} />}
           {type === 'note' ? (
             /* Note-only View: Title + Description only */
             <div className="edit-field-group" style={{ marginBottom: 0 }}>

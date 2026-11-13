@@ -4,67 +4,9 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Menu, Loader, X, RefreshCw, ArrowRight } from 'lucide-react';
-
-// ─── Marker icons (custom divIcon — no broken image paths) ───────────────────
-
-const TYPE_COLORS: Record<string, string> = {
-  flight:   'var(--sys-blue)',
-  hotel:    'var(--sys-orange)', // Back to Orange for distinction
-  activity: 'var(--sys-cyan)', // Brighter Sky Blue
-  hiking:   'var(--sys-green)',
-  transit:  'var(--sys-indigo)',
-  food:     'var(--sys-purple)', // Purple for meals
-  note:     'var(--sys-gray)', // Gray for notes
-  unknown:  'var(--sys-gray)',
-};
-
-const TYPE_EMOJI: Record<string, string> = {
-  flight:   '🛫',
-  hotel:    '🏨',
-  activity: '🏔️',
-  hiking:   '🥾',
-  transit:  '🚆',
-  food:     '🍽️',
-  note:     '📝',
-  unknown:  '📍',
-};
+import { makeMapItemIcon, MAP_ITEM_COLORS as TYPE_COLORS } from './mapItemIcon';
 
 const DAY_PALETTE = ['var(--sys-blue)', 'var(--sys-green)', 'var(--sys-orange)', 'var(--sys-purple)', '#FF6B6B', 'var(--sys-cyan)'];
-
-function makeMarkerIcon(type: string, isCheckout?: boolean) {
-  const color = isCheckout ? 'var(--sys-red)' : (TYPE_COLORS[type] ?? TYPE_COLORS.unknown);
-  const emoji = TYPE_EMOJI[type]  ?? TYPE_EMOJI.unknown;
-  
-  return L.divIcon({
-    className: '',
-    html: `
-      <div style="position:relative;width:44px;height:44px;display:flex;align-items:center;justify-content:center;">
-        <!-- Glass Teardrop Pin -->
-        <div style="
-          position:absolute;width:34px;height:34px;
-          background: rgba(var(--neutral-rgb), 0.05);
-          backdrop-filter: blur(12px) saturate(180%);
-          -webkit-backdrop-filter: blur(12px) saturate(180%);
-          border-radius:50% 50% 50% 0;
-          transform: rotate(-45deg);
-          border:1.5px solid rgba(var(--neutral-rgb), 0.4);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.3);"></div>
-        
-        <!-- Internal Tint Lens (also teardrop shaped for consistency) -->
-        <div style="
-          position:absolute;width:28px;height:28px;
-          background:${color};opacity:0.4;
-          border-radius:50% 50% 50% 0;
-          transform: rotate(-45deg);
-          filter: blur(3px);"></div>
-
-        <span style="position:relative;z-index:1;font-size:16px;line-height:1;margin-top:-6px;filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));">${emoji}</span>
-      </div>`,
-    iconSize:    [44, 44],
-    iconAnchor:  [22, 44], // Point ends at bottom-center
-    popupAnchor: [0, -44],
-  });
-}
 
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -596,7 +538,9 @@ export default function MapViewScreen() {
           <Marker
             key={`${item.id}-${item._isCheckout ? 'out' : 'base'}-${idx}`}
             position={[item.location.latitude!, item.location.longitude!]}
-            icon={makeMarkerIcon(item.type, item._isCheckout)}
+            icon={makeMapItemIcon(item.type, item.imageUrl, item._isCheckout)}
+            title={item.title}
+            alt={item.title}
           >
             <Popup className="custom-popup">
               <div style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -608,7 +552,7 @@ export default function MapViewScreen() {
                   marginBottom: '6px', 
                   textTransform: 'uppercase' 
                 }}>
-                  {new Date(item._renderDate.replace('T', ' ').replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                  {new Date(item._renderDate.replace('T', ' ').replace(/-/g, '/')).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                   {item._isCheckout ? ' • CHECK-OUT' : ''}
                 </p>
                 <p style={{ fontWeight: 800, fontSize: '16px', marginBottom: '4px', color: 'var(--sys-label-primary)', letterSpacing: '-0.3px' }}>
@@ -748,7 +692,7 @@ export default function MapViewScreen() {
           {allTripDayKeys.map((key, i) => {
             const isHidden = hiddenDayFilters.includes(key);
             const d = new Date(`${key}T12:00:00`);
-            const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            const label = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
             return (
               <div 
                 key={key} 

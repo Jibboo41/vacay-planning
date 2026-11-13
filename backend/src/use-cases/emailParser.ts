@@ -30,6 +30,7 @@ Return ONLY a valid JSON array of ItineraryItem objects, following this schema:
 ]
 Do not include markdown blocks like \`\`\`json, return pure JSON.
 ALWAYS prioritize extracting check-in/check-out times for hotels, pickup/return times for rental cars, takeoff/landing times for flights, and reservation times for dining.
+Preserve every year explicitly written in the source text. For example, "Fri 02 Jul 2027, 07:00 PM" means 2027-07-02T19:00:00, not a date in the current year. Never substitute another year for an explicit year.
 For RENTAL CARS, return ONE entry with startDate (pickup) and endDate (return).
 
 Email text:

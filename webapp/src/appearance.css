@@ -180,7 +180,29 @@ input::placeholder, textarea::placeholder { color: var(--sys-label-tertiary); op
 .day-description__actions > span { margin-right: auto; }
 .day-description__actions button { padding: 8px 12px; font-size: 13px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.activity-booking-fields { margin: 0 0 20px; padding: 16px; border: 1px solid var(--sys-separator); border-radius: 14px; background: var(--sys-bg-elevated-2); }
+.activity-booking-fields__heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+.activity-booking-fields__heading h3 { font-size: 14px; font-weight: 700; }
+.activity-booking-fields__heading button { font-size: 12px; color: var(--sys-label-secondary); }
+.booking-status-options { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.booking-status-option { display: flex; align-items: center; gap: 6px; border: 1px solid var(--sys-separator); padding: 9px 10px; border-radius: 10px; font-size: 12px; }
+.booking-status-option[aria-pressed="true"] { background: color-mix(in srgb, currentColor 10%, transparent); border-color: currentColor; box-shadow: 0 0 0 1px currentColor; }
+.booking-status--booked { color: var(--sys-green); }
+.booking-status--not-booked { color: var(--sys-red); }
+.booking-status--not-required, .booking-status--unset { color: var(--sys-label-secondary); }
+.booking-window-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.booking-window-fields .edit-field-group { min-width: 0; margin-bottom: 6px; }
+.activity-booking-fields > .edit-field-group { margin-top: 14px; margin-bottom: 0; }
+.activity-booking-fields .field-hint { margin-top: 4px; }
+.activity-booking-badge { flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 50%; }
+.activity-booking-timing { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; margin-top: 12px; border-top: 1px solid var(--sys-separator); font-size: 12px; line-height: 1.5; color: var(--sys-label-secondary); }
+.activity-booking-timing > div { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
+.activity-booking-timing > div > svg { flex-shrink: 0; margin-top: 2px; color: var(--sys-red); }
+.activity-booking-timing strong { color: var(--sys-label-primary); font-weight: 700; }
+.booking-deadline { display: block; }
+.activity-booking-timing > a { color: var(--sys-blue); display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--sys-separator); }
 @media (max-width: 500px) {
+  .day-section-label { font-size: 20px; }
   .day-description { margin-left: 16px; margin-right: 16px; }
   .item-thumbnail--photo { width: 60px; height: 60px; }
   .item-image-field__body { gap: 12px; }

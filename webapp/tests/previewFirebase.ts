@@ -18,7 +18,23 @@ const initial = [{ id: 'preview-paris', title: 'Paris getaway', userId: 'preview
   weather: { lastUpdated: Date.now(), forecast: ['2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20'].map(date => ({ date, tempHigh: 64, tempLow: 51, condition: 'Partly cloudy', icon: '⛅', rainfall: .1, snowfall: 0 })) },
 }];
 type PreviewTrip = Record<string, unknown> & { id: string };
-let trips: PreviewTrip[] = JSON.parse(localStorage.getItem('vacay_preview_trips') || 'null') || initial;
+const mapScenario = new URLSearchParams(window.location.search).get('scenario') === 'map';
+const bookingScenario = new URLSearchParams(window.location.search).get('scenario') === 'booking';
+const storageKey = bookingScenario ? 'vacay_preview_booking_trips' : mapScenario ? 'vacay_preview_map_trips' : 'vacay_preview_trips';
+const bookingItems: ItineraryItem[] = [
+  { ...items[2], id: 'show-booked', title: 'The Greatest Showman', startDate: '2027-07-02T19:00:00', location: { ...location, name: 'Theatre Royal Drury Lane' }, activityBooking: { status: 'booked' } },
+  { ...items[2], id: 'walk-not-required', title: 'Evening along the Thames', startDate: '2027-07-02T21:30:00', location: { ...location, name: 'South Bank' }, activityBooking: { status: 'not-required' } },
+  { ...items[3], id: 'museum-not-booked', title: 'Museum visit', startDate: '2027-07-03T10:00:00', location: { ...location, name: 'London' }, activityBooking: { status: 'not-booked', opensBefore: { amount: 90, unit: 'days' }, bookBy: '2027-06-20', url: 'https://example.com/book' } },
+];
+const bookingInitial = [{ ...initial[0], id: 'preview-booking', title: 'London activities', items: bookingItems, dayDescriptions: {}, weather: null }];
+const mapInitial = [{ ...initial[0], id: 'preview-map', title: 'Paris map and transit preview', items: [
+  items[0],
+  { ...items[2], imageUrl: '/tests/fixtures/paris-thumbnail.jpg', location: { ...location, name: 'Seine riverbanks', latitude: 48.8584, longitude: 2.2945 } },
+  { ...items[3], location: { ...location, name: 'Musée du Louvre', latitude: 48.8606, longitude: 2.3376 } },
+  { id: 'broken-photo', type: 'activity', title: 'Notre-Dame visit', startDate: '2026-10-18T12:00:00', imageUrl: '/tests/fixtures/missing.jpg', location: { ...location, name: 'Notre-Dame', latitude: 48.853, longitude: 2.3499 } },
+  { id: 'train', type: 'transit', title: 'Train to Paris', startDate: '2026-10-17T12:00:00', cost: 150, paidAmount: 50, location: { ...location, name: 'Gare du Nord', latitude: 48.8809, longitude: 2.3553 } },
+] }];
+let trips: PreviewTrip[] = JSON.parse(localStorage.getItem(storageKey) || 'null') || (bookingScenario ? bookingInitial : mapScenario ? mapInitial : initial);
 localStorage.setItem('vacay_current_trip_id', trips[0]?.id || '');
 export const db = {};
 export const auth = { currentUser: { uid: 'preview-user', displayName: 'Preview account', email: 'preview@example.test', photoURL: null }, signOut: async () => {} };
@@ -30,7 +46,7 @@ export const signOut = async () => {};
 type Snapshot = { docs: { id: string; data: () => Omit<PreviewTrip, 'id'> }[] };
 const listeners = new Set<(snapshot: Snapshot) => void>();
 const snapshot = (): Snapshot => ({ docs: trips.map(trip => ({ id: trip.id, data: () => Object.fromEntries(Object.entries(trip).filter(([key]) => key !== 'id')) })) });
-const publish = () => { localStorage.setItem('vacay_preview_trips', JSON.stringify(trips)); listeners.forEach(listener => listener(snapshot())); };
+const publish = () => { localStorage.setItem(storageKey, JSON.stringify(trips)); listeners.forEach(listener => listener(snapshot())); };
 export const collection = (_db: unknown, name: string) => name;
 export const where = (...args: unknown[]) => args;
 export const query = (...args: unknown[]) => args;

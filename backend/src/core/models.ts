@@ -14,6 +14,12 @@ export interface ItineraryItem {
   location: Location;
   description?: string;
   imageUrl?: string;
+  activityBooking?: {
+    status: 'booked' | 'not-booked' | 'not-required';
+    opensBefore?: { amount: number; unit: 'days' | 'weeks' | 'months' };
+    bookBy?: string;
+    url?: string;
+  };
   confirmationNumber?: string;
 }
 

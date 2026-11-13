@@ -4,7 +4,7 @@ import { useTripStore } from '../store/useTripStore';
 import TimelineItem from './TimelineItem';
 import NoteCard from './NoteCard';
 import DayDescription from './DayDescription';
-import { timelineDates } from '../core/timelineDetails';
+import { formatTimelineDayLabel, timelineDates } from '../core/timelineDetails';
 import type { ItineraryItem } from '../core/models';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -28,9 +28,7 @@ function getDayKey(dateString: string) {
 }
 
 function getDayLabel(dateString: string) {
-  const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
-  const d = new Date(clean);
-  return `${d.toLocaleDateString('en-US', { weekday: 'short' })} ${d.getMonth() + 1}/${d.getDate()}`;
+  return formatTimelineDayLabel(getDayKey(dateString));
 }
 
 // ─── Draggable Card Wrapper ───────────────────────────────────────────────────

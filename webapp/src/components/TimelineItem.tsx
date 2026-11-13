@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTripStore } from '../store/useTripStore';
 import type { ItineraryItem } from '../core/models';
 import Linkified from './Linkified';
+import { ActivityBookingBadge, ActivityBookingTiming } from './ActivityBookingBadge';
+import { supportsActivityBooking } from '../core/activityBooking';
 
 interface TimelineItemProps {
   item: ItineraryItem;
@@ -94,7 +96,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
         boxShadow: item.isStarred ? '0 8px 32px rgba(0, 0, 0, 0.25), 0 0 20px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(var(--neutral-rgb), 0.1)' : undefined,
         backgroundColor: tintedBackgrounds ? theme.bg : undefined,
         overflow: 'hidden',
-        maxHeight: isExpanded ? '1000px' : '200px',
+        maxHeight: isExpanded ? '1000px' : undefined,
         marginTop: (groupPosition === 'middle' || groupPosition === 'end') ? '-12px' : '0px',
         borderTopLeftRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
         borderTopRightRadius: (groupPosition === 'middle' || groupPosition === 'end') ? '0' : '20px',
@@ -199,6 +201,7 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
               <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--sys-label-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: 0 }}>
                 {item.title}
               </h3>
+              {supportsActivityBooking(item.type) && <ActivityBookingBadge item={item} onEdit={onPress} />}
               <div 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -260,6 +263,8 @@ export default function TimelineItem({ item, onPress, onGripTouchStart, isChecko
           </div>
         )}
       </div>
+
+      {supportsActivityBooking(item.type) && <ActivityBookingTiming item={item} />}
 
       {item.type === 'note' && item.description && (
         <div style={{ 

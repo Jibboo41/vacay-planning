@@ -3,6 +3,8 @@ import { X, Sparkles, Loader } from 'lucide-react';
 import type { ItineraryItem } from '../../core/models';
 import { parseItinerary } from '../../data/api';
 import { useTripStore } from '../../store/useTripStore';
+import { explicitSourceDates, normalizeParsedDate } from '../../core/parsedDates';
+import { isDayKey } from '../../core/timelineDetails';
 
 interface AddItineraryModalProps {
   onClose: () => void;
@@ -13,6 +15,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
   const [emailText, setEmailText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [parsedItems, setParsedItems] = useState<ItineraryItem[] | null>(null);
 
   const currentTripId = useTripStore(s => s.currentTripId);
   const trips = useTripStore(s => s.trips);
@@ -24,6 +27,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
     setError(null);
     try {
       let items = await parseItinerary(emailText, tripTitle);
+      const sourceDates = explicitSourceDates(emailText);
       
       // Year Sanitizer: If any items have missing/invalid years (usually defaults to 2001 or 1970 if yearless)
       // or if we just want to ensure consistency with the current trip.
@@ -33,61 +37,26 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
       
       if (currentItems.length > 0) {
         const sorted = [...currentItems].sort((a,b) => a.startDate.localeCompare(b.startDate));
-        const firstYear = new Date(sorted[0].startDate.replace(/-/g, '/')).getFullYear();
+        const firstYear = Number(sorted[0].startDate.slice(0, 4));
         if (!isNaN(firstYear) && firstYear >= 2000) {
           defaultYear = firstYear;
         }
       }
 
       items = items.map(item => {
-        // Advanced Date Recon: AI sometimes returns invalid years, missing years, or "MM-DD".
-        const fixDate = (dateStr: string) => {
-          if (!dateStr) return dateStr;
-          
-          // Try parsing. If it has a year >= 2000, it's likely fine.
-          const d = new Date(dateStr.replace(/-/g, '/'));
-          if (!isNaN(d.getFullYear()) && d.getFullYear() >= 2024) {
-             return dateStr;
-          }
-
-          // Case 1: "NaN-MM-DD..." or "0001-MM-DD..."
-          // Extract the parts after the first hyphen
-          const parts = dateStr.split('-');
-          if (parts.length >= 3) {
-            // Reconstruct: YYYY-MM-DD[T...]
-            return `${defaultYear}-${parts[1]}-${parts[2]}`;
-          }
-
-          // Case 2: "MM-DD" or unstructured
-          // Look for digits like XX-XX
-          const match = dateStr.match(/(\d{1,2})[/-](\d{1,2})/);
-          if (match) {
-            const m = match[1].padStart(2, '0');
-            const dStr = match[2].padStart(2, '0');
-            const timePart = dateStr.includes('T') ? dateStr.split('T')[1] : '12:00:00';
-            return `${defaultYear}-${m}-${dStr}T${timePart}`;
-          }
-
-          // Case 3: Just the year is bad but it starts with hyphen? No.
-          // Let's use a very aggressive regex to find the FIRST M-D pattern
-          return dateStr.replace(/^.*?(\d{4}|\d{2})[-/](\d{1,2})[-/](\d{1,2})/, (_match, _y, m, d) => {
-             return `${defaultYear}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-          });
-        };
-
         if (item.startDate) {
-          item.startDate = fixDate(item.startDate);
+          item.startDate = normalizeParsedDate(item.startDate, defaultYear, sourceDates);
           if (item.endDate) {
-            item.endDate = fixDate(item.endDate);
+            item.endDate = normalizeParsedDate(item.endDate, defaultYear, sourceDates);
           }
         }
         return item;
       });
 
-      items.forEach(item => onAdd(item));
-      onClose();
+      if (items.length === 0) throw new Error('No itinerary items were found. Check the text and try again.');
+      setParsedItems(items);
     } catch (err) {
-      setError('Could not connect to backend. Please make sure the server is running.');
+      setError(err instanceof Error ? err.message : 'Could not parse this itinerary. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +72,26 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} color="var(--sys-label-primary)" /></button>
         </div>
 
+        {parsedItems ? <>
+          <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginBottom: '16px' }}>Check the dates and times before adding these items.</p>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {parsedItems.map((item, index) => <div key={`${item.id}-${index}`} style={{ marginBottom: '20px' }}>
+              <strong>{item.title}</strong>
+              {(['startDate', 'endDate'] as const).map(field => (field === 'startDate' || item.endDate) && <label key={field} className="edit-field-group" style={{ marginTop: '8px' }}>
+                <span className="edit-field-label">{field === 'startDate' ? 'Start date and time' : 'End date and time'}</span>
+                <input className="edit-field-input" type="datetime-local" value={(item[field] || '').slice(0, 16)} onChange={event => setParsedItems(current => current?.map((entry, i) => i === index ? { ...entry, [field]: event.target.value ? `${event.target.value}:00` : '' } : entry) || null)} />
+              </label>)}
+            </div>)}
+          </div>
+          {error && <p className="field-error" role="alert">{error}</p>}
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+            <button type="button" onClick={() => { setParsedItems(null); setError(null); }} style={{ flex: 1, padding: '16px' }}>Back</button>
+            <button type="button" className="btn-glass-blue" style={{ flex: 2, padding: '16px', borderRadius: '14px' }} onClick={() => {
+              if (parsedItems.some(item => !item.startDate || !isDayKey(item.startDate.slice(0, 10)) || Number.isNaN(new Date(item.startDate).getTime()) || (item.endDate && (!isDayKey(item.endDate.slice(0, 10)) || Number.isNaN(new Date(item.endDate).getTime()) || item.endDate < item.startDate)))) { setError('Check that each start date is valid and each end is after its start.'); return; }
+              parsedItems.forEach(item => onAdd(item)); onClose();
+            }}>Add items</button>
+          </div>
+        </> : <>
         <p style={{ fontSize: '14px', color: 'var(--sys-label-secondary)', marginBottom: '20px', flexShrink: 0 }}>
           Paste a booking confirmation or itinerary email and we'll extract all the details automatically.
         </p>
@@ -142,6 +131,7 @@ export default function AddItineraryModal({ onClose, onAdd }: AddItineraryModalP
           {isLoading ? <Loader size={20} style={{ marginRight: '8px', animation: 'spin 1s linear infinite' }} /> : <Sparkles size={20} style={{ marginRight: '8px' }} />}
           {isLoading ? 'Parsing...' : 'Parse with AI'}
         </button>
+        </>}
       </div>
     </div>
   );

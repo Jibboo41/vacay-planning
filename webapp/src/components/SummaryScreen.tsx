@@ -22,7 +22,7 @@ function getDayLabel(dateString: string) {
   const clean = dateString.includes('T') ? dateString : dateString.replace(/-/g, '/');
   const d = new Date(clean);
   if (isNaN(d.getTime())) return 'Date TBD';
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 
 function getTimeLabel(dateString: string) {

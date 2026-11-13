@@ -1,15 +1,13 @@
 import { useState, useMemo } from 'react';
-import { Plus, Wallet, ShoppingBag, Utensils, Plane, Car, Menu, Bed, Activity, ChevronRight, Fuel, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Wallet, ShoppingBag, Utensils, Plane, TrainFront, Car, Menu, Bed, Activity, ChevronRight, Fuel, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore';
 import type { Expense } from '../core/models';
-
-const EXPENSE_CATEGORIES: Expense['category'][] = [
-  'Car Rental', 'Flights', 'Gas', 'Dining', 'Lodging', 'Souvenirs', 'Other'
-];
+import { EXPENSE_CATEGORIES, itineraryExpenseCategory, normalizeExpenseCategory } from '../core/expenseCategories';
 
 const CATEGORY_ICONS: Record<Expense['category'], any> = {
   'Car Rental': <Car size={18} />,
   'Flights': <Plane size={18} />,
+  'Transit': <TrainFront size={18} />,
   'Gas': <Fuel size={18} />,
   'Dining': <Utensils size={18} />,
   'Lodging': <Bed size={18} />,
@@ -20,6 +18,7 @@ const CATEGORY_ICONS: Record<Expense['category'], any> = {
 const CATEGORY_COLORS: Record<Expense['category'], string> = {
   'Car Rental': 'var(--sys-cyan)',
   'Flights': 'var(--sys-blue)',
+  'Transit': 'var(--sys-indigo)',
   'Gas': 'var(--sys-yellow)',
   'Dining': 'var(--sys-purple)',
   'Lodging': 'var(--sys-orange)',
@@ -39,11 +38,7 @@ export default function CostTrackerScreen() {
   // Map itinerary items to the new unified categories
   const itineraryExpenses = useMemo(() => {
     return items.filter(i => (i.cost || 0) > 0).map(i => {
-      let category: Expense['category'] = 'Other';
-      if (i.type === 'flight') category = 'Flights';
-      else if (i.type === 'hotel') category = 'Lodging';
-      else if (i.type === 'rental-car') category = 'Car Rental';
-      else if (i.type === 'food') category = 'Dining';
+      const category = itineraryExpenseCategory(i.type);
 
       return {
         id: `itinerary-${i.id}`,
@@ -62,11 +57,7 @@ export default function CostTrackerScreen() {
     // Migration for old expenses if any still use old categories
     const migratedManual = expenses.map(e => {
       if (EXPENSE_CATEGORIES.includes(e.category)) return e;
-      // Map old to new
-      let newCat: Expense['category'] = 'Other';
-      if (e.category === 'food' as any) newCat = 'Dining';
-      if (e.category === 'transport' as any) newCat = 'Car Rental';
-      return { ...e, category: newCat };
+      return { ...e, category: normalizeExpenseCategory(e.category) };
     });
 
     return [...migratedManual, ...itineraryExpenses].sort((a, b) => (b.date || '').localeCompare(a.date || ''));

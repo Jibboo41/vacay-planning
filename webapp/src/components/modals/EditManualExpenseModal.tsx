@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Save, Trash2 } from 'lucide-react';
 import { useTripStore } from '../../store/useTripStore';
 import type { Expense } from '../../core/models';
+import { EXPENSE_CATEGORIES, normalizeExpenseCategory } from '../../core/expenseCategories';
 
 export default function EditManualExpenseModal() {
   const { editingExpense, updateExpense, deleteExpense, setEditingExpense } = useTripStore();
@@ -17,7 +18,7 @@ export default function EditManualExpenseModal() {
       setTitle(editingExpense.title);
       setAmount(editingExpense.amount.toString());
       setPaidAmount(editingExpense.paidAmount?.toString() || '0');
-      setCategory(editingExpense.category);
+      setCategory(normalizeExpenseCategory(editingExpense.category));
       setDate(editingExpense.date || '');
     }
   }, [editingExpense]);
@@ -90,13 +91,7 @@ export default function EditManualExpenseModal() {
                 className="edit-field-input"
                 value={category} onChange={e => setCategory(e.target.value as any)}
               >
-                <option value="Car Rental">Car Rental</option>
-                <option value="Flights">Flights</option>
-                <option value="Gas">Gas</option>
-                <option value="Dining">Dining</option>
-                <option value="Lodging">Lodging</option>
-                <option value="Souvenirs">Souvenirs</option>
-                <option value="Other">Other</option>
+                {EXPENSE_CATEGORIES.map(value => <option key={value} value={value}>{value}</option>)}
               </select>
             </div>
             <div className="edit-field-group" style={{ flex: 1 }}>
